@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
+import Navbar from "./components/Navbar"; // ✅ Added Navbar
 import Dashboard from "./pages/Dashboard";
 import ListNewItem from "./pages/ListNewItem";
 import ViewListedItems from "./pages/ViewListedItems.js";
@@ -23,8 +24,14 @@ const App = () => {
           path="/*" 
           element={
             <div style={{ display: "flex" }}>
-              <Sidebar />
-              <div style={{ flexGrow: 1, padding: "20px" }}>
+              {/* Sidebar (Fixed Width) */}
+              <div style={{ width: "250px", height: "100vh", position: "fixed", background: "#f0fdf4" }}>
+                <Sidebar />
+              </div>
+
+              {/* Main Content (Pushed Right) */}
+              <div style={{ flexGrow: 1, marginLeft: "400px", width: "calc(100% - 400px)", padding: "20px" }}>
+                <Navbar /> {/* ✅ Added Navbar */}
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/list-new-item" element={<ListNewItem />} />

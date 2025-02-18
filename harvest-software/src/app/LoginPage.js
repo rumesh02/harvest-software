@@ -1,9 +1,20 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';  
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';  
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { FaGoogle } from "react-icons/fa"; // Google Icon
 
 function LoginPage() {
   const navigate = useNavigate();  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = () => {
+    if (email === "user@example.com" && password === "password123") {
+      navigate("/dashboard"); // Redirect on success
+    } else {
+      alert("Invalid login credentials!");
+    }
+  };
 
   return (
     <div className="container-fluid vh-100">
@@ -33,6 +44,8 @@ function LoginPage() {
                   className="form-control"
                   id="email"
                   placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
@@ -43,31 +56,27 @@ function LoginPage() {
                   className="form-control"
                   id="password"
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <div className="form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="remember"
-                  />
-                  <label className="form-check-label" htmlFor="remember">
-                    Remember me
-                  </label>
+                  <input type="checkbox" className="form-check-input" id="remember" />
+                  <label className="form-check-label" htmlFor="remember">Remember me</label>
                 </div>
-                <a href="#" className="text-success text-decoration-none">
-                  Forgot password
-                </a>
+                <Link to="/forgot-password" className="text-success text-decoration-none">
+                  Forgot password?
+                </Link>
               </div>
 
-              {/* Sign in button - Navigates to Register Page */}
+              {/* Sign in button */}
               <button
                 type="button"
                 className="btn btn-success w-100 mb-3"
                 style={{ backgroundColor: '#22C55E' }}
-                onClick={() => navigate('/register')}  
+                onClick={handleLogin}
               >
                 Sign in
               </button>
@@ -76,19 +85,15 @@ function LoginPage() {
                 type="button"
                 className="btn btn-outline-secondary w-100 mb-4 d-flex align-items-center justify-content-center gap-2"
               >
-                <i className="bi bi-google" style={{ fontSize: '1.2rem' }}></i>
+                <FaGoogle size={18} />
                 Sign in with Google
               </button>
 
               <p className="text-center">
                 Don't have an account?{' '}
-                <span 
-                  className="text-success text-decoration-none cursor-pointer"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => navigate('/register')} 
-                >
+                <Link to="/register" className="text-success text-decoration-none">
                   Sign up for free!
-                </span>
+                </Link>
               </p>
             </form>
           </div>

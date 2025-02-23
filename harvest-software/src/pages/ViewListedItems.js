@@ -17,7 +17,7 @@ const ViewListedItems = () => {
       <Sidebar />
       
       {/* Main Content */}
-      <Container maxWidth="lg" sx={{ mt: 5, ml: "0px", flexGrow: 1 }}>
+      <Container maxWidth="lg" sx={{ mt: 5, ml: "-180px", flexGrow: 1 }}>
         
         {/* Page Title */}
         <Typography variant="h4" fontFamily={"Josephin Sans}"} fontWeight="bold" mb={3}>

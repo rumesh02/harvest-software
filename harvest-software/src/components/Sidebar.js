@@ -21,7 +21,7 @@ const Sidebar = () => {
         width: 260,
         flexShrink: 0,
         "& .MuiDrawer-paper": {
-          width: 290,
+          width: 320,
           boxSizing: "border-box",
           backgroundColor: "#e2f7e5",
           borderRadius: "10px",
@@ -49,6 +49,8 @@ const Sidebar = () => {
             key={index}
             sx={{
               borderRadius: "10px",
+              border: "1px solid #ddd",
+              backgroundColor: "#fff",
               marginBottom: "8px",
               "&:hover": { backgroundColor: "#abf0b5" },
             }}
@@ -73,7 +75,7 @@ const Sidebar = () => {
             borderRadius: "10px",
             display: "inline-block",
             padding: "2px 10px",
-            fontSize: "12px",
+            fontSize: "16px",
           }}
         >
           Farmer

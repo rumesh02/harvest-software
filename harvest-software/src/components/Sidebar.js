@@ -63,7 +63,7 @@ const Sidebar = () => {
       </List>
 
       {/* User Profile */}
-      <Box mt={3} textAlign="center">
+      <Box mt={15} textAlign="center">
         <Avatar src="/farmer.jpg" sx={{ width: 60, height: 60, margin: "auto" }} />
         <Typography fontWeight="bold" mt={1}>
           Sunimal Perera

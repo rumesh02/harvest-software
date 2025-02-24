@@ -42,8 +42,9 @@ const Sidebar = () => {
           { text: "List New Item", icon: <AddIcon />, path: "/list-new-item" },
           { text: "View Listed Items", icon: <ListIcon />, path: "/view-listed-items" },
           { text: "Accept / Reject Bids", icon: <GavelIcon />, path: "/accept-reject-bids" },
-          { text: "Messages", icon: <ChatIcon />, path: "/messages" },
           { text: "Payment Approve", icon: <PaymentIcon />, path: "/payment-approve" },
+          { text: "Messages", icon: <ChatIcon />, path: "/messages" },
+
         ].map((item, index) => (
           <ListItemButton
             key={index}

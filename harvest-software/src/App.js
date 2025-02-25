@@ -10,9 +10,6 @@ import Messages from "./pages/Messages";
 import PaymentApprove from "./pages/PaymentApprove";
 import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
-import About from "./pages/About";
-import ContactUs from "./pages/ContactUs";
-import Help from "./pages/Help";
 
 const App = () => {
   return (
@@ -42,9 +39,6 @@ const App = () => {
                   <Route path="/accept-reject-bids" element={<AcceptRejectBids />} />
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/payment-approve" element={<PaymentApprove />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<ContactUs />} />
-                  <Route path="/help" element={<Help />} />
                 </Routes>
               </div>
             </div>

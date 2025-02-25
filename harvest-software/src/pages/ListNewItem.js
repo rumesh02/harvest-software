@@ -7,6 +7,8 @@ const harvestTypes = [
   "Vegetables",
   "Fruits",
   "Grains",
+  "Dairy",
+  "Meat",
   "Other",
 ];
 
@@ -38,7 +40,7 @@ const ListNewItem = () => {
           </TextField>
 
           <TextField label="Harvest Name" fullWidth />
-          <TextField label="Minimum Bid Price/kg" fullWidth InputProps={{ startAdornment: "Rs." }} />
+          <TextField label="Minimum Bid Price" fullWidth InputProps={{ startAdornment: "Rs." }} />
           <TextField label="Available Weight of Stock" fullWidth InputProps={{ endAdornment: "Kg" }} />
 
           {/* Upload Box */}

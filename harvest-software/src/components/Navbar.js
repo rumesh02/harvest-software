@@ -11,9 +11,9 @@ const Navbar = () => {
 
       {/* Right Side: Links */}
       <div style={{ display: "flex", gap: "80px" }}>
-        <a href="/about" style={{ color: "#555", textDecoration: "none", fontSize: "18px" }}>About</a>
-        <a href="/contact" style={{ color: "#555", textDecoration: "none", fontSize: "18px" }}>Contact Us</a>
-        <a href="/help" style={{ color: "#555", textDecoration: "none", fontSize: "18px" }}>Help</a>
+        <a href="#" style={{ color: "#555", textDecoration: "none", fontSize: "18px" }}>About</a>
+        <a href="#" style={{ color: "#555", textDecoration: "none", fontSize: "18px" }}>Contact Us</a>
+        <a href="#" style={{ color: "#555", textDecoration: "none", fontSize: "18px" }}>Help</a>
       </div>
     </nav>
   );

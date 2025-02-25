@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import { Box, Container } from "@mui/material";
-import { Routes, Route, useLocation } from "react-router-dom";
-import MerchantSidebar from "../../components/MerchantSidebar"; // ✅ Fixed import path
+import React from "react";
+import { Container } from "@mui/material";
+import { Routes, Route } from "react-router-dom";
 import BrowseListing from "./BrowseListing";
 import PlaceBids from "./PlaceBids";
 import MyBids from "./MyBids";
@@ -14,28 +13,11 @@ const DashboardHome = () => {
   return <h2>Welcome to the Merchant Dashboard</h2>;
 };
 
-const MerchantDashboardLayout = ({ children }) => {
-  const [selectedPage, setSelectedPage] = useState("Dashboard");
-  const location = useLocation();
-
-  // ✅ Sidebar only appears on merchant pages
-  const isMerchantPage = location.pathname.startsWith("/merchant");
-
-  return (
-    <Box sx={{ display: "flex" }}>
-      {isMerchantPage && <MerchantSidebar setSelectedPage={setSelectedPage} />}
-      <Container sx={{ flexGrow: 1, p: 3, ml: isMerchantPage ? "260px" : "0px" }}>
-        {children}
-      </Container>
-    </Box>
-  );
-};
-
 const MerchantDashboard = () => {
   return (
-    <MerchantDashboardLayout>
+    <Container sx={{ flexGrow: 1, p: 3 }}>
       <Routes>
-        <Route path="/merchant/dashboard" element={<DashboardHome />} /> {/* ✅ No infinite loop */}
+        <Route path="/merchant/dashboard" element={<DashboardHome />} />
         <Route path="/merchant/listings" element={<BrowseListing />} />
         <Route path="/merchant/buy" element={<PlaceBids />} />
         <Route path="/merchant/bids" element={<MyBids />} />
@@ -43,7 +25,7 @@ const MerchantDashboard = () => {
         <Route path="/merchant/messages" element={<Messages />} />
         <Route path="/merchant/payments" element={<Payments />} />
       </Routes>
-    </MerchantDashboardLayout>
+    </Container>
   );
 };
 

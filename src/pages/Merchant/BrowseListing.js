@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Container, Typography, TextField, Grid, Card, CardMedia } from "@mui/material";
-import MerchantSidebar from "../components/MerchantSidebar";
+import MerchantSidebar from "../../components/MerchantSidebar";
+
 
 // Sample images for products
 const products = [

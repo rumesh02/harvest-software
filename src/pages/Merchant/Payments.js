@@ -5,11 +5,11 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PaymentIcon from "@mui/icons-material/Payment";
 
 const Payments = () => {
-  const [amount, setAmount] = useState(10.0);
+  const [amount, setAmount] = useState(12000.0);
   const [cardNumber, setCardNumber] = useState("");
 
   const handlePayment = () => {
-    alert(`Payment of $${amount} processed successfully!`);
+    alert(`Payment of Rs.${amount} processed successfully!`);
   };
 
   return (
@@ -17,8 +17,8 @@ const Payments = () => {
       <Typography variant="h5" gutterBottom>Pay Now</Typography>
 
       <Box sx={{ marginBottom: "20px" }}>
-        <Typography variant="body1">UI Unicorn Store</Typography>
-        <Typography variant="h4" fontWeight="bold">${amount.toFixed(2)}</Typography>
+        <Typography variant="body1">Farm-to-Market</Typography>
+        <Typography variant="h4" fontWeight="bold">Rs.{amount.toFixed(2)}</Typography>
         <Typography variant="body2" color="textSecondary">Order №070490</Typography>
       </Box>
 
@@ -57,7 +57,7 @@ const Payments = () => {
         onClick={handlePayment}
         disabled={!amount}
       >
-        Pay ${amount.toFixed(2)}
+        Pay Rs.{amount.toFixed(2)}
       </Button>
     </Box>
   );

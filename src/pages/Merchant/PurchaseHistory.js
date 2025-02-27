@@ -4,7 +4,7 @@ import { Box, Typography, Card, CardMedia, CardContent, Button, Grid } from "@mu
 const purchases = [
   {
     id: 1,
-    image: "https://source.unsplash.com/200x200/?cabbage", // Replace with actual image URL
+    image: "https://d1obh0a64dzipo.cloudfront.net/images/4380.jpg", // Replace with actual image URL
     date: "2025-02-10",
     farmer: "Sunimal Perera",
     price: "Rs. 5000",
@@ -13,7 +13,7 @@ const purchases = [
   },
   {
     id: 2,
-    image: "https://source.unsplash.com/200x200/?onion", // Replace with actual image URL
+    image: "https://www.tastingtable.com/img/gallery/why-are-red-onions-purple/intro-1644158494.jpg", // Replace with actual image URL
     date: "2025-02-10",
     farmer: "Sunimal Perera",
     price: "Rs. 5000",

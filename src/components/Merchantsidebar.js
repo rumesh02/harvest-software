@@ -22,7 +22,7 @@ const MerchantSidebar = () => {
     <div style={{ width: 250, background: "#f9f9f9", height: "100vh", padding: "20px", borderRadius: "10px" }}>
       {/* Logo and Title */}
       <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        <img src="/logo.png" alt="Logo" width={50} />
+        <img src="/images/logo.png" alt="Logo" width={50} />
         <h2 style={{ fontSize: "18px", fontWeight: "bold" }}>Farm-to-Market</h2>
       </div>
 
@@ -60,7 +60,7 @@ const MerchantSidebar = () => {
       {/* Profile Section */}
       <div style={{ textAlign: "center" }}>
         <Badge overlap="circular" badgeContent={"Merchant"} color="primary">
-          <Avatar src="/profile.jpg" sx={{ width: 56, height: 56, margin: "0 auto" }} />
+          <Avatar src="/images/nimal.jpg" sx={{ width: 56, height: 56, margin: "0 auto" }} />
         </Badge>
         <h4 style={{ marginTop: 10, fontSize: "16px", fontWeight: "bold" }}>Sunimal Perera</h4>
       </div>

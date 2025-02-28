@@ -21,7 +21,7 @@ const Sidebar = () => {
         width: 260,
         flexShrink: 0,
         "& .MuiDrawer-paper": {
-          width: 290,
+          width: 320,
           boxSizing: "border-box",
           backgroundColor: "#e2f7e5",
           borderRadius: "10px",
@@ -42,13 +42,16 @@ const Sidebar = () => {
           { text: "List New Item", icon: <AddIcon />, path: "/list-new-item" },
           { text: "View Listed Items", icon: <ListIcon />, path: "/view-listed-items" },
           { text: "Accept / Reject Bids", icon: <GavelIcon />, path: "/accept-reject-bids" },
-          { text: "Messages", icon: <ChatIcon />, path: "/messages" },
           { text: "Payment Approve", icon: <PaymentIcon />, path: "/payment-approve" },
+          { text: "Messages", icon: <ChatIcon />, path: "/messages" },
+
         ].map((item, index) => (
           <ListItemButton
             key={index}
             sx={{
               borderRadius: "10px",
+              border: "1px solid #ddd",
+              backgroundColor: "#fff",
               marginBottom: "8px",
               "&:hover": { backgroundColor: "#abf0b5" },
             }}
@@ -61,7 +64,7 @@ const Sidebar = () => {
       </List>
 
       {/* User Profile */}
-      <Box mt={3} textAlign="center">
+      <Box mt={15} textAlign="center">
         <Avatar src="/farmer.jpg" sx={{ width: 60, height: 60, margin: "auto" }} />
         <Typography fontWeight="bold" mt={1}>
           Sunimal Perera
@@ -73,7 +76,7 @@ const Sidebar = () => {
             borderRadius: "10px",
             display: "inline-block",
             padding: "2px 10px",
-            fontSize: "12px",
+            fontSize: "16px",
           }}
         >
           Farmer

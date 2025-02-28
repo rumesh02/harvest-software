@@ -7,8 +7,6 @@ const harvestTypes = [
   "Vegetables",
   "Fruits",
   "Grains",
-  "Dairy",
-  "Meat",
   "Other",
 ];
 
@@ -19,7 +17,7 @@ const ListNewItem = () => {
       <Sidebar />
       
       {/* Main Content */}
-      <Box sx={{ flexGrow: 1, p: 3 }}>
+      <Box sx={{ flexGrow: 1, p: 3, ml: "-180px", mt: 5 }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>
           List New Item
         </Typography>
@@ -29,7 +27,7 @@ const ListNewItem = () => {
 
         <Box
           component="form"
-          sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 600 }}
+          sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 1000 }}
         >
           <TextField select label="Harvest Type" fullWidth>
             {harvestTypes.map((option) => (
@@ -40,7 +38,7 @@ const ListNewItem = () => {
           </TextField>
 
           <TextField label="Harvest Name" fullWidth />
-          <TextField label="Minimum Bid Price" fullWidth InputProps={{ startAdornment: "Rs." }} />
+          <TextField label="Minimum Bid Price/kg" fullWidth InputProps={{ startAdornment: "Rs." }} />
           <TextField label="Available Weight of Stock" fullWidth InputProps={{ endAdornment: "Kg" }} />
 
           {/* Upload Box */}

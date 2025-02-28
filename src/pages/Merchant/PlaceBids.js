@@ -9,7 +9,7 @@ const products = [
     available: "100 kg",
     farmer: "Sunimal Perera",
     location: "Nuwara Eliya",
-    image: "https://source.unsplash.com/200x150/?cabbage",
+    image: "https://d1obh0a64dzipo.cloudfront.net/images/4380.jpg",
   },
   {
     id: 2,
@@ -18,7 +18,7 @@ const products = [
     available: "100 kg",
     farmer: "Sunimal Perera",
     location: "Nuwara Eliya",
-    image: "https://source.unsplash.com/200x150/?beans",
+    image: "https://th.bing.com/th/id/OIP.4XW3qsorY_xMUonq--h19QHaEl?w=1920&h=1190&rs=1&pid=ImgDetMain",
   },
   {
     id: 3,
@@ -27,7 +27,7 @@ const products = [
     available: "100 kg",
     farmer: "Sunimal Perera",
     location: "Nuwara Eliya",
-    image: "https://source.unsplash.com/200x150/?carrots",
+    image: "https://garche.jp/wp-content/uploads/2021/01/5cf12d1a-145b-4ef9-8884-fc0101eb5312.jpg",
   },
   {
     id: 4,
@@ -36,7 +36,7 @@ const products = [
     available: "100 kg",
     farmer: "Sunimal Perera",
     location: "Nuwara Eliya",
-    image: "https://source.unsplash.com/200x150/?potatoes",
+    image: "https://kj1bcdn.b-cdn.net/media/65042/n.jpg",
   },
   {
     id: 5,
@@ -45,7 +45,7 @@ const products = [
     available: "100 kg",
     farmer: "Sunimal Perera",
     location: "Nuwara Eliya",
-    image: "https://source.unsplash.com/200x150/?apples",
+    image: "https://th.bing.com/th/id/OIP.at4Ylta_qj1J2ybQjf2TQgHaEU?w=600&h=350&rs=1&pid=ImgDetMain",
   },
 ];
 

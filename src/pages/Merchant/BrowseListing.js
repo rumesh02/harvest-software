@@ -3,12 +3,12 @@ import { Box, Container, Typography, TextField, Grid, Card, CardMedia } from "@m
 
 const products = [
   { name: "Cabbage", img: "/images/cabbage.jpg" },
-  { name: "Carrots", img: "/images/carrots.jpg" },
-  { name: "Long Beans", img: "/images/longbeans.jpg" },
+  { name: "Carrots", img: "/images/carrot.jpg" },
+  { name: "Long Beans", img: "/images/beans.jpg" },
   { name: "Red Onions", img: "/images/onions.jpg" },
-  { name: "Potatoes", img: "/images/potatoes.jpg" },
+  { name: "Potatoes", img: "/images/potato.jpg" },
   { name: "Spring Onions", img: "/images/springonions.jpg" },
-  { name: "Pineapple", img: "/images/pineapple.jpg" },
+  { name: "Pineapple", img: "/images/pineapples.webp" },
   { name: "Mangoes", img: "/images/mangoes.jpg" },
 ];
 

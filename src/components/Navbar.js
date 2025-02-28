@@ -7,7 +7,7 @@ const Navbar = () => {
       background: "#fff", borderRadius: "15px", padding: "20px 40px", boxShadow: "1px 1px 2px 4px rgba(0,0,0,0.1)", borderBottom: "1px solid #ddd"
     }}>
       {/* Left Side: Welcome Message */}
-      <h1 style={{ fontSize: "25px", fontWeight: "bold" }}>Welcome Back!</h1>
+      <h1 style={{ fontSize: "25px", fontWeight: "bold" }}>Hi Welcome Back!</h1>
 
       {/* Right Side: Links */}
       <div style={{ display: "flex", gap: "80px" }}>

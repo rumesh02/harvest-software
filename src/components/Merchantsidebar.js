@@ -21,10 +21,10 @@ const MerchantSidebar = () => {
   return (
     <div style={{ width: 250, background: "#f9f9f9", height: "100vh", padding: "20px", borderRadius: "10px" }}>
       {/* Logo and Title */}
-      <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        <img src="/images/logo.png" alt="Logo" width={50} />
-        <h2 style={{ fontSize: "18px", fontWeight: "bold" }}>Farm-to-Market</h2>
-      </div>
+     <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+      <img src="/images/logo.png" alt="Logo" width={50} />
+      <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>Farm-to-Market</h2>
+     </div>
 
       {/* Menu List */}
       <List>

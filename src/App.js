@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import FarmerLayout from "./layouts/FarmerLayout"; // ✅ New Farmer Layout
 import MerchantLayout from "./layouts/MerchantLayout"; // ✅ New Merchant Layout
 
+
 // Farmer Pages
 import Dashboard from "./pages/Farmer/Dashboard";
 import ListNewItem from "./pages/Farmer/ListNewItem";
@@ -27,12 +28,17 @@ import MerchantPayments from "./pages/Merchant/Payments";
 import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
 
+//home page
+import HomePage from "./pages/HomePage";
+
+
+
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        {/* Authentication Routes */}
-        <Route path="/login" element={<LoginPage />} />
+        <Router>
+    <Routes>
+      {/* Authentication Routes */}
+      <Route path="/login" element={<LoginPage/>} />
         <Route path="/register" element={<RegisterPage />} />
 
         {/* Farmer Routes (Uses FarmerLayout) */}
@@ -58,9 +64,18 @@ const App = () => {
           <Route path="messages" element={<MerchantMessages />} />
           <Route path="payments" element={<MerchantPayments />} />
         </Route>
-      </Routes>
+
+      {/* Home Page Route */}
+      <Route path="/homes" element={<HomePage />} />
+
+    </Routes>
     </Router>
+
   );
 };
+
+
+
+
 
 export default App;

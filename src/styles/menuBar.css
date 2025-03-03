@@ -1,0 +1,248 @@
+/* Menu Bar Container */
+.menu-bar-container {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Menu Icon (Hamburger Button) */
+.menu-icon {
+    width: 45px;
+    height: 35px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: linear-gradient(45deg, #ff416c, #111723); /* Modern gradient */
+    border-radius: 10px;
+    padding: 8px;
+    transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.menu-icon:hover {
+    transform: scale(1.1);
+    background: linear-gradient(45deg, #ff6b6b, #ff7eb3);
+}
+
+/* Each bar inside the menu icon */
+.bar {
+    width: 35px;
+    height: 4px;
+    background: white;
+    border-radius: 3px;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+/* When the icon is clicked, bars turn into an 'X' */
+.menu-icon.active .bar:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+    background: #111723; /* Yellowish shade */
+}
+
+.menu-icon.active .bar:nth-child(2) {
+    opacity: 1;
+    transform: translateY(-6px) rotate(-45deg);
+    background: #111723;
+}
+
+
+
+/* Modern Dropdown Menu */
+.menu-dropdown {
+    position: fixed;
+    top: 120px;
+    left: 20px;
+    width: 220px;
+    background: linear-gradient(135deg, #2c3e50, #4ca1af); /* Gradient background */
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    padding: 12px;
+    display: none;
+    flex-direction: column;
+    transform: translateY(-10px);
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Show dropdown with animation */
+.menu-dropdown.show {
+    display: flex;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Dropdown List */
+.menu-dropdown ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Dropdown Items */
+.menu-dropdown li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: white;
+    border-radius: 5px;
+    transition: background 0.3s ease-in-out, transform 0.2s;
+}
+
+/* Hover Effect for Dropdown Items */
+.menu-dropdown li:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+}
+
+/* Optional: Add Icons Before Each Menu Item */
+.menu-dropdown li::before {
+    font-size: 14px;
+    color: #f1c40f;
+}
+/* Menu Bar Container */
+.menu-bar-container {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Menu Icon (Hamburger Button) */
+.menu-icon {
+    width: 45px;
+    height: 35px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: linear-gradient(45deg, #ff416c, #111723);
+    border-radius: 10px;
+    padding: 8px;
+    transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.menu-icon:hover {
+    transform: scale(1.1);
+    background: linear-gradient(45deg, #ff6b6b, #1e1f22);
+}
+
+/* Each bar inside the menu icon */
+.bar {
+    width: 35px;
+    height: 4px;
+    background: white;
+    border-radius: 3px;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+/* Hood shape transformation */
+.menu-icon.active .bar:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+    background: #111723;
+}
+
+.menu-icon.active .bar:nth-child(2) {
+    opacity: 1;
+}
+
+.menu-icon.active .bar:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+    background: #111723;
+}
+
+/* Modern Dropdown Menu */
+.menu-dropdown {
+    position: fixed;
+    top: 120px;
+    left: 20px;
+    width: 220px;
+    background: linear-gradient(135deg, #2c3e50, #4ca1af);
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    padding: 12px;
+    display: none;
+    flex-direction: column;
+    transform: translateY(-10px);
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Show dropdown with animation */
+.menu-dropdown.show {
+    display: flex;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Dropdown List */
+.menu-dropdown ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Dropdown Items */
+.menu-dropdown li {
+    display: flex;
+    justify-content: center;
+    padding: 8px;
+}
+
+/* Styled Buttons */
+.menu-dropdown button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #ff4b2b, #ff416c); /* Modern gradient */
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+}
+
+/* Hover Effect */
+.menu-dropdown button:hover {
+    background: linear-gradient(135deg, #ff6b6b, #ff7eb3);
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(255, 75, 43, 0.4);
+}
+
+/* Optional: Add Icons Before Each Button */
+.menu-dropdown button::before {
+
+    font-size: 14px;
+    color: #f1c40f;
+    margin-right: 10px;
+}
+
+/* Menu Text inside the button */
+.menu-text {
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Hide text when menu is active */
+.menu-icon.active .menu-text {
+    display: none;
+}
+

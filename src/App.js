@@ -1,17 +1,16 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar"; // ✅ Existing Navbar
 import FarmerLayout from "./layouts/FarmerLayout"; // ✅ New Farmer Layout
 import MerchantLayout from "./layouts/MerchantLayout"; // ✅ New Merchant Layout
 
 
 // Farmer Pages
-import Dashboard from "./pages/Dashboard";
-import ListNewItem from "./pages/ListNewItem";
-import ViewListedItems from "./pages/ViewListedItems";
-import AcceptRejectBids from "./pages/AcceptRejectBids";
-import Messages from "./pages/Messages";
-import PaymentApprove from "./pages/PaymentApprove";
+import Dashboard from "./pages/Farmer/Dashboard";
+import ListNewItem from "./pages/Farmer/ListNewItem";
+import ViewListedItems from "./pages/Farmer/ViewListedItems";
+import AcceptRejectBids from "./pages/Farmer/AcceptRejectBids";
+import Messages from "./pages/Farmer/Messages";
+import PaymentApprove from "./pages/Farmer/PaymentApprove";
 import About from "./pages/About";
 import ContactUs from "./pages/ContactUs";
 import Help from "./pages/Help";

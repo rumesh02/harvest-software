@@ -1,16 +1,16 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar"; // ✅ Existing Navbar
 import FarmerLayout from "./layouts/FarmerLayout"; // ✅ New Farmer Layout
 import MerchantLayout from "./layouts/MerchantLayout"; // ✅ New Merchant Layout
 
+
 // Farmer Pages
-import Dashboard from "./pages/Dashboard";
-import ListNewItem from "./pages/ListNewItem";
-import ViewListedItems from "./pages/ViewListedItems";
-import AcceptRejectBids from "./pages/AcceptRejectBids";
-import Messages from "./pages/Messages";
-import PaymentApprove from "./pages/PaymentApprove";
+import Dashboard from "./pages/Farmer/Dashboard";
+import ListNewItem from "./pages/Farmer/ListNewItem";
+import ViewListedItems from "./pages/Farmer/ViewListedItems";
+import AcceptRejectBids from "./pages/Farmer/AcceptRejectBids";
+import Messages from "./pages/Farmer/Messages";
+import PaymentApprove from "./pages/Farmer/PaymentApprove";
 import About from "./pages/About";
 import ContactUs from "./pages/ContactUs";
 import Help from "./pages/Help";
@@ -28,12 +28,17 @@ import MerchantPayments from "./pages/Merchant/Payments";
 import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
 
+//home page
+import HomePage from "./pages/HomePage";
+
+
+
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        {/* Authentication Routes */}
-        <Route path="/login" element={<LoginPage />} />
+        <Router>
+    <Routes>
+      {/* Authentication Routes */}
+      <Route path="/login" element={<LoginPage/>} />
         <Route path="/register" element={<RegisterPage />} />
 
         {/* Farmer Routes (Uses FarmerLayout) */}
@@ -59,9 +64,18 @@ const App = () => {
           <Route path="messages" element={<MerchantMessages />} />
           <Route path="payments" element={<MerchantPayments />} />
         </Route>
-      </Routes>
+
+      {/* Home Page Route */}
+      <Route path="/homes" element={<HomePage />} />
+
+    </Routes>
     </Router>
+
   );
 };
+
+
+
+
 
 export default App;

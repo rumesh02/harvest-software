@@ -1,0 +1,193 @@
+/* Header Container Styles */
+.header-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 20px;
+    background-color: #333d29;
+    border-bottom: 2px solid #ddd;
+    z-index: 1000;
+    height: 50px; /* Ensures all elements fit */
+}
+
+/* Body Styles */
+body {
+    margin: 0;
+    padding: 0;
+}
+
+/* Buttons Container */
+.header-buttons {
+    display: flex;
+    gap: 12px;
+    position: absolute;
+    top: 50%;
+    right: 190px; /* Positioned slightly left from edge */
+    transform: translateY(-50%);
+}
+
+/* Login and Register Button Styles */
+.header-button {
+    padding: 6px 10px;
+    background-color: transparent;
+    border: 2px solid #fff;
+    color: #fff;
+    font-size: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Hover Effects */
+.header-button:hover {
+    background-color: #fff;
+    color: #333d29;
+    transform: scale(1.05);
+}
+
+/* Logo Section */
+.logo-section {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 35px;
+    margin-right: 8px;
+}
+
+.app-name {
+    font-size: 30px;
+    font-weight: bold;
+    color: gold;
+}
+
+/* Dark Mode Toggle */
+.dark-mode-switcher {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 28px; /* Smaller */
+    height: 14px; /* Smaller */
+    background-color: #ccc;
+    border-radius: 50px;
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    right: 140px; /* Moved slightly left */
+    transform: translateY(-50%);
+    transition: background-color 0.3s ease;
+}
+
+
+/* Moon Icon Styling */
+.moon-icon {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: opacity 0.3s ease;
+}
+
+/* Left Moon Icon (White) */
+.left-moon {
+    background-color: white;
+    left: 3px;
+    opacity: 1;
+}
+
+/* Right Moon Icon (Black) */
+.right-moon {
+    background-color: black;
+    right: 3px;
+    opacity: 0;
+}
+
+/* When Dark Mode is active */
+.dark-mode .dark-mode-switcher {
+    background-color: white;
+}
+
+/* When Dark Mode is active, right moon becomes visible */
+.dark-mode .right-moon {
+    opacity: 1;
+}
+
+/* When Dark Mode is active, left moon is hidden */
+.dark-mode .left-moon {
+    opacity: 0;
+}
+
+/* Language Selector */
+.language-selector {
+    position: absolute;
+    top: 50%;
+    right: 50px;
+    transform: translateY(-50%);
+}
+
+.language-selector select {
+    padding: 4px;
+    font-size: 11px; /* Compact */
+    border-radius: 6px;
+    background-color: transparent;
+    color:white;
+    height: 28px; /* Increased height */
+    min-width: 70px;
+}
+
+/* Dropdown options styling */
+.language-selector select option {
+    background-color: white;
+    color: black; /* Options text black */
+}
+
+/* Dark Mode Styling for Body */
+body.dark-mode {
+    background-color: #121212;
+    color: #111723;
+}
+
+/* Notification Container */
+.notification-container {
+    position: absolute;
+    top: 50%;
+    right: 20px; /* Positioned left of dark mode switcher */
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+/* Notification Icon */
+.notification-icon {
+    font-size: 22px; /* Adjust size */
+    color: white;
+    transition: color 0.3s ease;
+}
+
+.notification-icon:hover {
+    color: gold;
+}
+
+/* Notification Badge */
+.notification-badge {
+    position: absolute;
+    right: -5px;
+    top: -5px;
+    background-color: red;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}

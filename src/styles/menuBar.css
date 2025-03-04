@@ -15,7 +15,7 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    background: linear-gradient(45deg, #ff416c, #111723); /* Modern gradient */
+    background: linear-gradient(45deg, #ffc300, #111723); /* Modern gradient */
     border-radius: 10px;
     padding: 8px;
     transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
@@ -24,7 +24,7 @@
 
 .menu-icon:hover {
     transform: scale(1.1);
-    background: linear-gradient(45deg, #ff6b6b, #ff7eb3);
+    background: linear-gradient(45deg, #cfe1b9, #87986a);
 }
 
 /* Each bar inside the menu icon */
@@ -105,7 +105,7 @@
 /* Optional: Add Icons Before Each Menu Item */
 .menu-dropdown li::before {
     font-size: 14px;
-    color: #f1c40f;
+    color: #690500;
 }
 /* Menu Bar Container */
 .menu-bar-container {
@@ -124,7 +124,7 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    background: linear-gradient(45deg, #ff416c, #111723);
+    background: linear-gradient(45deg, #5e503f, #690500);
     border-radius: 10px;
     padding: 8px;
     transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
@@ -133,7 +133,7 @@
 
 .menu-icon:hover {
     transform: scale(1.1);
-    background: linear-gradient(45deg, #ff6b6b, #1e1f22);
+    background: linear-gradient(45deg, #babd8d, #1e1f22);
 }
 
 /* Each bar inside the menu icon */
@@ -166,7 +166,7 @@
     top: 120px;
     left: 20px;
     width: 220px;
-    background: linear-gradient(135deg, #2c3e50, #4ca1af);
+    background: linear-gradient(135deg, #000000, #eaf4f4);
     border-radius: 10px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     z-index: 999;
@@ -203,7 +203,7 @@
 .menu-dropdown button {
     width: 100%;
     padding: 12px;
-    background: linear-gradient(135deg, #ff4b2b, #ff416c); /* Modern gradient */
+    background: linear-gradient(135deg, #111d13, #5c8001); /* Modern gradient */
     border: none;
     border-radius: 5px;
     color: white;
@@ -215,9 +215,9 @@
 
 /* Hover Effect */
 .menu-dropdown button:hover {
-    background: linear-gradient(135deg, #ff6b6b, #ff7eb3);
+    background: linear-gradient(135deg, #90a955, #31310b);
     transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(255, 75, 43, 0.4);
+    box-shadow: 0 4px 8px rgb(10, 17, 40);
 }
 
 /* Optional: Add Icons Before Each Button */

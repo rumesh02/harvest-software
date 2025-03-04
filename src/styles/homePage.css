@@ -51,6 +51,7 @@ p {
     margin-top: 50px;
     flex-wrap: wrap;
     animation: fadeIn 1s ease-in;
+    margin-bottom: 20px;
 }
 
 /* Individual Tile Styling */
@@ -245,3 +246,4 @@ p {
         transform: translateY(0);
     }
 }
+

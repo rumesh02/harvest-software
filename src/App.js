@@ -30,6 +30,8 @@ import RegisterPage from "./app/RegisterPage";
 
 //home page
 import HomePage from "./pages/HomePage";
+import AboutUs from "./components/HOME/AboutUs";
+//import ContactUs from "./components/HOME/ContactUs";
 
 
 
@@ -41,6 +43,23 @@ const App = () => {
       <Route path="/login" element={<LoginPage/>} />
         <Route path="/register" element={<RegisterPage />} />
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+          {/* Protected Farmer Routes */}
+          <Route path="/" element={<ProtectedRoute><FarmerLayout /></ProtectedRoute>}>
+            <Route index element={<Dashboard />} />
+            <Route path="list-new-item" element={<ListNewItem />} />
+            <Route path="view-listed-items" element={<ViewListedItems />} />
+            <Route path="accept-reject-bids" element={<AcceptRejectBids />} />
+            <Route path="messages" element={<Messages />} />
+            <Route path="payment-approve" element={<PaymentApprove />} />
+            <Route path="about" element={<About />} />
+            <Route path="contact" element={<ContactUs />} />
+            <Route path="help" element={<Help />} />
+          </Route>
+=======
+>>>>>>> Stashed changes
         {/* Farmer Routes (Uses FarmerLayout) */}
         <Route path="/" element={<FarmerLayout />}>
           <Route index element={<Dashboard />} />
@@ -66,10 +85,20 @@ const App = () => {
         </Route>
 
       {/* Home Page Route */}
+<<<<<<< Updated upstream
       <Route path="/homes" element={<HomePage />} />
 
     </Routes>
     </Router>
+=======
+      <Route path="/home" element={<HomePage />} />
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/contact" element={<ContactUs />} />
+
+    </Routes>
+    </Router>
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
   );
 };

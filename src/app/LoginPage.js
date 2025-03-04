@@ -1,20 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';  
+import React from 'react';
+import { useAuth0 } from "@auth0/auth0-react";
+import { Link } from 'react-router-dom';  
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { FaGoogle } from "react-icons/fa"; // Google Icon
+import { FaGoogle } from "react-icons/fa";
 
 function LoginPage() {
-  const navigate = useNavigate();  
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleLogin = () => {
-    if (email === "user@example.com" && password === "password123") {
-      navigate("/dashboard"); // Redirect on success
-    } else {
-      alert("Invalid login credentials!");
-    }
-  };
+  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
 
   return (
     <div className="container-fluid vh-100">
@@ -36,66 +27,42 @@ function LoginPage() {
               <p className="text-muted">Welcome back! Please enter your details.</p>
             </div>
 
-            <form>
-              <div className="mb-3 text-start">
-                <label htmlFor="email" className="form-label fw-bold">Email</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  id="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+            {/* Show user details if logged in */}
+            {isAuthenticated ? (
+              <div className="text-center">
+                <h3>Welcome, {user.name}!</h3>
+                <p>{user.email}</p>
+                <button className="btn btn-danger w-100 mb-3" onClick={() => logout({ returnTo: window.location.origin })}>
+                  Logout
+                </button>
               </div>
+            ) : (
+              <form>
+                <button
+                  type="button"
+                  className="btn btn-success w-100 mb-3"
+                  onClick={() => loginWithRedirect()}
+                >
+                  Sign in with Auth0
+                </button>
 
-              <div className="mb-3 text-start">
-                <label htmlFor="password" className="form-label fw-bold">Password</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary w-100 mb-4 d-flex align-items-center justify-content-center gap-2"
+                  onClick={() => loginWithRedirect({ connection: "google-oauth2" })}
+                >
+                  <FaGoogle size={18} />
+                  Sign in with Google
+                </button>
 
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div className="form-check">
-                  <input type="checkbox" className="form-check-input" id="remember" />
-                  <label className="form-check-label" htmlFor="remember">Remember me</label>
-                </div>
-                <Link to="/forgot-password" className="text-success text-decoration-none">
-                  Forgot password?
-                </Link>
-              </div>
-
-              {/* Sign in button */}
-              <button
-                type="button"
-                className="btn btn-success w-100 mb-3"
-                style={{ backgroundColor: '#22C55E' }}
-                onClick={handleLogin}
-              >
-                Sign in
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-outline-secondary w-100 mb-4 d-flex align-items-center justify-content-center gap-2"
-              >
-                <FaGoogle size={18} />
-                Sign in with Google
-              </button>
-
-              <p className="text-center">
-                Don't have an account?{' '}
-                <Link to="/register" className="text-success text-decoration-none">
-                  Sign up for free!
-                </Link>
-              </p>
-            </form>
+                <p className="text-center">
+                  Don't have an account?{' '}
+                  <Link to="/register" className="text-success text-decoration-none">
+                    Sign up for free!
+                  </Link>
+                </p>
+              </form>
+            )}
           </div>
         </div>
       </div>

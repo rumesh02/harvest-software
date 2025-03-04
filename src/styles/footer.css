@@ -1,0 +1,154 @@
+/* Ensure the page takes full height and pushes the footer down */
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* Main content area to push the footer down */
+.content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* Make sure home page expands fully */
+.home-page-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    width: 100%; /* Full-width */
+    background-color: #2d2d2d;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-between; /* Spreads content */
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: 1200px; /* Limits max width */
+    margin: 0 auto;
+    padding: 10px 20px;
+}
+
+.footer-container h3 {
+    font-size: 1em;
+    margin: 10px;
+
+}
+
+.footer-container ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-container li {
+    margin-bottom: 8px;
+}
+
+.footer-container a {
+    color: #ccc;
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+    font-size: 0.9em;
+}
+
+.footer-container a:hover {
+    color: #fff;
+}
+
+/* Social Media Icons Styling */
+
+.social-media {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 60px;
+}
+
+.social-media a {
+    color: white;
+    font-size: 1.3em;
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    text-decoration: none;
+
+}
+
+/* Apply background colors for specific platforms */
+.social-media a.facebook {
+    background-color: #3b5998; /* Facebook Blue */
+}
+
+.social-media a.twitter {
+    background-color: #1DA1F2; /* Twitter Blue */
+}
+
+.social-media a.whatsapp {
+    background-color: #25D366; /* WhatsApp Green */
+}
+
+/* Icon Size & Color */
+.social-media a i {
+    font-size: 20px; /* Icon size */
+    color: white; /* Icon color */
+
+}
+
+/* Hover Effects */
+.social-media a:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+}
+
+/* Additional Styling */
+.copyright {
+    margin-top: 20px;
+    font-size: 0.7em;
+    opacity: 0.8;
+}
+
+.contact-info p {
+    font-size: 0.9em;
+    font-weight: normal;
+    color: #ccc;
+    margin: 20px;
+}
+
+
+.copyright {
+    margin-top: 20px;
+    font-size: 0.7em;
+    opacity: 0.8;
+}
+
+.quick-links {
+    margin-top: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .social-media {
+        margin-top: 10px;
+    }
+}
+

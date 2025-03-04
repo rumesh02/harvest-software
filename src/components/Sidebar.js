@@ -12,15 +12,10 @@ import {
   BoxArrowRight,
 } from "react-bootstrap-icons";
 
-const Sidebar = ({
-  userName = "Sunimal Perera",
-  userRole = "Farmer",
-  userAvatar = "./images/farmer.jpg",
-}) => {
+const Sidebar = ({ userRole = "Farmer" }) => {
   const location = useLocation();
   const navigate = useNavigate(); // Hook for navigation
-  const { logout } = useAuth0(); // Get logout function
-
+  const { logout, user, isAuthenticated } = useAuth0(); // Get Auth0 user details
   const [activePage, setActivePage] = useState(location.pathname);
 
   useEffect(() => {
@@ -48,7 +43,7 @@ const Sidebar = ({
       {/* Navigation Menu */}
       <nav className="flex-grow-1">
         <ul className="list-unstyled">
-          {[
+          {[ 
             { id: "/", label: "Dashboard", icon: <House size={18} />, path: "/" },
             { id: "/list-new-item", label: "List New Item", icon: <PlusCircle size={18} />, path: "/list-new-item" },
             { id: "/view-listed-items", label: "View Listed Items", icon: <ListUl size={18} />, path: "/view-listed-items" },
@@ -80,13 +75,13 @@ const Sidebar = ({
       {/* User Profile Section */}
       <div className="d-flex align-items-center mb-3 ps-2">
         <img
-          src={userAvatar || "/placeholder.svg"}
-          alt={userName}
+          src={isAuthenticated ? user.picture : "/placeholder.svg"} // Use user's profile picture
+          alt={isAuthenticated ? user.name : "User"}
           className="rounded-circle me-2"
           style={{ width: "40px", height: "40px", objectFit: "cover" }}
         />
         <div>
-          <h6 className="mb-0">{userName}</h6>
+          <h6 className="mb-0">{isAuthenticated ? user.name : "Guest"}</h6>
           <span className="badge bg-success rounded-pill">{userRole}</span>
         </div>
       </div>

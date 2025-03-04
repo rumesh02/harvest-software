@@ -1,22 +1,49 @@
-import React from "react";
+import { Link } from "react-router-dom"
 
-const Navbar = () => {
+const Navbar = ({ welcomeMessage = "Welcome Back!" }) => {
   return (
-    <nav style={{
-      display: "flex", justifyContent: "space-between", alignItems: "center",
-      background: "#fff", borderRadius: "15px", padding: "20px 40px", boxShadow: "1px 1px 2px 4px rgba(0,0,0,0.1)", borderBottom: "1px solid #ddd"
-    }}>
-      {/* Left Side: Welcome Message */}
-      <h1 style={{ fontSize: "25px", fontWeight: "bold" }}>Welcome Back!</h1>
+    <nav className="navbar navbar-expand-lg navbar-light bg-white rounded-3 shadow-sm mb-4 px-3 py-2">
+      <div className="container-fluid">
+        {/* Welcome Message */}
+        <h4 className="navbar-brand mb-0">{welcomeMessage}</h4>
 
-      {/* Right Side: Links */}
-      <div style={{ display: "flex", gap: "80px" }}>
-        <a href="/about" style={{ color: "#555", textDecoration: "none", fontSize: "18px" }}>About</a>
-        <a href="/contact" style={{ color: "#555", textDecoration: "none", fontSize: "18px" }}>Contact Us</a>
-        <a href="/help" style={{ color: "#555", textDecoration: "none", fontSize: "18px" }}>Help</a>
+        {/* Responsive Toggle Button */}
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        {/* Navigation Links */}
+        <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
+          <ul className="navbar-nav align-items-center">
+            <li className="nav-item">
+              <Link className="nav-link" to="/about">
+                About
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/contact">
+                Contact Us
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/help">
+                Help
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
     </nav>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar
+

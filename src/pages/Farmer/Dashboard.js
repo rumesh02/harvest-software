@@ -8,6 +8,7 @@ const Dashboard = ({
     { name: "Dabulla", value: 20 },
     { name: "Pettah", value: 35 },
     { name: "Galle", value: 10 },
+    { name: "Ampara", value: 6 },
     { name: "Peliyagoda", value: 20 },
     { name: "Kalutara", value: 15 },
   ],

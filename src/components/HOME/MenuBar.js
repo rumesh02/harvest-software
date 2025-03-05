@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import "../../styles/menuBar.css"; // Make sure the path is correct
-import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
+import "../../styles/menuBar.css";
+import { useNavigate } from "react-router-dom";
 
 const MenuBar = () => {
     const [menuVisible, setMenuVisible] = useState(false);
@@ -10,12 +10,33 @@ const MenuBar = () => {
     // Toggle the visibility of the menu and icon transformation
     const toggleMenu = () => {
         setMenuVisible(!menuVisible);
-        setIconActive(!iconActive); // Toggle the icon transformation
+        setIconActive(!iconActive);
     };
+
     // Navigation handler function
     const handleNavigation = (path) => {
-        navigate(path); // Navigate to the given path
-        setMenuVisible(false); // Close the dropdown after clicking
+        navigate(path);
+        setMenuVisible(false);
+        setIconActive(false);
+    };
+
+    // Scroll to About Us section
+    const handleScrollToAbout = () => {
+        const aboutSection = document.getElementById("about");
+        if (aboutSection) {
+            aboutSection.scrollIntoView({ behavior: "smooth" });
+        }
+        setMenuVisible(false);
+        setIconActive(false);
+    };
+
+    // Scroll to Contact Us section
+    const handleScrollToContact = () => {
+        const contactSection = document.getElementById("contact");
+        if (contactSection) {
+            contactSection.scrollIntoView({ behavior: "smooth" });
+        }
+        setMenuVisible(false);
         setIconActive(false);
     };
 
@@ -27,15 +48,13 @@ const MenuBar = () => {
                 <div className="bar"></div>
             </button>
 
-
-
             <div className={`menu-dropdown ${menuVisible ? "show" : ""}`}>
                 <ul>
                     <li>
-                        <button onClick={() => handleNavigation("/about")}>About Us</button>
+                        <button onClick={handleScrollToAbout}>About Us</button>
                     </li>
                     <li>
-                        <button onClick={() => handleNavigation("/contact")}>Contact Us</button>
+                        <button onClick={handleScrollToContact}>Contact Us</button>
                     </li>
                     <li>
                         <button onClick={() => handleNavigation("/services")}>Services</button>

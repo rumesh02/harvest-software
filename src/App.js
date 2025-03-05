@@ -22,6 +22,7 @@ import MerchantPayments from "./pages/Merchant/Payments";
 import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
 import HomePage from "./pages/HomePage";
+import AboutUs from "./components/HOME/AboutUs";
 
 const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";
 const clientId = "TteW47136eGLVWWVHIFxAiViqCnittRm";
@@ -40,6 +41,7 @@ const App = () => {
     <Auth0Provider domain={domain} clientId={clientId} authorizationParams={{ redirect_uri: window.location.origin }}>
       <Router>
         <Routes>
+          {/* Authentication Routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
@@ -55,6 +57,22 @@ const App = () => {
             <Route path="contact" element={<ContactUs />} />
             <Route path="help" element={<Help />} />
           </Route>
+
+          {/* Protected Merchant Routes */}
+          <Route path="/merchant" element={<ProtectedRoute><MerchantLayout /></ProtectedRoute>}>
+            <Route path="dashboard" element={<MerchantDashboard />} />
+            <Route path="listings" element={<MerchantBrowseListing />} />
+            <Route path="buy" element={<MerchantBuy />} />
+            <Route path="bids" element={<MerchantBids />} />
+            <Route path="purchase-history" element={<MerchantPurchaseHistory />} />
+            <Route path="messages" element={<MerchantMessages />} />
+            <Route path="payments" element={<MerchantPayments />} />
+          </Route>
+
+          {/* Home Page Route */}
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactUs />} />
 
           {/* Redirect home to login */}
           <Route path="*" element={<Navigate to="/login" />} />

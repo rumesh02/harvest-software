@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="850d7634-8321-4988-8135-54971d99911c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,6 +65,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="harvest-software" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -90,7 +97,13 @@
       <workItem from="1740972382058" duration="2223000" />
       <workItem from="1740987605643" duration="1336000" />
       <workItem from="1741005786597" duration="496000" />
-      <workItem from="1741006301519" duration="355000" />
+      <workItem from="1741006301519" duration="1795000" />
+      <workItem from="1741038387625" duration="5594000" />
+      <workItem from="1741045674882" duration="4798000" />
+      <workItem from="1741105254881" duration="8668000" />
+      <workItem from="1741118236929" duration="67000" />
+      <workItem from="1741159801947" duration="754000" />
+      <workItem from="1741168061161" duration="2201000" />
     </task>
     <servers />
   </component>
@@ -123,7 +136,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="main" />
+                        <option value="piyumi02" />
                       </list>
                     </value>
                   </entry>

@@ -36,71 +36,46 @@ import AboutUs from "./components/HOME/AboutUs";
 
 
 const App = () => {
-  return (
+    return (
         <Router>
-    <Routes>
-      {/* Authentication Routes */}
-      <Route path="/login" element={<LoginPage/>} />
-        <Route path="/register" element={<RegisterPage />} />
+            <Routes>
+                {/* Authentication Routes */}
+                <Route path="/login" element={<LoginPage/>} />
+                <Route path="/register" element={<RegisterPage />} />
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-          {/* Protected Farmer Routes */}
-          <Route path="/" element={<ProtectedRoute><FarmerLayout /></ProtectedRoute>}>
-            <Route index element={<Dashboard />} />
-            <Route path="list-new-item" element={<ListNewItem />} />
-            <Route path="view-listed-items" element={<ViewListedItems />} />
-            <Route path="accept-reject-bids" element={<AcceptRejectBids />} />
-            <Route path="messages" element={<Messages />} />
-            <Route path="payment-approve" element={<PaymentApprove />} />
-            <Route path="about" element={<About />} />
-            <Route path="contact" element={<ContactUs />} />
-            <Route path="help" element={<Help />} />
-          </Route>
-=======
->>>>>>> Stashed changes
-        {/* Farmer Routes (Uses FarmerLayout) */}
-        <Route path="/" element={<FarmerLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="list-new-item" element={<ListNewItem />} />
-          <Route path="view-listed-items" element={<ViewListedItems />} />
-          <Route path="accept-reject-bids" element={<AcceptRejectBids />} />
-          <Route path="messages" element={<Messages />} />
-          <Route path="payment-approve" element={<PaymentApprove />} />
-          <Route path="about" element={<About />} />
-          <Route path="contact" element={<ContactUs />} />
-          <Route path="help" element={<Help />} />
-        </Route>
+                {/* Farmer Routes (Uses FarmerLayout) */}
+                <Route path="/" element={<FarmerLayout />}>
+                    <Route index element={<Dashboard />} />
+                    <Route path="list-new-item" element={<ListNewItem />} />
+                    <Route path="view-listed-items" element={<ViewListedItems />} />
+                    <Route path="accept-reject-bids" element={<AcceptRejectBids />} />
+                    <Route path="messages" element={<Messages />} />
+                    <Route path="payment-approve" element={<PaymentApprove />} />
+                    <Route path="about" element={<About />} />
+                    <Route path="contact" element={<ContactUs />} />
+                    <Route path="help" element={<Help />} />
+                </Route>
 
-        {/* Merchant Routes (Uses MerchantLayout) */}
-        <Route path="/merchant" element={<MerchantLayout />}>
-          <Route path="dashboard" element={<MerchantDashboard />} />
-          <Route path="listings" element={<MerchantBrowseListing />} />
-          <Route path="buy" element={<MerchantBuy />} />
-          <Route path="bids" element={<MerchantBids />} />
-          <Route path="purchase-history" element={<MerchantPurchaseHistory />} />
-          <Route path="messages" element={<MerchantMessages />} />
-          <Route path="payments" element={<MerchantPayments />} />
-        </Route>
+                {/* Merchant Routes (Uses MerchantLayout) */}
+                <Route path="/merchant" element={<MerchantLayout />}>
+                    <Route path="dashboard" element={<MerchantDashboard />} />
+                    <Route path="listings" element={<MerchantBrowseListing />} />
+                    <Route path="buy" element={<MerchantBuy />} />
+                    <Route path="bids" element={<MerchantBids />} />
+                    <Route path="purchase-history" element={<MerchantPurchaseHistory />} />
+                    <Route path="messages" element={<MerchantMessages />} />
+                    <Route path="payments" element={<MerchantPayments />} />
+                </Route>
 
-      {/* Home Page Route */}
-<<<<<<< Updated upstream
-      <Route path="/homes" element={<HomePage />} />
+                {/* Home Page Route */}
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/about" element={<AboutUs />} />
+                <Route path="/contact" element={<ContactUs />} />
 
-    </Routes>
-    </Router>
-=======
-      <Route path="/home" element={<HomePage />} />
-      <Route path="/about" element={<AboutUs />} />
-      <Route path="/contact" element={<ContactUs />} />
+            </Routes>
+        </Router>
 
-    </Routes>
-    </Router>
->>>>>>> Stashed changes
->>>>>>> Stashed changes
-
-  );
+    );
 };
 
 

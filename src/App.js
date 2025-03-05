@@ -1,8 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import FarmerLayout from "./layouts/FarmerLayout"; // ✅ New Farmer Layout
-import MerchantLayout from "./layouts/MerchantLayout"; // ✅ New Merchant Layout
-
+import FarmerLayout from "./layouts/FarmerLayout";
+import MerchantLayout from "./layouts/MerchantLayout";
+import TransporterLayout from "./layouts/TransporterLayout";
 
 // Farmer Pages
 import Dashboard from "./pages/Farmer/Dashboard";
@@ -28,17 +28,21 @@ import MerchantPayments from "./pages/Merchant/Payments";
 import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
 
-//home page
+// Home Page
 import HomePage from "./pages/HomePage";
 
-
+// Transporter Pages
+import TransporterDashboard from "./pages/Transporter/TransporterDashboard";
+import Bookings from "./pages/Transporter/Bookings";
+import AddVehicle from "./pages/Transporter/AddVehicle";
+import EditListed from "./pages/Transporter/EditListed";
 
 const App = () => {
   return (
-        <Router>
-    <Routes>
-      {/* Authentication Routes */}
-      <Route path="/login" element={<LoginPage/>} />
+    <Router>
+      <Routes>
+        {/* Authentication Routes */}
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
         {/* Farmer Routes (Uses FarmerLayout) */}
@@ -65,17 +69,19 @@ const App = () => {
           <Route path="payments" element={<MerchantPayments />} />
         </Route>
 
-      {/* Home Page Route */}
-      <Route path="/homes" element={<HomePage />} />
+        {/* Home Page Route */}
+        <Route path="/homes" element={<HomePage />} />
 
-    </Routes>
+        {/* Transporter Routes (Uses TransporterLayout) */}
+        <Route path="/transporter" element={<TransporterLayout />}>
+          <Route path="dashboard" element={<TransporterDashboard />} />
+          <Route path="addVehicle" element={<AddVehicle />} />
+          <Route path="bookings" element={<Bookings />} />
+          <Route path="editListed" element={<EditListed />} />
+        </Route>
+      </Routes>
     </Router>
-
   );
 };
-
-
-
-
 
 export default App;

@@ -1,0 +1,90 @@
+/* Page container */
+.container {
+    padding: 20px;
+    background-color: #e3f2fd; /* Light blue background */
+    min-height: 100vh;
+    text-align: center;
+  }
+  
+  /* Title styling */
+  .title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  /* Grid layout */
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust for responsiveness */
+    gap: 20px;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  /* Card styling */
+  .card {
+    background-color: #f0f9ff;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .card:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Image container */
+  .image-container {
+    background-color: white;
+    padding: 10px;
+ 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 150px;
+    height: 150px;
+    margin: auto;
+  }
+  
+  /* Image styling */
+  .lorry-image {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 10px;
+  }
+  
+  /* Divider */
+  .divider {
+    border: 0;
+    height: 1px;
+    background: gray;
+    margin: 10px 0;
+  }
+  
+  /* Text styling */
+  .lorry-type {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  /* Edit button */
+  .edit-button {
+    background-color: #1a1a3d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 16px;
+    margin-top: 10px;
+  }
+  
+  .edit-button:hover {
+    background-color: #333366;
+  }
+  

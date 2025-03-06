@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import Header from "../components/HOME/Header"; // Import the Header
+import Header from "../components/HOME/Header";
 import MenuBar from "../components/HOME/MenuBar";
+import AboutUs from "../components/HOME/AboutUs";
+import ContactUs from "../components/HOME/ContactUs";
 import bgImage from "../assets/bg.png";
 import farmerHome from "../assets/farmer home.jpg";
 import merchantHome from "../assets/merchant home.jpeg";
 import transporterHome from "../assets/transporter home.jpeg";
 import "../styles/homePage.css";
 import { FaFacebookF, FaTwitter, FaWhatsapp } from "react-icons/fa";
-//import "../styles/footer.css";
 
 const HomePage = () => {
     const [language, setLanguage] = useState("English");
@@ -27,34 +28,47 @@ const HomePage = () => {
             />
             <div className="content">
                 <h1>Welcome to AgriLink!</h1>
-                <p>Your One-Stop Platform for Connecting Farmers, Merchants, and Transporters – Ensuring a Seamless Harvest Journey!</p>
+                <p>Your One-Stop Platform for Connecting Farmers, Merchants, and Transporters – Ensuring a Seamless
+                    Harvest Journey!</p>
 
                 <div className="tile-container">
                     <div className="tile">
                         <img src={farmerHome} alt="Farmer" className="tile-image"/>
                         <h3>Farmers</h3>
-                        <p>Empowering you by Maximizing your harvest's value – List your produce, get the best bids, and sell directly to trusted merchants!</p>
+                        <p>Empowering you by Maximizing your harvest's value – List your produce, get the best bids, and
+                            sell directly to trusted merchants!</p>
                         <a href="/signup?role=farmer" className="btn">Get Started</a>
                     </div>
                     <div className="tile">
                         <img src={merchantHome} alt="Merchant" className="tile-image"/>
-                        <h3>Merchant</h3>
-                        <p>Access a wide variety of fresh harvests, place bids with ease, arrange seamless delivery and expand your business – all in one place!</p>
+                        <h3>Merchants</h3>
+                        <p>Access a wide variety of fresh harvests, place bids with ease, arrange seamless delivery and
+                            expand your business – all in one place!</p>
                         <a href="/signup?role=merchant" className="btn">Get Started</a>
                     </div>
                     <div className="tile">
                         <img src={transporterHome} alt="Transporter" className="tile-image"/>
                         <h3>Transporters</h3>
-                        <p>Expand your transport services by connecting with farmers and merchants – secure new delivery requests every day.</p>
+                        <p>Expand your transport services by connecting with farmers and merchants – secure new delivery
+                            requests every day.</p>
                         <a href="/signup?role=transporter" className="btn">Get Started</a>
                     </div>
+                </div>
+
+                {/* About Us Section with ID for scrolling */}
+                <div id="about">
+                    <AboutUs/>
+                </div>
+
+                <div id="contact">
+                    <ContactUs/>
                 </div>
 
                 <MenuBar/>
             </div>
 
             <footer className="footer">
-                <div className="footer-container">
+            <div className="footer-container">
                     <div className="quick-links">
                         <h3>Quick Links</h3>
                         <ul>

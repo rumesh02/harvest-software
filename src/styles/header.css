@@ -20,34 +20,7 @@ body {
     padding: 0;
 }
 
-/* Buttons Container */
-.header-buttons {
-    display: flex;
-    gap: 12px;
-    position: absolute;
-    top: 50%;
-    right: 190px; /* Positioned slightly left from edge */
-    transform: translateY(-50%);
-}
 
-/* Login and Register Button Styles */
-.header-button {
-    padding: 6px 10px;
-    background-color: transparent;
-    border: 2px solid #fff;
-    color: #fff;
-    font-size: 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-/* Hover Effects */
-.header-button:hover {
-    background-color: #fff;
-    color: #333d29;
-    transform: scale(1.05);
-}
 
 /* Logo Section */
 .logo-section {
@@ -155,39 +128,3 @@ body.dark-mode {
 }
 
 /* Notification Container */
-.notification-container {
-    position: absolute;
-    top: 50%;
-    right: 20px; /* Positioned left of dark mode switcher */
-    transform: translateY(-50%);
-    cursor: pointer;
-}
-
-/* Notification Icon */
-.notification-icon {
-    font-size: 22px; /* Adjust size */
-    color: white;
-    transition: color 0.3s ease;
-}
-
-.notification-icon:hover {
-    color: gold;
-}
-
-/* Notification Badge */
-.notification-badge {
-    position: absolute;
-    right: -5px;
-    top: -5px;
-    background-color: red;
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid white;
-}

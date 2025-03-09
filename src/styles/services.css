@@ -1,10 +1,10 @@
-/* Contact Us Section Styling */
-.contact-us-container {
+/* Services Section Styling */
+.services-container {
     width: 100%;
     padding: 50px 20px;
     margin-bottom: 20px;
-    background: linear-gradient(to right, #22333b, #0c1229);
-    color: #ffffff; /* Gold accent */
+    background: linear-gradient(to right, #3F51B5, #719e45);
+    color: white;
     text-align: center;
     display: flex;
     justify-content: center;
@@ -16,12 +16,12 @@
 }
 
 /* When in view, fade in and move up */
-.contact-us-container.animate {
+.services-container.animate {
     opacity: 1;
     transform: translateY(0);
 }
 
-.contact-us-content {
+.services-content {
     display: flex;
     flex-wrap: wrap;
     max-width: 1200px;
@@ -29,7 +29,7 @@
     text-align: left;
 }
 
-/* Text section styling */
+/* Animation for text */
 .text-content {
     flex: 1;
     padding: 20px;
@@ -38,39 +38,16 @@
     transition: opacity 1s ease-out, transform 1s ease-out;
 }
 
-.contact-us-container.animate .text-content {
+.services-container.animate .text-content {
     opacity: 1;
     transform: translateX(0);
 }
 
-/* Elegant typography */
-.text-content h2 {
-    margin-bottom: 15px;
-    color: #f8b400; /* Gold */
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    font-weight: 700;
-    font-family: 'Poppins', sans-serif;
-    animation: glowText 2s infinite alternate ease-in-out;
-}
-
+/* Pulsing effect for heading */
 .text-content h2 {
     font-size: 2.5em;
+    margin-bottom: 10px;
     animation: pulse 2s infinite alternate ease-in-out;
-}
-
-/* Gold highlight effect on hover */
-.text-content ul li {
-    font-size: 1.2em;
-    list-style: none;
-    margin: 10px 0;
-    color: #dcdcdc; /* Soft silver */
-    font-family: 'Poppins', sans-serif;
-    transition: color 0.3s ease;
-}
-
-.text-content ul li:hover {
-    color: #f5c518;
 }
 
 /* Floating animation for image */
@@ -83,8 +60,7 @@
     transition: opacity 1s ease-out, transform 1s ease-out;
 }
 
-/* Make image appear with float effect */
-.contact-us-container.animate .image-content {
+.services-container.animate .image-content {
     opacity: 1;
     transform: translateX(0);
     animation: floatUpDown 4s infinite ease-in-out;
@@ -92,14 +68,14 @@
 
 .image-content img {
     width: 90%;
-    max-width: 450px;
+    max-width: 500px;
     border-radius: 15px;
-    box-shadow: 0px 6px 15px rgba(255, 215, 0, 0.4); /* Gold glow */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .contact-us-content {
+    .services-content {
         flex-direction: column;
         text-align: center;
     }
@@ -115,12 +91,12 @@
 }
 
 /* Keyframes for dynamic effects */
-@keyframes glowText {
+@keyframes pulse {
     from {
-        text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        transform: scale(1);
     }
     to {
-        text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        transform: scale(1.05);
     }
 }
 

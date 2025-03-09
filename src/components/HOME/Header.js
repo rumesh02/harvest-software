@@ -29,11 +29,6 @@ const Header = ({ language, setLanguage }) => {
                 <h1 className="app-name">AgriLink</h1>
             </div>
 
-            {/* Notification Icon */}
-            <div className="notification-container">
-                <FaBell className="notification-icon" />
-                {notifications > 0 && <span className="notification-badge">{notifications}</span>}
-            </div>
 
             {/* Dark Mode Switcher */}
             <div className="dark-mode-switcher" onClick={toggleDarkMode}>
@@ -44,11 +39,6 @@ const Header = ({ language, setLanguage }) => {
             {/* Language Selector */}
             <LanguageSelector language={language} setLanguage={setLanguage} />
 
-            {/* Login and Register Buttons */}
-            <div className="header-buttons">
-                <button className="header-button">Login</button>
-                <button className="header-button">Sign Up</button>
-            </div>
         </header>
     );
 };

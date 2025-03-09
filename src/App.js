@@ -23,6 +23,7 @@ import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
 import HomePage from "./pages/HomePage";
 import AboutUs from "./components/HOME/AboutUs";
+import Services from "./components/HOME/Services";
 
 const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";
 const clientId = "TteW47136eGLVWWVHIFxAiViqCnittRm";
@@ -55,6 +56,7 @@ const App = () => {
                         <Route path="payment-approve" element={<PaymentApprove />} />
                         <Route path="about" element={<About />} />
                         <Route path="contact" element={<ContactUs />} />
+                        <Route path="/services" element={<Services />} />
                         <Route path="help" element={<Help />} />
                     </Route>
 
@@ -73,6 +75,8 @@ const App = () => {
                     <Route path="/home" element={<HomePage />} />
                     <Route path="/about" element={<AboutUs />} />
                     <Route path="/contact" element={<ContactUs />} />
+                    <Route path="/service" element={<Services />} />
+
 
                     {/* Redirect all unmatched routes to login */}
                     <Route path="*" element={<Navigate to="/login" />} />

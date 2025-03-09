@@ -54,7 +54,7 @@ const Sidebar = ({ userRole = "Farmer" }) => {
             <li key={item.id} className="mb-2">
               <Link
                 to={item.path}
-                className={`d-flex align-items-center text-decoration-none rounded-pill py-2 px-3 w-100 justify-content-center ${
+                className={`d-flex align-items-center text-decoration-none rounded-pill py-2 px-3 w-100 justify-content-start ${
                   activePage === item.path ? "bg-text-dark fw-bold" : "text-dark"
                 }`}
                 style={{
@@ -63,7 +63,7 @@ const Sidebar = ({ userRole = "Farmer" }) => {
                 }}
               >
                 <span className="me-2">{item.icon}</span>
-                <span className="text-center flex-grow-1">{item.label}</span>
+                <span className="text-start flex-grow-1">{item.label}</span>
               </Link>
             </li>
           ))}
@@ -89,13 +89,13 @@ const Sidebar = ({ userRole = "Farmer" }) => {
       {/* Settings and Logout */}
       <ul className="list-unstyled">
         <li className="mb-2">
-          <Link to="/settings" className="d-flex align-items-center text-decoration-none text-dark py-2 px-3">
+          <Link to="/settings" className="d-flex align-items-center text-decoration-none text-dark py-2 px-3 justify-content-start">
             <Gear size={18} className="me-2" />
             <span>Settings</span>
           </Link>
         </li>
         <li>
-          <button onClick={handleLogout} className="d-flex align-items-center text-decoration-none text-dark py-2 px-3 w-100 border-0 bg-transparent">
+          <button onClick={handleLogout} className="d-flex align-items-center text-decoration-none text-dark py-2 px-3 w-100 border-0 bg-transparent justify-content-start">
             <BoxArrowRight size={18} className="me-2" />
             <span>Log Out</span>
           </button>

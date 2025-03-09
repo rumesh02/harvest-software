@@ -1,5 +1,5 @@
 import React from "react";
-import { List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { List, ListItemButton, ListItemIcon, ListItemText, Button } from "@mui/material";
 import { Home, ShoppingCart, Gavel, History, Chat, Payment, Settings, ExitToApp } from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -27,63 +27,87 @@ const MerchantSidebar = () => {
   };
 
   return (
-    <div style={{ width: 250, background: "#f9f9f9", height: "100vh", padding: "20px", borderRadius: "10px" }}>
-      {/* Logo and Title */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-        <img src="/images/logo.png" alt="Logo" width={50} />
-        <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>Farm-to-Market</h2>
-      </div>
+    <div style={{ width: 250, background: "#f9f9f9", height: "100vh", padding: "20px", borderRadius: "10px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      {/* Top Section - Logo and Menu */}
+      <div>
+        {/* Logo and Title */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+          <img src="/images/logo.png" alt="Logo" width={50} />
+          <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>Farm-to-Market</h2>
+        </div>
 
-      {/* Menu List */}
-      <List>
-        {menuItems.map((item) => (
-          <ListItemButton
-            key={item.text}
-            component={Link}
-            to={item.path}
-            sx={{
-              borderRadius: "8px",
-              marginBottom: "8px",
-              backgroundColor: location.pathname === item.path ? "#FFEDD5" : "transparent",
-              "&:hover": { backgroundColor: "#FDE68A" },
-            }}
-          >
-            <ListItemIcon sx={{ color: location.pathname === item.path ? "#D97706" : "#6B7280" }}>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText
-              primary={item.text}
-              primaryTypographyProps={{
-                fontWeight: location.pathname === item.path ? "bold" : "normal",
-                color: location.pathname === item.path ? "#D97706" : "#374151"
+        {/* Menu List */}
+        <List>
+          {menuItems.map((item) => (
+            <ListItemButton
+              key={item.text}
+              component={Link}
+              to={item.path}
+              sx={{
+                borderRadius: "8px",
+                marginBottom: "8px",
+                backgroundColor: location.pathname === item.path ? "#FFEDD5" : "transparent",
+                "&:hover": { backgroundColor: "#FFF8EC" },
               }}
-            />
-          </ListItemButton>
-        ))}
-      </List>
-
-      {/* Divider */}
-      <hr style={{ margin: "20px 0", border: "1px solid #E5E7EB" }} />
-
-      {/* Profile Section */}
-      <div style={{ textAlign: "center" }}>
-        <Badge overlap="circular" badgeContent={"Merchant"} color="primary">
-          <Avatar src={isAuthenticated ? user.picture : "/images/placeholder.svg"} sx={{ width: 56, height: 56, margin: "0 auto" }} />
-        </Badge>
-        <h4 style={{ marginTop: 10, fontSize: "16px", fontWeight: "bold" }}>{isAuthenticated ? user.name : "Guest"}</h4>
+            >
+              <ListItemIcon sx={{ color: location.pathname === item.path ? "#D97706" : "#6B7280" }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={item.text}
+                primaryTypographyProps={{
+                  fontWeight: location.pathname === item.path ? "bold" : "normal",
+                  color: location.pathname === item.path ? "#D97706" : "#374151"
+                }}
+              />
+            </ListItemButton>
+          ))}
+        </List>
       </div>
 
-      {/* Settings and Logout */}
-      <List>
-        <ListItemButton component={Link} to="/merchant/settings" sx={{ borderRadius: "8px", marginTop: "10px" }}>
-          <ListItemIcon><Settings /></ListItemIcon>
-          <ListItemText primary="Settings" />
-        </ListItemButton>
-        <ListItemButton onClick={handleLogout} sx={{ borderRadius: "8px", marginTop: "5px" }}>
-          <ListItemIcon><ExitToApp /></ListItemIcon>
-          <ListItemText primary="Log Out" />
-        </ListItemButton>
-      </List>
+      {/* Bottom Section - Profile, Settings, Logout, and Confirm Order Button */}
+      <div>
+        {/* Divider */}
+        <hr style={{ margin: "20px 0", border: "1px solid #E5E7EB" }} />
+
+        {/* Profile Section */}
+        <div style={{ textAlign: "center", marginBottom: "15px" }}>
+          <Badge overlap="circular" badgeContent={"Merchant"} color="primary">
+            <Avatar src={isAuthenticated ? user.picture : "/images/placeholder.svg"} sx={{ width: 56, height: 56, margin: "0 auto" }} />
+          </Badge>
+          <h4 style={{ marginTop: 10, fontSize: "16px", fontWeight: "bold" }}>{isAuthenticated ? user.name : "Guest"}</h4>
+        </div>
+
+        {/* Settings and Logout */}
+        <List>
+          <ListItemButton component={Link} to="/merchant/settings" sx={{ borderRadius: "8px", marginTop: "10px" }}>
+            <ListItemIcon><Settings /></ListItemIcon>
+            <ListItemText primary="Settings" />
+          </ListItemButton>
+          <ListItemButton onClick={handleLogout} sx={{ borderRadius: "8px", marginTop: "5px" }}>
+            <ListItemIcon><ExitToApp /></ListItemIcon>
+            <ListItemText primary="Log Out" />
+          </ListItemButton>
+        </List>
+
+        {/* Confirm Order Button */}
+        <Button
+          variant="contained"
+          color="warning"
+          sx={{
+            backgroundColor: "#FFF8EC", // Default Warning Color (Amber)#FFF8EC
+            "&:hover": {
+              backgroundColor: "#FFC107", // Light pastel hover effect
+            },
+            width: "100%",
+            marginTop: "10px",
+            borderRadius: "8px",
+            fontWeight: "bold"
+          }}
+        >
+          Confirm Order
+        </Button>
+      </div>
     </div>
   );
 };

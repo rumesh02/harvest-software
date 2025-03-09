@@ -1,8 +1,8 @@
 // components/HarvestCard.js
 import React from "react";
-import { Card, CardContent, CardMedia, Typography, Button } from "@mui/material";
+import { Card, CardContent, CardMedia, Typography, Button, Box } from "@mui/material";
 
-const HarvestCard = ({ image, name, price, weight }) => {
+const HarvestCard = ({ image, name, price, weight, onEdit, onRemove }) => {
   return (
     <Card
       sx={{
@@ -34,14 +34,24 @@ const HarvestCard = ({ image, name, price, weight }) => {
         <Typography variant="body1" color="text.secondary">
           Available: {weight} kg
         </Typography>
-        <Button
-          variant="contained"
-          fullWidth
-          sx={{ mt: 2, bgcolor: "#4CAF50", "&:hover": { bgcolor: "#388E3C" } }}
-          onClick={() => alert(`Viewing details for ${name}`)}
-        >
-          View More Details
-        </Button>
+
+        {/* Edit and Remove Buttons in One Line with Green Colors */}
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+          <Button
+            variant="contained"
+            sx={{ bgcolor: "#4CAF50", "&:hover": { bgcolor: "#388E3C" }, flex: 1, mr: 1 }} // Light Green Edit Button
+            onClick={() => onEdit(name)}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="contained"
+            sx={{ bgcolor: "#4CAF50", "&:hover": { bgcolor: "#388E3C" }, flex: 1 }} // Dark Green Remove Button
+            onClick={() => onRemove(name)}
+          >
+            Remove
+          </Button>
+        </Box>
       </CardContent>
     </Card>
   );

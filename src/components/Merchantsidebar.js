@@ -1,7 +1,8 @@
 import React from "react";
 import { List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { Home, ShoppingCart, Gavel, History, Chat, Payment, Settings, ExitToApp } from "@mui/icons-material";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
 
@@ -17,14 +18,21 @@ const menuItems = [
 
 const MerchantSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout, user, isAuthenticated } = useAuth0();
+
+  const handleLogout = () => {
+    logout({ returnTo: window.location.origin });
+    navigate("/login");
+  };
 
   return (
     <div style={{ width: 250, background: "#f9f9f9", height: "100vh", padding: "20px", borderRadius: "10px" }}>
       {/* Logo and Title */}
-     <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-      <img src="/images/logo.png" alt="Logo" width={50} />
-      <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>Farm-to-Market</h2>
-     </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+        <img src="/images/logo.png" alt="Logo" width={50} />
+        <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>Farm-to-Market</h2>
+      </div>
 
       {/* Menu List */}
       <List>
@@ -60,18 +68,18 @@ const MerchantSidebar = () => {
       {/* Profile Section */}
       <div style={{ textAlign: "center" }}>
         <Badge overlap="circular" badgeContent={"Merchant"} color="primary">
-          <Avatar src="/images/nimal.jpg" sx={{ width: 56, height: 56, margin: "0 auto" }} />
+          <Avatar src={isAuthenticated ? user.picture : "/images/placeholder.svg"} sx={{ width: 56, height: 56, margin: "0 auto" }} />
         </Badge>
-        <h4 style={{ marginTop: 10, fontSize: "16px", fontWeight: "bold" }}>Sunimal Perera</h4>
+        <h4 style={{ marginTop: 10, fontSize: "16px", fontWeight: "bold" }}>{isAuthenticated ? user.name : "Guest"}</h4>
       </div>
 
       {/* Settings and Logout */}
       <List>
-        <ListItemButton sx={{ borderRadius: "8px", marginTop: "10px" }}>
+        <ListItemButton component={Link} to="/merchant/settings" sx={{ borderRadius: "8px", marginTop: "10px" }}>
           <ListItemIcon><Settings /></ListItemIcon>
           <ListItemText primary="Settings" />
         </ListItemButton>
-        <ListItemButton sx={{ borderRadius: "8px", marginTop: "5px" }}>
+        <ListItemButton onClick={handleLogout} sx={{ borderRadius: "8px", marginTop: "5px" }}>
           <ListItemIcon><ExitToApp /></ListItemIcon>
           <ListItemText primary="Log Out" />
         </ListItemButton>

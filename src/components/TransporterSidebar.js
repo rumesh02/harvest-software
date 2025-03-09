@@ -5,6 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
 import { PenFill, PlusCircleFill } from "react-bootstrap-icons";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const menuItems = [
   { text: "Dashboard", icon: <Home />, path: "dashboard" },
@@ -17,14 +18,15 @@ const menuItems = [
 
 const TransporterSidebar = () => {
   const location = useLocation();
+  const { user, logout } = useAuth0();
 
   return (
     <div style={{ width: 300, background: "#f9f9f9", height: "100vh", padding: "20px", borderRadius: "10px" }}>
       {/* Logo and Title */}
-     <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-      <img src="/images/logo.png" alt="Logo" width={50} />
-      <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>Farm-to-Market</h2>
-     </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+        <img src="/images/logo.png" alt="Logo" width={50} />
+        <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>Farm-to-Market</h2>
+      </div>
 
       {/* Menu List */}
       <List>
@@ -60,9 +62,9 @@ const TransporterSidebar = () => {
       {/* Profile Section */}
       <div style={{ textAlign: "center" }}>
         <Badge overlap="circular" badgeContent={"Transporter"} color="primary">
-          <Avatar src="/images/nimal.jpg" sx={{ width: 56, height: 56, margin: "0 auto" }} />
+          <Avatar src={user?.picture} sx={{ width: 56, height: 56, margin: "0 auto" }} />
         </Badge>
-        <h4 style={{ marginTop: 10, fontSize: "16px", fontWeight: "bold" }}>Sunimal Perera</h4>
+        <h4 style={{ marginTop: 10, fontSize: "16px", fontWeight: "bold" }}>{user?.name}</h4>
       </div>
 
       {/* Settings and Logout */}
@@ -71,7 +73,7 @@ const TransporterSidebar = () => {
           <ListItemIcon><Settings /></ListItemIcon>
           <ListItemText primary="Settings" />
         </ListItemButton>
-        <ListItemButton sx={{ borderRadius: "8px", marginTop: "5px" }}>
+        <ListItemButton sx={{ borderRadius: "8px", marginTop: "5px" }} onClick={() => logout({ returnTo: window.location.origin })}>
           <ListItemIcon><ExitToApp /></ListItemIcon>
           <ListItemText primary="Log Out" />
         </ListItemButton>

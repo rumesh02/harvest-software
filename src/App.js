@@ -84,17 +84,6 @@ const Auth0ProviderWithRedirect = ({ children }) => {
     );
 };
 
-// Main app component
-const App = () => {
-    return (
-        <Auth0ProviderWithRedirect>
-            <Router>
-                <AppRoutes />
-            </Router>
-        </Auth0ProviderWithRedirect>
-    );
-};
-
 // Routes component with role handling
 const AppRoutes = () => {
     const { isAuthenticated, isLoading } = useAuth0();
@@ -174,6 +163,17 @@ const AppRoutes = () => {
             {/* Redirect unknown routes to home */}
             <Route path="*" element={<Navigate to="/home" />} />
         </Routes>
+    );
+};
+
+// Main app component
+const App = () => {
+    return (
+        <Auth0ProviderWithRedirect>
+            <Router>
+                <AppRoutes />
+            </Router>
+        </Auth0ProviderWithRedirect>
     );
 };
 

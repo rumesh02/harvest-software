@@ -14,7 +14,6 @@ import Messages from "./pages/Farmer/Messages";
 import PaymentApprove from "./pages/Farmer/PaymentApprove";
 import OrderPage from "./pages/Farmer/Order";
 
-
 // Merchant Pages
 import MerchantDashboard from "./pages/Merchant/MerchantDashboard";
 import MerchantBrowseListing from "./pages/Merchant/BrowseListing";
@@ -30,6 +29,7 @@ import Bookings from "./pages/Transporter/Bookings";
 import AddVehicle from "./pages/Transporter/AddVehicle";
 import Inbox from "./pages/Transporter/Inbox";
 import EditListed from "./pages/Transporter/EditListed";
+import Paymentapproves from "./pages/Transporter/PaymentApproves"; // Added back the missing route
 
 // General Pages
 import About from "./pages/About";
@@ -158,6 +158,7 @@ const AppRoutes = () => {
                 <Route path="bookings" element={<Bookings />} />
                 <Route path="editListed" element={<EditListed />} />
                 <Route path="inbox" element={<Inbox />} />
+                <Route path="payments" element={<Paymentapproves />} /> {/* Both routes included */}
             </Route>
 
             {/* Other Public Routes */}

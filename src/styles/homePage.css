@@ -25,16 +25,19 @@ html, body {
 /* Main Content */
 .content {
     flex-grow: 1;
-    margin-top: 60px;
+    margin-top: 80px;
     padding: 20px;
     text-align: center;
     color: #4CAF50;
 }
 
 /* Main Heading */
+
 h1 {
-    font-size: 3em;
-    margin-bottom: 20px;
+        font-size: 3em;
+        margin: 0 auto;
+        text-align: center;
+        width: 100%; /* Ensure it takes full width */
 }
 
 /* Paragraph Styling */

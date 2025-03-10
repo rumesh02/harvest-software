@@ -27,6 +27,7 @@ import TransporterDashboard from "./pages/Transporter/TransporterDashboard";
 import Bookings from "./pages/Transporter/Bookings";
 import AddVehicle from "./pages/Transporter/AddVehicle";
 import EditListed from "./pages/Transporter/EditListed";
+import Paymentapproves from "./pages/Transporter/PaymentApproves";
 
 // General Pages
 import About from "./pages/About";
@@ -153,6 +154,7 @@ const AppRoutes = () => {
                 <Route path="addVehicle" element={<AddVehicle />} />
                 <Route path="bookings" element={<Bookings />} />
                 <Route path="editListed" element={<EditListed />} />
+                <Route path="payments" element={<Paymentapproves />} />
             </Route>
 
             {/* Other Public Routes */}

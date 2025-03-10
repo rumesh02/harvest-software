@@ -83,7 +83,9 @@ const ListNewItem = () => {
           <div className="col-md-6">
             <label className="form-label">Minimum Bid Price</label>
             <div className="input-group">
-              <span className="input-group-text">Rs.</span>
+              <span className="input-group-text" style={{ fontSize: "14px", height: "38px" }}>
+                Rs.
+              </span>
               <input
                 type="number"
                 className="form-control"
@@ -105,7 +107,9 @@ const ListNewItem = () => {
                   setFormData({ ...formData, availableWeight: e.target.value })
                 }
               />
-              <span className="input-group-text">Kg</span>
+              <span className="input-group-text" style={{ fontSize: "14px", height: "38px" }}>
+                Kg
+              </span>
             </div>
           </div>
         </div>
@@ -129,8 +133,17 @@ const ListNewItem = () => {
               accept="image/*"
               onChange={handleFileChange}
             />
-            <label htmlFor="fileUpload" style={{ color: "black", background: "transparent", border: "none", cursor: "pointer" }}>
-             Click to Upload
+            <label
+              htmlFor="fileUpload"
+              style={{
+                color: "black",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              Click to Upload
             </label>
             <p className="mt-2 text-muted">or drag and drop your files here</p>
           </div>

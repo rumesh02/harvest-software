@@ -3,7 +3,7 @@ import React from "react";
 const AcceptRejectBids = () => {
   return (
     <div className="p-6 w-full overflow-x-auto">
-      <h2 className="text-2xl font-semibold mb-4 mt-5">Accept / Reject Bids</h2>
+      <h2 className="text-2xl font-semibold mb-3 mt-3">Accept / Reject Bids</h2>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300">
           <thead>
@@ -32,8 +32,8 @@ const AcceptRejectBids = () => {
                 <td className="border p-2 text-center">{bid.buyer}</td>
                 <td className="border p-2 text-center">{bid.phone}</td>
                 <td className="border p-2 flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-2">
-                  <button className="bg-green-500 text-black px-3 py-1 rounded hover:bg-green-600 transition w-full md:w-auto">✅ Accept</button>
-                  <button className="bg-red-500 text-black px-3 py-1 rounded hover:bg-red-600 transition w-full md:w-auto">❌ Reject</button>
+                  <button className="accept-btn"> Accept</button>
+                  <button className="accept-btn"> Reject</button>
                 </td>
               </tr>
             ))}

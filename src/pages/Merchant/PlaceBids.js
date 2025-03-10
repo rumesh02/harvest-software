@@ -76,11 +76,11 @@ const PlaceBids = () => {
                 </Typography>
               </CardContent>
               <div style={{ display: "flex", justifyContent: "space-between", padding: "10px" }}>
-                <Button variant="contained" color="warning">
+                <Button variant="contained" color="secondary">
                   Place Bid
                 </Button>
-                <Button variant="contained" color="secondary">
-                  Cancel
+                <Button variant="contained" color="warning">
+                  Remove
                 </Button>
               </div>
             </Card>

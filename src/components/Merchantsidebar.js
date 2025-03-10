@@ -1,6 +1,6 @@
 import React from "react";
-import { List, ListItemButton, ListItemIcon, ListItemText, Button } from "@mui/material";
-import { Home, ShoppingCart, Gavel, History, Chat, Payment, Settings, ExitToApp } from "@mui/icons-material";
+import { List, ListItemButton, ListItemIcon, ListItemText} from "@mui/material";
+import { Home, ShoppingCart, MonetizationOn, AssignmentTurnedIn, History, Chat, AccountBalanceWallet, Settings, ExitToApp } from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import Avatar from "@mui/material/Avatar";
@@ -9,11 +9,11 @@ import Badge from "@mui/material/Badge";
 const menuItems = [
   { text: "Dashboard", icon: <Home />, path: "/merchant/dashboard" },
   { text: "Browse Listing", icon: <ShoppingCart />, path: "/merchant/listings" },
-  { text: "Place Bids / Buy Now", icon: <Gavel />, path: "/merchant/buy" },
-  { text: "My Bids", icon: <Gavel />, path: "/merchant/bids" },
-  { text: "Purchase History", icon: <History />, path: "/merchant/purchase-history" },
+  { text: "Place Bids", icon: <MonetizationOn />, path: "/merchant/buy" },  // 💰 Changed icon
+  { text: "My Bids", icon: <AssignmentTurnedIn />, path: "/merchant/bids" },  // ✅ Changed icon
+  { text: "Purchases", icon: <History />, path: "/merchant/purchase-history" },
   { text: "Messages/Chat", icon: <Chat />, path: "/merchant/messages" },
-  { text: "Payments", icon: <Payment />, path: "/merchant/payments" }
+  { text: "Payments", icon: <AccountBalanceWallet />, path: "/merchant/payments" } // 👛 Changed icon
 ];
 
 const MerchantSidebar = () => {
@@ -89,24 +89,6 @@ const MerchantSidebar = () => {
             <ListItemText primary="Log Out" />
           </ListItemButton>
         </List>
-
-        {/* Confirm Order Button */}
-        <Button
-          variant="contained"
-          color="warning"
-          sx={{
-            backgroundColor: "#FFF8EC", // Default Warning Color (Amber)#FFF8EC
-            "&:hover": {
-              backgroundColor: "#FFC107", // Light pastel hover effect
-            },
-            width: "100%",
-            marginTop: "10px",
-            borderRadius: "8px",
-            fontWeight: "bold"
-          }}
-        >
-          Confirm Order
-        </Button>
       </div>
     </div>
   );

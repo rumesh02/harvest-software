@@ -12,6 +12,7 @@
     opacity: 0;
     transform: translateY(50px);
     transition: opacity 1s ease-out, transform 1s ease-out;
+    border-radius: 10px;
 }
 
 /* When in view, fade in and move up */

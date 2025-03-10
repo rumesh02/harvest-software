@@ -40,6 +40,17 @@ const MenuBar = () => {
         setIconActive(false);
     };
 
+    // Scroll to Services section
+    const handleScrollToServices = () => {
+        const servicesSection = document.getElementById("service");
+        if (servicesSection) {
+            servicesSection.scrollIntoView({ behavior: "smooth" });
+        }
+        setMenuVisible(false);
+        setIconActive(false);
+    };
+
+
     return (
         <div className="menu-bar-container">
             <button className={`menu-icon ${iconActive ? "active" : ""}`} onClick={toggleMenu}>
@@ -57,7 +68,7 @@ const MenuBar = () => {
                         <button onClick={handleScrollToContact}>Contact Us</button>
                     </li>
                     <li>
-                        <button onClick={() => handleNavigation("/services")}>Services</button>
+                        <button onClick={handleScrollToServices}>Services</button>
                     </li>
                     <li>
                         <button onClick={() => handleNavigation("/successStories")}>Success Stories</button>

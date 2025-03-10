@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Box, Typography, TextField, Button } from "@mui/material";
 import AppleIcon from "@mui/icons-material/Apple";
-import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PaymentIcon from "@mui/icons-material/Payment";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 
 const Payments = () => {
-  const [amount, setAmount] = useState(12000.0);
-  const [cardNumber, setCardNumber] = useState("");
+  const amount = 12000.0; // Directly setting the amount value
+
+  const [cardNumber, setCardNumber] = useState(""); // Only keep state for the card number
 
   const handlePayment = () => {
     alert(`Payment of Rs.${amount} processed successfully!`);
@@ -34,7 +35,7 @@ const Payments = () => {
 
       <Typography variant="body2" color="textSecondary" gutterBottom>Other payment methods</Typography>
 
-      <Box sx={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+      <Box sx={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
         <Button variant="contained" startIcon={<AppleIcon />} sx={{ background: "black", color: "white" }}>
           Apple Pay
         </Button>
@@ -46,6 +47,12 @@ const Payments = () => {
         </Button>
         <Button variant="contained" sx={{ background: "orange", color: "white" }}>
           Bitcoin
+        </Button>
+        <Button variant="contained" startIcon={<CreditCardIcon />} sx={{ background: "#EB001B", color: "white" }}>
+          MasterCard
+        </Button>
+        <Button variant="contained" startIcon={<CreditCardIcon />} sx={{ background: "#1A1F71", color: "white" }}>
+          Visa Card
         </Button>
       </Box>
 

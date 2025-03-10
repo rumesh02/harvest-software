@@ -5,6 +5,7 @@ import { FaBell } from "react-icons/fa"; // Import notification bell icon
 
 const Header = ({ language, setLanguage }) => {
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [fontSize, setFontSize] = useState("medium");
 
     // Toggle Dark/Light mode
     const toggleDarkMode = () => {
@@ -12,6 +13,11 @@ const Header = ({ language, setLanguage }) => {
     };
 
     const [notifications, setNotifications] = useState(3);
+
+    const changeFontSize = (size) => {
+        setFontSize(size);
+        document.body.style.fontSize = size === "small" ? "14px" : size === "medium" ? "16px" : "18px";
+    };
 
     // Apply dark mode to the body
     useEffect(() => {
@@ -29,11 +35,25 @@ const Header = ({ language, setLanguage }) => {
                 <h1 className="app-name">AgriLink</h1>
             </div>
 
-            {/* Notification Icon */}
-            <div className="notification-container">
-                <FaBell className="notification-icon" />
-                {notifications > 0 && <span className="notification-badge">{notifications}</span>}
+            {/* Font Size Switcher */}
+            <div className="font-size-switcher">
+                <button className={fontSize === "small" ? "active" : ""}
+                        onClick={() => changeFontSize("small")}
+                        style={{ fontSize: "10px" }}>
+                    A
+                </button>
+                <button className={fontSize === "medium" ? "active" : ""}
+                        onClick={() => changeFontSize("medium")}
+                        style={{ fontSize: "12px" }}>
+                    A
+                </button>
+                <button className={fontSize === "large" ? "active" : ""}
+                        onClick={() => changeFontSize("large")}
+                        style={{ fontSize: "15px" }}>
+                    A
+                </button>
             </div>
+
 
             {/* Dark Mode Switcher */}
             <div className="dark-mode-switcher" onClick={toggleDarkMode}>
@@ -44,11 +64,8 @@ const Header = ({ language, setLanguage }) => {
             {/* Language Selector */}
             <LanguageSelector language={language} setLanguage={setLanguage} />
 
-            {/* Login and Register Buttons */}
-            <div className="header-buttons">
-                <button className="header-button">Login</button>
-                <button className="header-button">Sign Up</button>
-            </div>
+
+
         </header>
     );
 };

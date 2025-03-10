@@ -1,16 +1,22 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
 const Dashboard = ({
   monthlyRevenue = "Rs. 65,600",
   yearlyRevenue = "Rs. 425,300",
   totalOrders = 27,
-  topDistricts = [
-    { name: "Dabulla", value: 20 },
-    { name: "Pettah", value: 35 },
-    { name: "Galle", value: 10 },
-    { name: "Ampara", value: 6 },
-    { name: "Peliyagoda", value: 20 },
-    { name: "Kalutara", value: 15 },
+  monthlyData = [
+    { name: "Jan", revenue: 50000 },
+    { name: "Feb", revenue: 42000 },
+    { name: "March", revenue: 65000 },
+    { name: "April", revenue: 70000 },
+    { name: "May", revenue: 62000 },
+    { name: "June", revenue: 54000 },
+    { name: "July", revenue: 68000 },
+    { name: "Aug", revenue: 72000 },
+    { name: "Sep", revenue: 58000 },
+    { name: "Oct", revenue: 64000 },
+    { name: "Nov", revenue: 75000 },
+    { name: "Dec", revenue: 80000 },
   ],
   topBuyers = [
     { name: "Nimal Silva", avatar: "./images/nimal.jpg" },
@@ -51,14 +57,14 @@ const Dashboard = ({
       <div className="row g-4">
         <div className="col-md-7">
           <div className="bg-white rounded h-100 d-flex flex-column">
-            <h5 className="mb-3">Top Districts</h5>
+            <h5 className="mb-3">Monthly Revenue</h5>
             <div className="flex-grow-1">
               <ResponsiveContainer width="100%" height="100%" minHeight={220}>
-                <BarChart data={topDistricts}>
+                <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Bar dataKey="value" fill="#4caf50" />
+                  <Bar dataKey="revenue" fill="#4caf50" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -88,7 +94,7 @@ const Dashboard = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;

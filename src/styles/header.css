@@ -20,34 +20,7 @@ body {
     padding: 0;
 }
 
-/* Buttons Container */
-.header-buttons {
-    display: flex;
-    gap: 12px;
-    position: absolute;
-    top: 50%;
-    right: 190px; /* Positioned slightly left from edge */
-    transform: translateY(-50%);
-}
 
-/* Login and Register Button Styles */
-.header-button {
-    padding: 6px 10px;
-    background-color: transparent;
-    border: 2px solid #fff;
-    color: #fff;
-    font-size: 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-/* Hover Effects */
-.header-button:hover {
-    background-color: #fff;
-    color: #333d29;
-    transform: scale(1.05);
-}
 
 /* Logo Section */
 .logo-section {
@@ -154,40 +127,33 @@ body.dark-mode {
     color: #111723;
 }
 
-/* Notification Container */
-.notification-container {
-    position: absolute;
-    top: 50%;
-    right: 20px; /* Positioned left of dark mode switcher */
-    transform: translateY(-50%);
-    cursor: pointer;
-}
-
-/* Notification Icon */
-.notification-icon {
-    font-size: 22px; /* Adjust size */
-    color: white;
-    transition: color 0.3s ease;
-}
-
-.notification-icon:hover {
-    color: gold;
-}
-
-/* Notification Badge */
-.notification-badge {
-    position: absolute;
-    right: -5px;
-    top: -5px;
-    background-color: red;
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
+.font-size-switcher {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid white;
+    gap: 3px; /* Adjusts spacing between buttons */
+    position: absolute;
+    right: 190px; /* Moves the font-size switcher more to the left */
+    top: 30%;
+    transform: translateY(-50%);
 }
+
+.font-size-switcher button {
+
+    font-size: 14px; /* Default button size */
+    font-weight: bold;
+    cursor: pointer;
+    padding: 5px 8px;
+    transition: all 0.3s ease-in-out;
+    color: #333;
+    background:#fff;
+    border: 2px solid var(#4CAF50);
+}
+
+.font-size-switcher button.active {
+    color: #90EE90; /* Highlight active font size */
+    text-decoration: underline;
+}
+
+.font-size-switcher button:hover {
+    transform: scale(1.05);
+}
+

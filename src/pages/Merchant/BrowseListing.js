@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Container, Typography, TextField, Grid, Card, CardMedia } from "@mui/material";
+import { Box, Container, Typography, TextField, Grid, Card, CardMedia, CardActions, Button } from "@mui/material";
 
 const products = [
   { name: "Cabbage", img: "/images/cabbage.jpg" },
@@ -40,8 +40,27 @@ const BrowseListing = () => {
       <Grid container spacing={2}>
         {products.map((product, index) => (
           <Grid item xs={6} sm={4} md={3} key={index}>
-            <Card sx={{ borderRadius: "10px", overflow: "hidden" }}>
+            <Card sx={{ borderRadius: "10px", overflow: "hidden", textAlign: "center" }}>
               <CardMedia component="img" height="120" image={product.img} alt={product.name} />
+              <Typography variant="subtitle1" fontWeight={600} mt={1}>
+                {product.name}
+              </Typography>
+              <CardActions>
+                <Button
+                  variant="contained"
+                  size="small"
+                  sx={{
+                    width: "100%",
+                    backgroundColor: "#FFEFD5",
+                    color: "#333", // Dark text for contrast
+                    "&:hover": {
+                      backgroundColor: "#FFDBA4", // Slightly darker on hover
+                    },
+                  }}
+                >
+                  Add to Cart
+                </Button>
+              </CardActions>
             </Card>
           </Grid>
         ))}

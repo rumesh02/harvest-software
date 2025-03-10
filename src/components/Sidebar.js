@@ -10,6 +10,7 @@ import {
   CreditCard,
   Gear,
   BoxArrowRight,
+  Cart3, // Import Cart3 icon for Orders
 } from "react-bootstrap-icons";
 
 const Sidebar = ({ userRole = "Farmer" }) => {
@@ -43,13 +44,14 @@ const Sidebar = ({ userRole = "Farmer" }) => {
       {/* Navigation Menu */}
       <nav className="flex-grow-1">
         <ul className="list-unstyled">
-          {[ 
-            { id: "/", label: "Dashboard", icon: <House size={18} />, path: "/" },
-            { id: "/list-new-item", label: "List New Item", icon: <PlusCircle size={18} />, path: "/list-new-item" },
-            { id: "/view-listed-items", label: "View Listed Items", icon: <ListUl size={18} />, path: "/view-listed-items" },
-            { id: "/accept-reject-bids", label: "Accept / Reject Bids", icon: <CheckCircle size={18} />, path: "/accept-reject-bids" },
-            { id: "/messages", label: "Messages", icon: <ChatLeftText size={18} />, path: "/messages" },
-            { id: "/payment-approve", label: "Payment Approve", icon: <CreditCard size={18} />, path: "/payment-approve" },
+          {[
+            { id: "dashboard", label: "Dashboard", icon: <House size={18} />, path: "/" },
+            { id: "list-new-item", label: "List New Item", icon: <PlusCircle size={18} />, path: "/list-new-item" },
+            { id: "view-listed-items", label: "View Listed Items", icon: <ListUl size={18} />, path: "/view-listed-items" },
+            { id: "accept-reject-bids", label: "Accept / Reject Bids", icon: <CheckCircle size={18} />, path: "/accept-reject-bids" },
+            { id: "messages", label: "Messages", icon: <ChatLeftText size={18} />, path: "/messages" },
+            { id: "payment-approve", label: "Payment Approve", icon: <CreditCard size={18} />, path: "/payment-approve" },
+            { id: "orders", label: "Orders", icon: <Cart3 size={18} />, path: "/order" }, // Corrected path to "/orders"
           ].map((item) => (
             <li key={item.id} className="mb-2">
               <Link

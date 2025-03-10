@@ -13,7 +13,7 @@ const menuItems = [
   { text: "View Delivery Requests", icon: <Gavel />, path: "bookings" },
   { text: "Edit Listed", icon: <PenFill />, path: "editListed" },
   { text: "Go to Inbox", icon: <MessageRounded />, path: "inbox" }, // Updated to include the full path
-  { text: "Payment Approve", icon: <Payment />, path: "payments" } // Updated to include the full path
+  { text: "PaymentApproves", icon: <Payment />, path: "payments" } // Updated to include the full path
 ];
 
 const TransporterSidebar = () => {

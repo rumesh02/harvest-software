@@ -163,14 +163,14 @@
 /* Modern Dropdown Menu */
 .menu-dropdown {
     position: fixed;
-    top: 120px;
+    top: 140px;
     left: 20px;
     width: 220px;
     background: linear-gradient(135deg, #000000, #eaf4f4);
     border-radius: 10px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     z-index: 999;
-    padding: 12px;
+    padding: 0;
     display: none;
     flex-direction: column;
     transform: translateY(-10px);
@@ -196,13 +196,13 @@
 .menu-dropdown li {
     display: flex;
     justify-content: center;
-    padding: 8px;
+    padding: 10px;
 }
 
 /* Styled Buttons */
 .menu-dropdown button {
     width: 100%;
-    padding: 12px;
+    padding: 15px;
     background: linear-gradient(135deg, #111d13, #5c8001); /* Modern gradient */
     border: none;
     border-radius: 5px;

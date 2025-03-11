@@ -10,7 +10,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 const menuItems = [
   { text: "Dashboard", icon: <Home />, path: "dashboard" },
   { text: "Add New", icon: <PlusCircleFill />, path: "addVehicle" },
-  { text: "View Delivery Requests", icon: <Gavel />, path: "bookings" },
+  { text: "Bookings", icon: <Gavel />, path: "bookings" },
   { text: "Edit Listed", icon: <PenFill />, path: "editListed" },
   { text: "Go to Inbox", icon: <MessageRounded />, path: "inbox" }, // Updated to include the full path
   { text: "PaymentApproves", icon: <Payment />, path: "payments" } // Updated to include the full path

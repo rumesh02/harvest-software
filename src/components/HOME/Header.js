@@ -1,22 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "../../styles/header.css";
 import LanguageSelector from "./LanguageSelector";
-import { FaBell } from "react-icons/fa"; // Import notification bell icon
 
 const Header = ({ language, setLanguage }) => {
     const [isDarkMode, setIsDarkMode] = useState(false);
-    const [fontSize, setFontSize] = useState("medium");
 
     // Toggle Dark/Light mode
     const toggleDarkMode = () => {
         setIsDarkMode(!isDarkMode);
-    };
-
-    const [notifications, setNotifications] = useState(3);
-
-    const changeFontSize = (size) => {
-        setFontSize(size);
-        document.body.style.fontSize = size === "small" ? "14px" : size === "medium" ? "16px" : "18px";
     };
 
     // Apply dark mode to the body
@@ -28,44 +19,42 @@ const Header = ({ language, setLanguage }) => {
         }
     }, [isDarkMode]);
 
+    // Function to scroll to a section smoothly
+    const scrollToSection = (sectionId) => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.scrollIntoView({ behavior: "smooth" });
+        }
+    };
+
     return (
         <header className="header-container">
-            <div className="logo-section">
-                <img src="/favicon.ico" alt="Farm to Market Logo" className="logo" />
-                <h1 className="app-name">AgriLink</h1>
+            {/* Left Section: AgriLink Logo & Name */}
+            <div className="nav-left">
+                <div className="logo-section">
+                    <img src="/favicon.ico" alt="AgriLink Logo" className="logo" />
+                    <h1 className="app-name">Farmer to Market</h1>
+                </div>
+
+                {/* Navigation Buttons */}
+                <nav className="nav-buttons">
+                    <button className="nav-button" onClick={() => scrollToSection("about")}>About Us</button>
+                    <button className="nav-button" onClick={() => scrollToSection("contact")}>Contact Us</button>
+                    <button className="nav-button" onClick={() => scrollToSection("service")}>Services</button>
+                </nav>
             </div>
 
-            {/* Font Size Switcher */}
-            <div className="font-size-switcher">
-                <button className={fontSize === "small" ? "active" : ""}
-                        onClick={() => changeFontSize("small")}
-                        style={{ fontSize: "10px" }}>
-                    A
-                </button>
-                <button className={fontSize === "medium" ? "active" : ""}
-                        onClick={() => changeFontSize("medium")}
-                        style={{ fontSize: "12px" }}>
-                    A
-                </button>
-                <button className={fontSize === "large" ? "active" : ""}
-                        onClick={() => changeFontSize("large")}
-                        style={{ fontSize: "15px" }}>
-                    A
-                </button>
+            {/* Right Section: Dark Mode Switch & Language Selector */}
+            <div className="header-right">
+                {/* Dark Mode Switcher */}
+                <div className="dark-mode-switcher" onClick={toggleDarkMode}>
+                    <span className={`moon-icon left-moon ${isDarkMode ? "hidden" : ""}`}></span>
+                    <span className={`moon-icon right-moon ${isDarkMode ? "" : "hidden"}`}></span>
+                </div>
+
+                {/* Language Selector */}
+                <LanguageSelector language={language} setLanguage={setLanguage} />
             </div>
-
-
-            {/* Dark Mode Switcher */}
-            <div className="dark-mode-switcher" onClick={toggleDarkMode}>
-                <span className={`moon-icon left-moon ${isDarkMode ? "hidden" : ""}`}></span>
-                <span className={`moon-icon right-moon ${isDarkMode ? "" : "hidden"}`}></span>
-            </div>
-
-            {/* Language Selector */}
-            <LanguageSelector language={language} setLanguage={setLanguage} />
-
-
-
         </header>
     );
 };

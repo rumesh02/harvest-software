@@ -1,25 +1,26 @@
-import React, { useState,  } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Header from "../components/HOME/Header";
-import MenuBar from "../components/HOME/MenuBar";
 import AboutUs from "../components/HOME/AboutUs";
 import ContactUs from "../components/HOME/ContactUs";
 import Services from "../components/HOME/Services";
-import bgImage from "../assets/bg.png";
 import farmerHome from "../assets/farmer home.jpg";
 import merchantHome from "../assets/merchant home.jpeg";
 import transporterHome from "../assets/transporter home.jpeg";
 import "../styles/homePage.css";
-import { FaFacebookF, FaTwitter, FaWhatsapp, } from "react-icons/fa";
+import { FaFacebookF, FaTwitter, FaWhatsapp } from "react-icons/fa";
 import { FaCommentDots } from "react-icons/fa";
 
 const HomePage = () => {
     const [language, setLanguage] = useState("English");
     const [query, setQuery] = useState("");
 
-    const handleLanguageChange = (e) => {
-        setLanguage(e.target.value);
-    };
+    const navigate = useNavigate(); // Initialize useNavigate
 
+    // Function to navigate to the login page
+    const handleSignUpClick = () => {
+        navigate("/login"); // Redirect to the login page
+    };
 
     return (
         <div className="home-page-container">
@@ -30,7 +31,7 @@ const HomePage = () => {
                 setQuery={setQuery}
             />
             <div className="content">
-                <h1>Welcome to AgriLink!</h1>
+                <h1>Welcome to Farmer to Market!</h1>
                 <p>Your One-Stop Platform for Connecting Farmers, Merchants, and Transporters – Ensuring a Seamless
                     Harvest Journey!</p>
 
@@ -55,12 +56,12 @@ const HomePage = () => {
                     </div>
                 </div>
 
-                {/* Single Get Started Button Below Tiles */}
+                {/* Sign Up Button - Redirects to Login Page */}
                 <div className="get-started-container">
-                    <a href="/signup" className="btn get-started">Sign Up</a>
+                    <button onClick={handleSignUpClick} className="btn get-started">Sign Up</button>
                 </div>
 
-                {/* About Us Section with ID for scrolling */}
+                {/* About Us Section */}
                 <div id="about">
                     <AboutUs/>
                 </div>
@@ -72,8 +73,6 @@ const HomePage = () => {
                 <div id="service">
                     <Services/>
                 </div>
-
-                <MenuBar/>
             </div>
 
             <div className="chat-button">
@@ -81,7 +80,6 @@ const HomePage = () => {
                     <FaCommentDots />
                 </a>
             </div>
-
 
             <footer className="footer">
                 <div className="footer-container">
@@ -114,7 +112,7 @@ const HomePage = () => {
                     </div>
                 </div>
                 <div className="copyright">
-                    <p>&copy; {new Date().getFullYear()} AgriLink. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} Farmer to Market. All rights reserved.</p>
                 </div>
             </footer>
         </div>

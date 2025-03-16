@@ -18,8 +18,8 @@ const TransporterDashboard = () => {
     ],
     datasets: [
       {
-        label: "Revenue (Rs.)",
-        data: [50000, 43000, 46000, 35000, 48000, 51000, 53000, 52000, 60000, 59000, 62000, 65000], // Sample data
+        label: "Orders",
+        data: [5, 4, 4, 3, 4, 5, 5, 5, 6, 5, 6, 6], // Sample data
         backgroundColor: "#007BFF", // Blue color
         borderRadius: 5,
         borderSkipped: false
@@ -89,7 +89,7 @@ const TransporterDashboard = () => {
         </div>
 
         <div className="driver-monthly-revenue">
-          <h4>Driver Monthly Revenue</h4>
+          <h4>Driver Monthly Orders</h4>
           <Bar data={chartData} options={chartOptions} />
         </div>
       </div>

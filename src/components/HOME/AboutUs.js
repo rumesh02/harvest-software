@@ -30,7 +30,7 @@ const AboutUs = () => {
                 <div className="text-content">
                     <h2>About Us</h2>
                     <p>
-                        AgriLink connects Farmers, Merchants, and Transporters for a seamless harvest journey.
+                        Farmer to Market connects Farmers, Merchants, and Transporters for a seamless harvest journey.
                         By eliminating middlemen, we ensure fair pricing and efficient transactions.
                     </p>
                     <ul>

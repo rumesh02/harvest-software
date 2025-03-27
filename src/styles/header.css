@@ -7,63 +7,70 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 20px;
-    background-color: #333d29;
+    padding: 15px 30px;
+    background-color: #2d3e2d; /* Dark green background */
     border-bottom: 2px solid #ddd;
+    color: white;
     z-index: 1000;
-    height: 50px; /* Ensures all elements fit */
+    height: 60px; /* Adjusted for better alignment */
 }
 
-/* Body Styles */
-body {
-    margin: 0;
-    padding: 0;
-}
-
-/* Buttons Container */
-.header-buttons {
+/* Left Navigation (Logo & Navigation Buttons) */
+.nav-left {
     display: flex;
-    gap: 12px;
-    position: absolute;
-    top: 50%;
-    right: 190px; /* Positioned slightly left from edge */
-    transform: translateY(-50%);
-}
-
-/* Login and Register Button Styles */
-.header-button {
-    padding: 6px 10px;
-    background-color: transparent;
-    border: 2px solid #fff;
-    color: #fff;
-    font-size: 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-/* Hover Effects */
-.header-button:hover {
-    background-color: #fff;
-    color: #333d29;
-    transform: scale(1.05);
+    align-items: center;
+    gap: 20px;
 }
 
 /* Logo Section */
 .logo-section {
     display: flex;
     align-items: center;
+    gap: 10px;
 }
 
 .logo {
-    height: 35px;
-    margin-right: 8px;
+    width: 40px;
+    height: 40px;
 }
 
 .app-name {
-    font-size: 30px;
+    font-size: 24px;
     font-weight: bold;
-    color: gold;
+    color: #f1c40f; /* Yellow */
+}
+
+/* Navigation Buttons */
+.nav-buttons {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 5px;
+}
+
+/* Navigation Buttons */
+.nav-button {
+    background-color: #2d3e2d;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    transition: color 0.3s ease;
+    padding: 10px 15px;
+}
+
+/* Hover Effect: Only Change Text Color */
+.nav-button:hover {
+    color: #f1c40f; /* Yellow color on hover */
+    text-decoration: underline;
+    background-color: #2d3e2d;
+}
+
+/* Right Section of the Header */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
 /* Dark Mode Toggle */
@@ -71,18 +78,14 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 28px; /* Smaller */
-    height: 14px; /* Smaller */
+    width: 28px;
+    height: 14px;
     background-color: #ccc;
     border-radius: 50px;
     cursor: pointer;
-    position: absolute;
-    top: 50%;
-    right: 140px; /* Moved slightly left */
-    transform: translateY(-50%);
+    position: relative;
     transition: background-color 0.3s ease;
 }
-
 
 /* Moon Icon Styling */
 .moon-icon {
@@ -126,68 +129,27 @@ body {
 
 /* Language Selector */
 .language-selector {
-    position: absolute;
-    top: 50%;
-    right: 50px;
-    transform: translateY(-50%);
+    position: relative;
 }
 
 .language-selector select {
-    padding: 4px;
-    font-size: 11px; /* Compact */
+    padding: 6px;
+    font-size: 12px;
     border-radius: 6px;
     background-color: transparent;
-    color:white;
-    height: 28px; /* Increased height */
-    min-width: 70px;
+    color: white;
+    height: 30px;
+    min-width: 80px;
 }
 
 /* Dropdown options styling */
 .language-selector select option {
     background-color: white;
-    color: black; /* Options text black */
+    color: black;
 }
 
 /* Dark Mode Styling for Body */
 body.dark-mode {
     background-color: #121212;
-    color: #111723;
-}
-
-/* Notification Container */
-.notification-container {
-    position: absolute;
-    top: 50%;
-    right: 20px; /* Positioned left of dark mode switcher */
-    transform: translateY(-50%);
-    cursor: pointer;
-}
-
-/* Notification Icon */
-.notification-icon {
-    font-size: 22px; /* Adjust size */
     color: white;
-    transition: color 0.3s ease;
-}
-
-.notification-icon:hover {
-    color: gold;
-}
-
-/* Notification Badge */
-.notification-badge {
-    position: absolute;
-    right: -5px;
-    top: -5px;
-    background-color: red;
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid white;
 }

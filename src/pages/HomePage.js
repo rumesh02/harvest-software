@@ -1,21 +1,25 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Header from "../components/HOME/Header";
-import MenuBar from "../components/HOME/MenuBar";
 import AboutUs from "../components/HOME/AboutUs";
 import ContactUs from "../components/HOME/ContactUs";
-import bgImage from "../assets/bg.png";
+import Services from "../components/HOME/Services";
 import farmerHome from "../assets/farmer home.jpg";
 import merchantHome from "../assets/merchant home.jpeg";
 import transporterHome from "../assets/transporter home.jpeg";
 import "../styles/homePage.css";
 import { FaFacebookF, FaTwitter, FaWhatsapp } from "react-icons/fa";
+import { FaCommentDots } from "react-icons/fa";
 
 const HomePage = () => {
     const [language, setLanguage] = useState("English");
     const [query, setQuery] = useState("");
 
-    const handleLanguageChange = (e) => {
-        setLanguage(e.target.value);
+    const navigate = useNavigate(); // Initialize useNavigate
+
+    // Function to navigate to the login page
+    const handleSignUpClick = () => {
+        navigate("/login"); // Redirect to the login page
     };
 
     return (
@@ -27,7 +31,7 @@ const HomePage = () => {
                 setQuery={setQuery}
             />
             <div className="content">
-                <h1>Welcome to AgriLink!</h1>
+                <h1>Welcome to Farmer to Market!</h1>
                 <p>Your One-Stop Platform for Connecting Farmers, Merchants, and Transporters – Ensuring a Seamless
                     Harvest Journey!</p>
 
@@ -37,25 +41,27 @@ const HomePage = () => {
                         <h3>Farmers</h3>
                         <p>Empowering you by Maximizing your harvest's value – List your produce, get the best bids, and
                             sell directly to trusted merchants!</p>
-                        <a href="/signup?role=farmer" className="btn">Get Started</a>
                     </div>
                     <div className="tile">
                         <img src={merchantHome} alt="Merchant" className="tile-image"/>
                         <h3>Merchants</h3>
                         <p>Access a wide variety of fresh harvests, place bids with ease, arrange seamless delivery and
                             expand your business – all in one place!</p>
-                        <a href="/signup?role=merchant" className="btn">Get Started</a>
                     </div>
                     <div className="tile">
                         <img src={transporterHome} alt="Transporter" className="tile-image"/>
                         <h3>Transporters</h3>
                         <p>Expand your transport services by connecting with farmers and merchants – secure new delivery
                             requests every day.</p>
-                        <a href="/signup?role=transporter" className="btn">Get Started</a>
                     </div>
                 </div>
 
-                {/* About Us Section with ID for scrolling */}
+                {/* Sign Up Button - Redirects to Login Page */}
+                <div className="get-started-container">
+                    <button onClick={handleSignUpClick} className="btn get-started">Sign Up</button>
+                </div>
+
+                {/* About Us Section */}
                 <div id="about">
                     <AboutUs/>
                 </div>
@@ -64,11 +70,19 @@ const HomePage = () => {
                     <ContactUs/>
                 </div>
 
-                <MenuBar/>
+                <div id="service">
+                    <Services/>
+                </div>
+            </div>
+
+            <div className="chat-button">
+                <a href="/chat" className="chat-icon">
+                    <FaCommentDots />
+                </a>
             </div>
 
             <footer className="footer">
-            <div className="footer-container">
+                <div className="footer-container">
                     <div className="quick-links">
                         <h3>Quick Links</h3>
                         <ul>
@@ -98,7 +112,7 @@ const HomePage = () => {
                     </div>
                 </div>
                 <div className="copyright">
-                    <p>&copy; {new Date().getFullYear()} AgriLink. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} Farmer to Market. All rights reserved.</p>
                 </div>
             </footer>
         </div>

@@ -108,7 +108,7 @@ function LoginPage() {
                   className="btn btn-success w-100 mb-3"
                   onClick={handleLogin}
                 >
-                  Sign in with Auth0
+                  Sign in 
                 </button>
                 <button
                   type="button"

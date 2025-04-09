@@ -103,16 +103,14 @@ function RegisterPage() {
                 </div>
               </div>
 
-              <div className="mb-3">
-                <input type="text" className="form-control" placeholder="Username" />
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <input type="password" className="form-control" placeholder="Password" />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <input type="password" className="form-control" placeholder="Confirm Password" />
+              <div>
+                <div className="mb-5">
+                  <select className="form-select">
+                    <option>Role</option>
+                    <option>Farmer</option>
+                    <option>Merchant</option>
+                    <option>Transporter</option>
+                  </select>
                 </div>
               </div>
 

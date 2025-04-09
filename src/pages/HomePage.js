@@ -19,7 +19,7 @@ const HomePage = () => {
 
     // Function to navigate to the login page
     const handleSignUpClick = () => {
-        navigate("/login"); // Redirect to the login page
+        navigate("/register"); 
     };
 
     return (
@@ -56,12 +56,11 @@ const HomePage = () => {
                     </div>
                 </div>
 
-                {/* Sign Up Button - Redirects to Login Page */}
+                
                 <div className="get-started-container">
                     <button onClick={handleSignUpClick} className="btn get-started">Sign Up</button>
                 </div>
 
-                {/* About Us Section */}
                 <div id="about">
                     <AboutUs/>
                 </div>

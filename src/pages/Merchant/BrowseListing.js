@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Container, Typography, TextField, Grid, Card, CardMedia, CardActions, Button } from "@mui/material";
+import axios from "axios";
 
 const products = [
   { name: "Cabbage", img: "/images/cabbage.jpg" },
@@ -13,6 +14,15 @@ const products = [
 ];
 
 const BrowseListing = () => {
+
+  const [fetchedProducts, setFetchedProducts] = useState([]);
+
+  useEffect(() => {
+    axios.get("http://localhost:5000/api/products") // adjust your backend URL
+      .then((res) => setFetchedProducts(res.data))
+      .catch((err) => console.error("Error fetching products:", err));
+  }, []);
+
   return (
     <Container sx={{ mt: 4 }}>
       {/* Header */}
@@ -65,6 +75,45 @@ const BrowseListing = () => {
           </Grid>
         ))}
       </Grid>
+
+      {/* Dynamically Loaded Products */}
+      <Typography variant="h6" fontWeight={600} mt={4} mb={2}>
+        Live Listings from Farmers 🌿
+      </Typography>
+      <Grid container spacing={2}>
+        {fetchedProducts.map((product, index) => (
+          <Grid item xs={6} sm={4} md={3} key={index}>
+            <Card sx={{ borderRadius: "10px", overflow: "hidden", textAlign: "center" }}>
+              <CardMedia component="img" height="120" image={product.image} alt={product.name} />
+              <Typography variant="subtitle1" fontWeight={600} mt={1}>
+                {product.name}
+              </Typography>
+              <Typography variant="body2">Rs. {product.price}</Typography>
+              <Typography variant="body2">Qty: {product.quantity}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {new Date(product.listedDate).toLocaleDateString()}
+              </Typography>
+              <CardActions>
+                <Button
+                  variant="contained"
+                  size="small"
+                  sx={{
+                    width: "100%",
+                    backgroundColor: "#FFEFD5",
+                    color: "#333",
+                    "&:hover": {
+                      backgroundColor: "#FFDBA4",
+                    },
+                  }}
+                >
+                  Add to Cart
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
     </Container>
   );
 };

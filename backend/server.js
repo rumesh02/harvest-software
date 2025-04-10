@@ -24,7 +24,12 @@ app.get("/api/test", (req, res) => {
 
 // Import routes
 const userRoutes = require("./routes/userRoutes");
+const bidRoutes = require("./routes/bidRoutes");
+const productsRoutes = require("./routes/productsRoutes");
+
 app.use("/api/users", userRoutes);
+app.use("/api/bids", bidRoutes);
+app.use("/api/products", productsRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

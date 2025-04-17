@@ -15,6 +15,6 @@ const productSchema = new mongoose.Schema({
     method: String,
     location: String
   }
-});
+}, { collection: 'products' }); // Explicitly specify collection name
 
 module.exports = mongoose.model("Product", productSchema);

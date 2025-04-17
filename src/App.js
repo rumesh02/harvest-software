@@ -4,6 +4,7 @@ import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import FarmerLayout from "./layouts/FarmerLayout";
 import MerchantLayout from "./layouts/MerchantLayout";
 import TransporterLayout from "./layouts/TransporterLayout";
+import { CartProvider } from "./context/CartContext";
 
 // Farmer Pages
 import Dashboard from "./pages/Farmer/Dashboard";
@@ -176,9 +177,11 @@ const AppRoutes = () => {
 const App = () => {
     return (
         <Auth0ProviderWithRedirect>
-            <Router>
-                <AppRoutes />
-            </Router>
+            <CartProvider> 
+                <Router>
+                    <AppRoutes />
+                </Router>
+            </CartProvider>
         </Auth0ProviderWithRedirect>
     );
 };

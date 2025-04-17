@@ -1,75 +1,79 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import HarvestCard from "../../components/HarvestCard";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+} from "@mui/material";
 
 const ListedItems = () => {
-  // Sample produce data
-  const produceItems = [
-    {
-      id: 1,
-      name: "Cabbage",
-      price: 160,
-      weight: 300,
-      image: "./images/cabbage.jpg",
-    },
-    {
-      id: 2,
-      name: "Carrot",
-      price: 220,
-      weight: 470,
-      image: "./images/carrot.jpg",
-    },
-    {
-      id: 3,
-      name: "Long Beans",
-      price: 150,
-      weight: 200,
-      image: "./images/beans.jpg",
-    },
-    {
-      id: 4,
-      name: "Onion",
-      price: 95,
-      weight: 1120,
-      image: "./images/onions.jpg",
-    },
-    {
-      id: 5,
-      name: "Potato",
-      price: 90,
-      weight: 1450,
-      image: "./images/potato.jpg",
-    },
-    {
-      id: 6,
-      name: "Leeks",
-      price: 160,
-      weight: 470,
-      image: "./images/springonions.jpg",
-    },
-    {
-      id: 7,
-      name: "Pineapple",
-      price: 210,
-      weight: 350,
-      image: "./images/pineapples.webp",
-    },
-    {
-      id: 8,
-      name: "Mango",
-      price: 320,
-      weight: 90,
-      image: "./images/mangoes.jpg",
-    },
-  ];
+  const [products, setProducts] = useState([]);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    price: "",
+    quantity: "",
+  });
 
-  // Function to handle edit button click
-  const handleEdit = (name) => {
-    alert(`Editing ${name}`);
+  // Fetch products from backend
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/products");
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      alert("Failed to load products");
+    }
   };
 
-  // Function to handle remove button click
-  const handleRemove = (name) => {
-    alert(`Removing ${name}`);
+  // Handle edit button click
+  const handleEdit = (product) => {
+    setEditingProduct(product);
+    setEditForm({
+      name: product.name,
+      price: product.price,
+      quantity: product.quantity,
+    });
+    setEditDialogOpen(true);
+  };
+
+  // Handle edit form submission
+  const handleEditSubmit = async () => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/products/${editingProduct._id}`,
+        editForm
+      );
+      setEditDialogOpen(false);
+      fetchProducts(); // Refresh the products list
+      alert("Product updated successfully");
+    } catch (error) {
+      console.error("Error updating product:", error);
+      alert("Failed to update product");
+    }
+  };
+
+  // Handle remove button click
+  const handleRemove = async (productId) => {
+    if (window.confirm("Are you sure you want to remove this product?")) {
+      try {
+        await axios.delete(`http://localhost:5000/api/products/${productId}`);
+        fetchProducts(); // Refresh the products list
+        alert("Product removed successfully");
+      } catch (error) {
+        console.error("Error removing product:", error);
+        alert("Failed to remove product");
+      }
+    }
   };
 
   return (
@@ -77,20 +81,58 @@ const ListedItems = () => {
       <div className="p-1">
         <h2 className="mb-4">Listed Items</h2>
         <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-          {produceItems.map((item) => (
-            <div key={item.id} className="col">
+          {products.map((product) => (
+            <div key={product._id} className="col">
               <HarvestCard
-                image={item.image}
-                name={item.name}
-                price={item.price}
-                weight={item.weight}
-                onEdit={() => handleEdit(item.name)} // Pass edit function
-                onRemove={() => handleRemove(item.name)} // Pass remove function
+                image={product.image}
+                name={product.name}
+                price={product.price}
+                weight={product.quantity}
+                onEdit={() => handleEdit(product)}
+                onRemove={() => handleRemove(product._id)}
               />
             </div>
           ))}
         </div>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
+        <DialogTitle>Edit Product</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Name"
+            fullWidth
+            margin="normal"
+            value={editForm.name}
+            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+          />
+          <TextField
+            label="Price"
+            type="number"
+            fullWidth
+            margin="normal"
+            value={editForm.price}
+            onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+          />
+          <TextField
+            label="Quantity"
+            type="number"
+            fullWidth
+            margin="normal"
+            value={editForm.quantity}
+            onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleEditSubmit} color="primary">
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

@@ -1,82 +1,205 @@
 const { MongoClient, ObjectId } = require("mongodb");
-const uri = "mongodb+srv://Piyumi:Piyu123@harvest-software.tgbx7.mongodb.net/?retryWrites=true&w=majority&appName=harvest-software"; // MongoDB URI
+const uri = "mongodb+srv://Piyumi:Piyu123@harvest-software.tgbx7.mongodb.net/harvest-sw?retryWrites=true&w=majority";
 
-// Fetch all bids for a particular harvestId
-const getBids = async (req, res) => {
-  const { harvestId } = req.params;
+const createBid = async (req, res) => {
+  const { productId, productName, bidAmount, orderWeight } = req.body;
+
+  console.log("Incoming request body:", req.body); // Debugging
 
   try {
-    const client = await MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    const client = await MongoClient.connect(uri);
     const db = client.db("harvest-sw");
     const collection = db.collection("bids");
 
-    // Find all bids related to the given harvestId
-    const bids = await collection.find({ harvestId: new ObjectId(harvestId) }).toArray();
+    const newBid = {
+      productId,
+      productName,
+      bidAmount,
+      orderWeight,
+      status: "Pending", // Default status
+      createdAt: new Date(),
+    };
 
-    if (bids.length === 0) {
-      return res.status(404).json({ message: "No bids found for this harvest." });
-    }
-
-    res.json(bids); // Respond with the list of bids
+    const result = await collection.insertOne(newBid);
+    res.status(201).json({
+      message: "Bid created successfully!",
+      bid: { ...newBid, _id: result.insertedId }, // Include the inserted ID
+    });
     client.close();
+
   } catch (error) {
-    console.error(error);
+    console.error("Error in createBid:", error); // Debugging
     res.status(500).json({ message: "Server Error", details: error.message });
   }
 };
 
+
 // Accept a bid
 const acceptBid = async (req, res) => {
-  const { bidId } = req.params;
-
   try {
-    const client = await MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    const { bidId } = req.params;
+    console.log("Accepting bid with ID:", bidId);
+
+    // Validate bidId format
+    if (!ObjectId.isValid(bidId)) {
+      return res.status(400).json({ message: "Invalid bid ID format" });
+    }
+
+    const client = await MongoClient.connect(uri);
     const db = client.db("harvest-sw");
     const collection = db.collection("bids");
 
-    // Update the bid status to accepted
+    // Use updateOne instead of findOneAndUpdate
     const result = await collection.updateOne(
-        { _id: new ObjectId(bidId) },
-        { $set: { status: "Accepted" } }
-      );
-      
+      { _id: new ObjectId(bidId) },
+      { 
+        $set: { 
+          status: "Accepted",
+          updatedAt: new Date()
+        } 
+      }
+    );
+
+    console.log("Update result:", result);
+
     if (result.matchedCount === 0) {
-      return res.status(404).json({ message: "Bid not found." });
+      client.close();
+      return res.status(404).json({ message: "Bid not found" });
     }
 
-    res.json({ message: "Bid accepted successfully!" });
     client.close();
+    res.json({ 
+      message: "Bid accepted successfully",
+      modifiedCount: result.modifiedCount
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error", details: error.message });
+    console.error("Error in acceptBid:", error);
+    res.status(500).json({ 
+      message: "Error accepting bid", 
+      error: error.message 
+    });
   }
 };
 
 // Reject a bid
 const rejectBid = async (req, res) => {
-  const { bidId } = req.params;
-
   try {
-    const client = await MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    const { bidId } = req.params;
+    console.log("Rejecting bid with ID:", bidId);
+
+    // Validate bidId format
+    if (!ObjectId.isValid(bidId)) {
+      return res.status(400).json({ message: "Invalid bid ID format" });
+    }
+
+    const client = await MongoClient.connect(uri);
     const db = client.db("harvest-sw");
     const collection = db.collection("bids");
 
-    // Update the bid status to rejected
+    // Use updateOne instead of findOneAndUpdate
     const result = await collection.updateOne(
-      { _id: ObjectId(bidId) },
-      { $set: { status: "Rejected" } }
+      { _id: new ObjectId(bidId) },
+      { 
+        $set: { 
+          status: "Rejected",
+          updatedAt: new Date()
+        } 
+      }
     );
 
+    console.log("Update result:", result);
+
     if (result.matchedCount === 0) {
-      return res.status(404).json({ message: "Bid not found." });
+      client.close();
+      return res.status(404).json({ message: "Bid not found" });
     }
 
-    res.json({ message: "Bid rejected successfully!" });
     client.close();
+    res.json({ 
+      message: "Bid rejected successfully",
+      modifiedCount: result.modifiedCount
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error", details: error.message });
+    console.error("Error in rejectBid:", error);
+    res.status(500).json({ 
+      message: "Error rejecting bid", 
+      error: error.message 
+    });
   }
 };
 
-module.exports = { getBids, acceptBid, rejectBid };
+// Get all bids
+const getBids = async (req, res) => {
+  try {
+    const client = await MongoClient.connect(uri);
+    const db = client.db("harvest-sw");
+    const collection = db.collection("bids");
+
+    // Convert _id to string in the response
+    const bids = await collection.find({}).toArray();
+    const bidsWithStringId = bids.map(bid => ({
+      ...bid,
+      _id: bid._id.toString()
+    }));
+
+    res.json(bidsWithStringId);
+    client.close();
+  } catch (error) {
+    console.error("Error fetching bids:", error);
+    res.status(500).json({ message: "Error fetching bids", error: error.message });
+  }
+};
+
+
+const updateBidStatus = async (req, res) => {
+  try {
+    const { bidId } = req.params;
+    const { status } = req.body;
+
+    if (!ObjectId.isValid(bidId)) {
+      return res.status(400).json({ message: "Invalid bid ID format" });
+    }
+
+    const client = await MongoClient.connect(uri);
+    const db = client.db("harvest-sw");
+    const collection = db.collection("bids");
+
+    const result = await collection.updateOne(
+      { _id: new ObjectId(bidId) },
+      { 
+        $set: { 
+          status,
+          updatedAt: new Date()
+        } 
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      client.close();
+      return res.status(404).json({ message: "Bid not found" });
+    }
+
+    client.close();
+    res.json({ 
+      message: "Bid status updated successfully",
+      modifiedCount: result.modifiedCount
+    });
+
+  } catch (error) {
+    console.error("Error updating bid status:", error);
+    res.status(500).json({ 
+      message: "Error updating bid status", 
+      error: error.message 
+    });
+  }
+};
+
+module.exports = { 
+  createBid, 
+  acceptBid, 
+  rejectBid,
+  getBids,
+  updateBidStatus
+};

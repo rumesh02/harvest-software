@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import HarvestCard from "../../components/HarvestCard";
+import { useAuth0 } from "@auth0/auth0-react";
 import {
   Dialog,
   DialogTitle,
@@ -8,10 +9,15 @@ import {
   DialogActions,
   Button,
   TextField,
+
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 
 const ListedItems = () => {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -19,23 +25,30 @@ const ListedItems = () => {
     price: "",
     quantity: "",
   });
+  const { user, isAuthenticated } = useAuth0();
 
   // Fetch products from backend
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/products");
+      setLoading(true);
+      setError(null);
+      // Use the dedicated endpoint for farmer's products
+      const response = await axios.get(`http://localhost:5000/api/products/farmer/${user.sub}`);
       setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
-      alert("Failed to load products");
+      setError(error.response?.data?.message || "Failed to load products");
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [user?.sub]);
 
-  // Handle edit button click
+  useEffect(() => {
+    if (isAuthenticated && user?.sub) {
+      fetchProducts();
+    }
+  }, [user, isAuthenticated, fetchProducts]);
+
   const handleEdit = (product) => {
     setEditingProduct(product);
     setEditForm({
@@ -46,54 +59,92 @@ const ListedItems = () => {
     setEditDialogOpen(true);
   };
 
-  // Handle edit form submission
   const handleEditSubmit = async () => {
     try {
-      await axios.put(
+      if (!editingProduct?._id) return;
+
+      const response = await axios.put(
         `http://localhost:5000/api/products/${editingProduct._id}`,
-        editForm
+        {
+          ...editForm,
+          farmerID: user.sub
+        }
       );
-      setEditDialogOpen(false);
-      fetchProducts(); // Refresh the products list
-      alert("Product updated successfully");
+
+      if (response.status === 200) {
+        setEditDialogOpen(false);
+        fetchProducts(); // Refresh the list
+        setError(null);
+      }
     } catch (error) {
       console.error("Error updating product:", error);
-      alert("Failed to update product");
+      setError(error.response?.data?.message || "Failed to update product");
     }
   };
 
-  // Handle remove button click
   const handleRemove = async (productId) => {
     if (window.confirm("Are you sure you want to remove this product?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/products/${productId}`);
-        fetchProducts(); // Refresh the products list
-        alert("Product removed successfully");
+        const response = await axios.delete(
+          `http://localhost:5000/api/products/${productId}`
+        );
+
+        if (response.status === 200) {
+          fetchProducts(); // Refresh the list
+          setError(null);
+        }
       } catch (error) {
         console.error("Error removing product:", error);
-        alert("Failed to remove product");
+        setError(error.response?.data?.message || "Failed to remove product");
       }
     }
   };
 
+  if (!isAuthenticated) {
+    return <Alert severity="warning">Please log in to view your products</Alert>;
+  }
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center p-5">
+        <CircularProgress />
+      </div>
+    );
+  }
+
   return (
     <div className="containerCards">
       <div className="p-1">
-        <h2 className="mb-4">Listed Items</h2>
-        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-          {products.map((product) => (
-            <div key={product._id} className="col">
-              <HarvestCard
-                image={product.image}
-                name={product.name}
-                price={product.price}
-                weight={product.quantity}
-                onEdit={() => handleEdit(product)}
-                onRemove={() => handleRemove(product._id)}
-              />
-            </div>
-          ))}
-        </div>
+        <h2 className="mb-4">My Listed Harvests</h2>
+        
+        {error && (
+          <Alert severity="error" className="mb-3">
+            {error}
+          </Alert>
+        )}
+
+        {products.length === 0 ? (
+          <Alert severity="info">
+            You haven't listed any harvests yet.
+          </Alert>
+        ) : (
+          <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            {products.map((product) => (
+              <div key={product._id} className="col">
+                <HarvestCard
+                  image={product.image}
+                  name={product.name}
+                  price={product.price}
+                  weight={product.quantity}
+                  type={product.type}
+                  listedDate={new Date(product.listedDate).toLocaleDateString()}
+                  onEdit={() => handleEdit(product)}
+                  onRemove={() => handleRemove(product._id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Edit Dialog */}

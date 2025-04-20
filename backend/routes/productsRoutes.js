@@ -4,11 +4,15 @@ const {
   getProducts, 
   createProduct, 
   deleteProduct, 
-  updateProduct 
+  updateProduct,
+  getProductsByFarmer
 } = require("../controllers/productController");
 
 // GET: Browse all products
 router.get("/", getProducts);
+
+// GET: Products by farmer ID
+router.get("/farmer/:farmerID", getProductsByFarmer);
 
 // POST: Create new product
 router.post("/", createProduct);

@@ -124,9 +124,32 @@ const updateProduct = async (req, res) => {
   }
 };
 
+// Get products by farmer ID
+const getProductsByFarmer = async (req, res) => {
+  try {
+    const { farmerID } = req.params;
+    
+    if (!farmerID) {
+      return res.status(400).json({ message: "Farmer ID is required" });
+    }
+
+    const products = await Product.find({ farmerID });
+    
+    if (products.length === 0) {
+      return res.json([]);
+    }
+
+    res.json(products);
+  } catch (error) {
+    console.error("Error fetching farmer products:", error);
+    res.status(500).json({ message: "Error fetching products", error: error.message });
+  }
+};
+
 module.exports = { 
   getProducts, 
   createProduct, 
   deleteProduct, 
-  updateProduct 
+  updateProduct,
+  getProductsByFarmer // Add this export
 };

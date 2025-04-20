@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const ListNewItem = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ const ListNewItem = () => {
   const [dragActive, setDragActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
+  const { user } = useAuth0();
 
   // Handle Form Submission
   const handleSubmit = async (e) => {
@@ -41,7 +43,7 @@ const ListNewItem = () => {
         price: Number(formData.minBidPrice),
         quantity: Number(formData.availableWeight),
         image: base64Image,
-        farmerID: "default"
+        farmerID: user.sub // Use the authenticated user's ID
       };
 
       console.log("Attempting to submit product:", productData);
@@ -54,7 +56,7 @@ const ListNewItem = () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          timeout: 40000, // 5 second timeout
+          timeout: 60000, // 5 second timeout
         }
       );
 

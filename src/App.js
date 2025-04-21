@@ -6,17 +6,16 @@ import {
   Route,
   Navigate,
   useLocation,
-  useNavigate
 } from "react-router-dom";
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
-import axios from "axios";
 
-import AuthWrapper from "./components/AuthWrapper"; // ✅ Import the improved wrapper
+import AuthWrapper from "./components/AuthWrapper";
 
 // Layouts
 import FarmerLayout from "./layouts/FarmerLayout";
 import MerchantLayout from "./layouts/MerchantLayout";
 import TransporterLayout from "./layouts/TransporterLayout";
+import { CartProvider } from "./context/CartContext";
 
 // Farmer Pages
 import Dashboard from "./pages/Farmer/Dashboard";
@@ -115,7 +114,14 @@ const AppRoutes = () => {
       <Route path="/help" element={<Help />} />
 
       {/* Farmer */}
-      <Route path="/" element={<ProtectedRoute allowedRole="farmer"><FarmerLayout /></ProtectedRoute>}>
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute allowedRole="farmer">
+            <FarmerLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Dashboard />} />
         <Route path="list-new-item" element={<ListNewItem />} />
         <Route path="view-listed-items" element={<ViewListedItems />} />
@@ -129,7 +135,14 @@ const AppRoutes = () => {
       </Route>
 
       {/* Merchant */}
-      <Route path="/merchant" element={<ProtectedRoute allowedRole="merchant"><MerchantLayout /></ProtectedRoute>}>
+      <Route
+        path="/merchant"
+        element={
+          <ProtectedRoute allowedRole="merchant">
+            <MerchantLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="dashboard" element={<MerchantDashboard />} />
         <Route path="listings" element={<MerchantBrowseListing />} />
         <Route path="buy" element={<MerchantBuy />} />
@@ -140,7 +153,14 @@ const AppRoutes = () => {
       </Route>
 
       {/* Transporter */}
-      <Route path="/transporter" element={<ProtectedRoute allowedRole="transporter"><TransporterLayout /></ProtectedRoute>}>
+      <Route
+        path="/transporter"
+        element={
+          <ProtectedRoute allowedRole="transporter">
+            <TransporterLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="dashboard" element={<TransporterDashboard />} />
         <Route path="addVehicle" element={<AddVehicle />} />
         <Route path="bookings" element={<Bookings />} />
@@ -155,15 +175,17 @@ const AppRoutes = () => {
   );
 };
 
-// ✅ Final App Component
+// ✅ Final App Component (with resolved merge)
 const App = () => {
   return (
     <Auth0ProviderWithRedirect>
-      <Router>
-        <AuthWrapper>
-          <AppRoutes />
-        </AuthWrapper>
-      </Router>
+      <CartProvider>
+        <Router>
+          <AuthWrapper>
+            <AppRoutes />
+          </AuthWrapper>
+        </Router>
+      </CartProvider>
     </Auth0ProviderWithRedirect>
   );
 };

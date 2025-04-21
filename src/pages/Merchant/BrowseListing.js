@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Container, Typography, TextField, Grid, Card, CardMedia, CardActions, Button } from "@mui/material";
+import axios from "axios";
+import { useCart } from "../../context/CartContext";
 
-const products = [
+const staticProducts = [
   { name: "Cabbage", img: "/images/cabbage.jpg" },
   { name: "Carrots", img: "/images/carrot.jpg" },
   { name: "Long Beans", img: "/images/beans.jpg" },
@@ -13,6 +15,19 @@ const products = [
 ];
 
 const BrowseListing = () => {
+  const [fetchedProducts, setFetchedProducts] = useState([]);
+  const { addToCart } = useCart();
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/products") // adjust your backend URL
+      .then((res) => setFetchedProducts(res.data))
+      .catch((err) => console.error("Error fetching products:", err));
+  }, []);
+
+  // Combine static products with dynamically fetched ones
+  const allProducts = [...staticProducts, ...fetchedProducts];
+
   return (
     <Container sx={{ mt: 4 }}>
       {/* Header */}
@@ -38,13 +53,20 @@ const BrowseListing = () => {
         Buy Fresh Harvest!
       </Typography>
       <Grid container spacing={2}>
-        {products.map((product, index) => (
+        {allProducts.slice().reverse().map((product, index) => ( // Reverse the array to show the latest first
           <Grid item xs={6} sm={4} md={3} key={index}>
             <Card sx={{ borderRadius: "10px", overflow: "hidden", textAlign: "center" }}>
-              <CardMedia component="img" height="120" image={product.img} alt={product.name} />
+              <CardMedia component="img" height="120" image={product.img || product.image} alt={product.name} />
               <Typography variant="subtitle1" fontWeight={600} mt={1}>
                 {product.name}
               </Typography>
+              {product.price && <Typography variant="body2">Rs. {product.price}</Typography>}
+              {product.quantity && <Typography variant="body2">Qty: {product.quantity}</Typography>}
+              {product.listedDate && (
+                <Typography variant="caption" color="text.secondary">
+                  {new Date(product.listedDate).toLocaleDateString()}
+                </Typography>
+              )}
               <CardActions>
                 <Button
                   variant="contained"
@@ -52,11 +74,12 @@ const BrowseListing = () => {
                   sx={{
                     width: "100%",
                     backgroundColor: "#FFEFD5",
-                    color: "#333", // Dark text for contrast
+                    color: "#333",
                     "&:hover": {
-                      backgroundColor: "#FFDBA4", // Slightly darker on hover
+                      backgroundColor: "#FFDBA4",
                     },
                   }}
+                  onClick={() => addToCart(product)}
                 >
                   Add to Cart
                 </Button>

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axios from "axios";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const ListNewItem = () => {
   const [formData, setFormData] = useState({
@@ -10,11 +12,108 @@ const ListNewItem = () => {
   });
 
   const [dragActive, setDragActive] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
+  const { user } = useAuth0();
 
   // Handle Form Submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+    setIsSubmitting(true);
+    setSubmitStatus({ type: "", message: "" });
+
+    try {
+      if (!formData.images || formData.images.length === 0) {
+        throw new Error("Please select at least one image");
+      }
+
+      // Convert first image to base64
+      const imageFile = formData.images[0];
+      const base64Image = await convertImageToBase64(imageFile);
+
+      // Validate form data
+      if (!formData.harvestType || !formData.harvestName || 
+          !formData.minBidPrice || !formData.availableWeight) {
+        throw new Error("Please fill in all required fields");
+      }
+
+      const productData = {
+        type: formData.harvestType,
+        name: formData.harvestName,
+        price: Number(formData.minBidPrice),
+        quantity: Number(formData.availableWeight),
+        image: base64Image,
+        farmerID: user.sub // Use the authenticated user's ID
+      };
+
+      console.log("Attempting to submit product:", productData);
+
+      // Add error handling and timeout
+      const response = await axios.post(
+        "http://localhost:5000/api/products",
+        productData,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 60000, // 5 second timeout
+        }
+      );
+
+      console.log("Server response:", response.data);
+
+      if (response.status === 201) {
+        setSubmitStatus({
+          type: "success",
+          message: "Product listed successfully!"
+        });
+
+        // Reset form
+        setFormData({
+          harvestType: "",
+          harvestName: "",
+          minBidPrice: "",
+          availableWeight: "",
+          images: []
+        });
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      
+      let errorMessage = "Failed to list product. ";
+      
+      if (error.code === "ECONNREFUSED") {
+        errorMessage += "Cannot connect to server. Please check if the server is running.";
+      } else if (error.code === "ETIMEDOUT") {
+        errorMessage += "Connection timed out. Please try again.";
+      } else if (error.response) {
+        errorMessage += error.response.data.message || "Please try again.";
+      } else if (error.message) {
+        errorMessage += error.message;
+      }
+
+      setSubmitStatus({
+        type: "error",
+        message: errorMessage
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Convert image to base64
+  const convertImageToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error("No file provided"));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(new Error("Error converting image: " + error));
+    });
   };
 
   // Handle File Selection
@@ -42,10 +141,33 @@ const ListNewItem = () => {
     setFormData({ ...formData, images: [...formData.images, ...files] });
   };
 
+  const handleReset = () => {
+    setFormData({
+      harvestType: "",
+      harvestName: "",
+      minBidPrice: "",
+      availableWeight: "",
+      images: []
+    });
+    setSubmitStatus({ type: "", message: "" });
+  };
+
   return (
     <div className="bg-white p-4 rounded">
       <h5 className="mb-4">List New Item</h5>
       <p className="text-muted mb-4">Add Your Harvest Here</p>
+
+      {submitStatus.message && (
+        <div
+          className={`alert ${
+            submitStatus.type === "success" 
+              ? "alert-success" 
+              : "alert-danger"
+          } mb-4`}
+        >
+          {submitStatus.message}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         {/* Harvest Type & Name */}
@@ -160,9 +282,22 @@ const ListNewItem = () => {
           )}
         </div>
 
-        <button type="submit" className="btn btn-success w-100">
-          Add Listing
-        </button>
+<div className="d-flex gap-2">
+  <button 
+    type="submit" 
+    className="btn btn-success flex-grow-1" 
+    disabled={isSubmitting}
+  >
+    {isSubmitting ? "Adding..." : "Add Listing"}
+  </button>
+  <button 
+    type="button" 
+    className="btn btn-secondary" 
+    onClick={handleReset}
+  >
+    Reset Form
+  </button>
+</div>
       </form>
     </div>
   );

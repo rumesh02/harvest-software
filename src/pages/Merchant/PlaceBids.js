@@ -1,92 +1,143 @@
-import React from "react";
-import { Card, CardContent, CardMedia, Typography, Button, Grid } from "@mui/material";
-
-const products = [
-  {
-    id: 1,
-    name: "Cabbage",
-    price: "Rs. 500/kg",
-    available: "100 kg",
-    farmer: "Sunimal Perera",
-    location: "Nuwara Eliya",
-    image: "https://d1obh0a64dzipo.cloudfront.net/images/4380.jpg",
-  },
-  {
-    id: 2,
-    name: "Beans",
-    price: "Rs. 500/kg",
-    available: "100 kg",
-    farmer: "Sunimal Perera",
-    location: "Nuwara Eliya",
-    image: "https://th.bing.com/th/id/OIP.4XW3qsorY_xMUonq--h19QHaEl?w=1920&h=1190&rs=1&pid=ImgDetMain",
-  },
-  {
-    id: 3,
-    name: "Carrots",
-    price: "Rs. 500/kg",
-    available: "100 kg",
-    farmer: "Sunimal Perera",
-    location: "Nuwara Eliya",
-    image: "https://garche.jp/wp-content/uploads/2021/01/5cf12d1a-145b-4ef9-8884-fc0101eb5312.jpg",
-  },
-  {
-    id: 4,
-    name: "Potatoes",
-    price: "Rs. 500/kg",
-    available: "100 kg",
-    farmer: "Sunimal Perera",
-    location: "Nuwara Eliya",
-    image: "https://kj1bcdn.b-cdn.net/media/65042/n.jpg",
-  },
-  {
-    id: 5,
-    name: "Fresh Apples",
-    price: "Rs. 500/kg",
-    available: "100 kg",
-    farmer: "Sunimal Perera",
-    location: "Nuwara Eliya",
-    image: "https://th.bing.com/th/id/OIP.at4Ylta_qj1J2ybQjf2TQgHaEU?w=600&h=350&rs=1&pid=ImgDetMain",
-  },
-];
+import React, { useState } from "react";
+import { Card, CardContent, CardMedia, Typography, Button, Grid,Dialog,DialogTitle,DialogContent,DialogActions,TextField} from "@mui/material";
+import { useCart } from "../../context/CartContext";
+import axios from "axios";
 
 const PlaceBids = () => {
+  const { cartItems, removeFromCart } = useCart();
+  const [open, setOpen] = useState(false); // State to control the dialog
+  const [selectedProduct, setSelectedProduct] = useState(null); // State to store the selected product
+  const [bidAmount, setBidAmount] = useState(""); // State for bid amount
+  const [orderWeight, setOrderWeight] = useState(""); // State for order weight
+
+  // Open the dialog and set the selected product
+  const handlePlaceBidClick = (product) => {
+    console.log("Place Bid clicked for:", product); // Debugging
+    setSelectedProduct(product);
+    setOpen(true);
+    console.log("Dialog open state:", open);
+  };
+
+  // Close the dialog
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedProduct(null);
+    setBidAmount("");
+    setOrderWeight("");
+  };
+
+  // Handle submitting the bid
+  const handleSubmitBid = async () => {
+    if (!bidAmount || !orderWeight) {
+      alert("Please enter both bid amount and order weight.");
+      return;
+    }
+
+  // Send the bid details to "My Bids" (API call)
+      try {
+        const response = await axios.post("http://localhost:5000/api/bids", {
+          productId: selectedProduct._id,
+          productName: selectedProduct.name,
+          bidAmount: Number(bidAmount),
+          orderWeight: Number(orderWeight),
+        });
+        console.log("Bid Submitted:", response.data);
+
+  
+  // Close the dialog and reset states
+        handleClose();
+        alert("Bid successfully submitted!");
+      } catch (error) {
+        console.error("Error submitting bid:", error);
+        alert("Failed to submit the bid. Please try again.");
+      }
+    };
+
   return (
     <div style={{ padding: "20px" }}>
       <Typography variant="h5" gutterBottom>
-        Buy Now
+        Selected Products
       </Typography>
       <Grid container spacing={3}>
-        {products.map((product) => (
-          <Grid item xs={12} sm={6} md={4} key={product.id}>
+        {cartItems.map((product, index) => (
+          <Grid item xs={12} sm={6} md={4} key={index}>
             <Card sx={{ maxWidth: 345 }}>
-              <CardMedia component="img" height="140" image={product.image} alt={product.name} />
+              <CardMedia component="img" height="140" image={product.img || product.image} alt={product.name} />
               <CardContent>
                 <Typography variant="body2" color="textSecondary">
-                  <b>Product Details:</b>
-                  <br />
                   <b>Name:</b> {product.name}
-                  <br />
-                  <b>Price:</b> {product.price}
-                  <br />
-                  <b>Available:</b> {product.available}
-                  <br />
-                  <b>Farmer:</b> {product.farmer}
-                  <br />
-                  <b>Location:</b> {product.location}
+                  {product.price && (
+                    <>
+                      <br />
+                      <b>Price:</b> Rs. {product.price}
+                    </>
+                  )}
+                  {product.quantity && (
+                    <>
+                      <br />
+                      <b>Quantity:</b> {product.quantity}
+                    </>
+                  )}
                 </Typography>
               </CardContent>
               <div style={{ display: "flex", justifyContent: "space-between", padding: "10px" }}>
-                <Button variant="contained" color="secondary">
+                
+              <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={() => handlePlaceBidClick(product)} // Open the dialog
+                >
                   Place Bid
                 </Button>
-                <Button variant="contained" color="warning">
+
+                <Button
+                  variant="contained"
+                  color="warning"
+                  sx={{ border: "1px solid red" }}
+                  onClick={() => removeFromCart(product.name)} 
+                >
                   Remove
                 </Button>
+
               </div>
             </Card>
           </Grid>
         ))}
       </Grid>
+    
+      {/* Dialog for entering bid details */}
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Enter Bid Details</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom>
+            Product: {selectedProduct?.name}
+          </Typography>
+          <TextField
+            label="Bid Amount (Rs.)"
+            type="number"
+            fullWidth
+            value={bidAmount}
+            onChange={(e) => setBidAmount(e.target.value)}
+            sx={{ marginBottom: "10px" }}
+          />
+          <TextField
+            label="Order Weight (kg)"
+            type="number"
+            fullWidth
+            value={orderWeight}
+            onChange={(e) => setOrderWeight(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmitBid} color="primary">
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </div>
   );
 };

@@ -58,7 +58,7 @@ const MerchantDashboard = ({
       <div className="row g-4">
         <div className="col-md-7">
           <div className="bg-white rounded h-100 d-flex flex-column">
-            <h5 className="mb-3">Monthly Harvest Percheses</h5>
+            <h5 className="mb-3">Monthly Harvest Purchases</h5>
             <div className="flex-grow-1">
               <ResponsiveContainer width="100%" height="100%" minHeight={220}>
                 <BarChart data={monthlyData}>

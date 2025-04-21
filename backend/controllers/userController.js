@@ -32,4 +32,22 @@ const getUsers = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, getUsers };
+// Check if user exists by Auth0 ID
+const checkUserExistence = async (req, res) => {
+    const { auth0Id } = req.params;
+
+    try {
+        const user = await User.findOne({ auth0Id });
+        if (user) {
+            return res.status(200).json({ exists: true, role: user.role });
+        } else {
+            return res.status(200).json({ exists: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+
+module.exports = { registerUser, getUsers, checkUserExistence };

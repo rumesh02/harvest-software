@@ -1,6 +1,6 @@
 import React from "react";
-import { List, ListItemButton, ListItemIcon, ListItemText} from "@mui/material";
-import { Home, ShoppingCart, MonetizationOn, AssignmentTurnedIn, History, Chat, AccountBalanceWallet, Settings, ExitToApp } from "@mui/icons-material";
+import { List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { Home, ShoppingCart, MonetizationOn, AssignmentTurnedIn, History, Chat, AccountBalanceWallet, Settings, ExitToApp, DirectionsCar } from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import Avatar from "@mui/material/Avatar";
@@ -9,11 +9,12 @@ import Badge from "@mui/material/Badge";
 const menuItems = [
   { text: "Dashboard", icon: <Home />, path: "/merchant/dashboard" },
   { text: "Browse Listing", icon: <ShoppingCart />, path: "/merchant/listings" },
-  { text: "Place Bids", icon: <MonetizationOn />, path: "/merchant/buy" },  // 💰 Changed icon
-  { text: "My Bids", icon: <AssignmentTurnedIn />, path: "/merchant/bids" },  // ✅ Changed icon
+  { text: "Place Bids", icon: <MonetizationOn />, path: "/merchant/buy" },
+  { text: "My Bids", icon: <AssignmentTurnedIn />, path: "/merchant/bids" },
   { text: "Purchases", icon: <History />, path: "/merchant/purchase-history" },
   { text: "Messages/Chat", icon: <Chat />, path: "/merchant/messages" },
-  { text: "Payments", icon: <AccountBalanceWallet />, path: "/merchant/payments" } // 👛 Changed icon
+  { text: "Payments", icon: <AccountBalanceWallet />, path: "/merchant/payments" },
+  { text: "Book Vehicle", icon: <DirectionsCar />, path: "/merchant/book-vehicle" }
 ];
 
 const MerchantSidebar = () => {
@@ -65,9 +66,8 @@ const MerchantSidebar = () => {
         </List>
       </div>
 
-      {/* Bottom Section - Profile, Settings, Logout, and Confirm Order Button */}
+      {/* Bottom Section - Profile, Settings, Logout */}
       <div>
-        {/* Divider */}
         <hr style={{ margin: "20px 0", border: "1px solid #E5E7EB" }} />
 
         {/* Profile Section */}

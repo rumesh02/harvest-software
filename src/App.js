@@ -22,6 +22,7 @@ import MerchantBids from "./pages/Merchant/MyBids";
 import MerchantPurchaseHistory from "./pages/Merchant/PurchaseHistory";
 import MerchantMessages from "./pages/Merchant/Messages";
 import MerchantPayments from "./pages/Merchant/Payments";
+import MerchantVehicleBooking from "./pages/Merchant/BookVehicle"; // Added Book Vehicle route
 
 // Transporter Pages
 import TransporterDashboard from "./pages/Transporter/TransporterDashboard";
@@ -45,6 +46,10 @@ const clientId = "TteW47136eGLVWWVHIFxAiViqCnittRm";
 
 // Role-Based Protected Route Component
 const ProtectedRoute = ({ children, allowedRole }) => {
+    // 🔧 Temporarily bypassing auth checks for development
+    return children;
+
+    /*
     const { isAuthenticated, isLoading } = useAuth0();
     const userRole = localStorage.getItem('userRole');
 
@@ -70,10 +75,15 @@ const ProtectedRoute = ({ children, allowedRole }) => {
 
     // Fallback to login if no role is set
     return <Navigate to="/login" />;
+    */
 };
 
 // Auth0 provider with redirect handler
-const Auth0ProviderWithRedirect = ({ children }) => {
+//const Auth0ProviderWithRedirect = ({ children }) => {
+    // 🔧 Temporarily skipping Auth0Provider during development
+    //return <>{children}</>;
+
+    /*
     return (
         <Auth0Provider
             domain={domain}
@@ -85,7 +95,8 @@ const Auth0ProviderWithRedirect = ({ children }) => {
             {children}
         </Auth0Provider>
     );
-};
+    */
+//};
 
 // Routes component with role handling
 const AppRoutes = () => {
@@ -93,7 +104,8 @@ const AppRoutes = () => {
     const location = useLocation();
     const userRole = localStorage.getItem('userRole');
 
-    // Handle automatic redirect after login
+    // 🔧 Temporarily disable auto redirect based on role
+    /*
     React.useEffect(() => {
         if (!isLoading && isAuthenticated && userRole && location.pathname === '/') {
             if (userRole === 'merchant') {
@@ -104,6 +116,7 @@ const AppRoutes = () => {
             // For farmer role, we're already at the right location (/)
         }
     }, [isAuthenticated, isLoading, userRole, location.pathname]);
+    */
 
     return (
         <Routes>
@@ -145,6 +158,7 @@ const AppRoutes = () => {
                 <Route path="purchase-history" element={<MerchantPurchaseHistory />} />
                 <Route path="messages" element={<MerchantMessages />} />
                 <Route path="payments" element={<MerchantPayments />} />
+                <Route path="book-vehicle" element={<MerchantVehicleBooking />} /> {/* Added Book Vehicle route */}
             </Route>
 
             {/* Protected Transporter Routes */}
@@ -158,7 +172,7 @@ const AppRoutes = () => {
                 <Route path="bookings" element={<Bookings />} />
                 <Route path="editListed" element={<EditListed />} />
                 <Route path="inbox" element={<Inbox />} />
-                <Route path="payments" element={<Paymentapproves />} /> {/* Both routes included */}
+                <Route path="payments" element={<Paymentapproves />} />
             </Route>
 
             {/* Other Public Routes */}
@@ -175,11 +189,11 @@ const AppRoutes = () => {
 // Main app component
 const App = () => {
     return (
-        <Auth0ProviderWithRedirect>
+        //<Auth0ProviderWithRedirect>
             <Router>
                 <AppRoutes />
             </Router>
-        </Auth0ProviderWithRedirect>
+        //</Auth0ProviderWithRedirect>
     );
 };
 

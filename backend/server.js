@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
+const userRoutes = require('./routes/userRoutes'); // ✅ Keep only this one
 
 dotenv.config();
 connectDB();
@@ -12,19 +13,18 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ✅ Default route
+// Routes
+app.use("/api/users", userRoutes);
+
+// Default route
 app.get("/", (req, res) => {
     res.send("API is running...");
 });
 
-// ✅ Test API route (ADD THIS HERE)
+// Test route
 app.get("/api/test", (req, res) => {
     res.send("API is working!");
 });
-
-// Import routes
-const userRoutes = require("./routes/userRoutes");
-app.use("/api/users", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

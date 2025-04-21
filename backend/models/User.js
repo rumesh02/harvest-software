@@ -1,10 +1,16 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-});
+  auth0Id: { type: String, required: true, unique: true }, // e.g., auth0|123456
+  email: { type: String, required: true },
+  name: { type: String, required: true }, // Combined first + last name
+  phone: { type: String, required: true },
+  nic: { type: String, required: true },
+  gender: { type: String },
+  address: { type: String },
+  province: { type: String },
+  district: { type: String },
+  role: { type: String, required: true } // farmer / merchant / transporter
+}, { timestamps: true });
 
-const User = mongoose.model("User", userSchema);
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);

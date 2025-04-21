@@ -1,6 +1,19 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+// src/App.js
+import React, { useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate
+} from "react-router-dom";
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
+import axios from "axios";
+
+import AuthWrapper from "./components/AuthWrapper"; // ✅ Import the improved wrapper
+
+// Layouts
 import FarmerLayout from "./layouts/FarmerLayout";
 import MerchantLayout from "./layouts/MerchantLayout";
 import TransporterLayout from "./layouts/TransporterLayout";
@@ -29,7 +42,7 @@ import Bookings from "./pages/Transporter/Bookings";
 import AddVehicle from "./pages/Transporter/AddVehicle";
 import Inbox from "./pages/Transporter/Inbox";
 import EditListed from "./pages/Transporter/EditListed";
-import Paymentapproves from "./pages/Transporter/PaymentApproves"; // Added back the missing route
+import Paymentapproves from "./pages/Transporter/PaymentApproves";
 
 // General Pages
 import About from "./pages/About";
@@ -43,144 +56,116 @@ import RegisterPage from "./app/RegisterPage";
 const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";
 const clientId = "TteW47136eGLVWWVHIFxAiViqCnittRm";
 
-// Role-Based Protected Route Component
+// ✅ Protected Route
 const ProtectedRoute = ({ children, allowedRole }) => {
-    const { isAuthenticated, isLoading } = useAuth0();
-    const userRole = localStorage.getItem('userRole');
+  const { isAuthenticated, isLoading } = useAuth0();
+  const userRole = localStorage.getItem("userRole");
 
-    if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
+  if (!isAuthenticated) return <Navigate to="/login" />;
 
-    if (!isAuthenticated) {
-        return <Navigate to="/login" />;
-    }
+  if (!allowedRole || userRole === allowedRole) return children;
 
-    // If no specific role is required or user has the correct role
-    if (!allowedRole || userRole === allowedRole) {
-        return children;
-    }
+  if (userRole === "farmer") return <Navigate to="/" />;
+  if (userRole === "merchant") return <Navigate to="/merchant/dashboard" />;
+  if (userRole === "transporter") return <Navigate to="/transporter/dashboard" />;
 
-    // Redirect to appropriate dashboard based on role
-    if (userRole === 'farmer') {
-        return <Navigate to="/" />;
-    } else if (userRole === 'merchant') {
-        return <Navigate to="/merchant/dashboard" />;
-    } else if (userRole === 'transporter') {
-        return <Navigate to="/transporter/dashboard" />;
-    }
-
-    // Fallback to login if no role is set
-    return <Navigate to="/login" />;
+  return <Navigate to="/login" />;
 };
 
-// Auth0 provider with redirect handler
+// ✅ Auth0 Provider Wrapper
 const Auth0ProviderWithRedirect = ({ children }) => {
-    return (
-        <Auth0Provider
-            domain={domain}
-            clientId={clientId}
-            authorizationParams={{
-                redirect_uri: window.location.origin
-            }}
-        >
-            {children}
-        </Auth0Provider>
-    );
+  return (
+    <Auth0Provider
+      domain={domain}
+      clientId={clientId}
+      authorizationParams={{
+        redirect_uri: window.location.origin,
+      }}
+    >
+      {children}
+    </Auth0Provider>
+  );
 };
 
-// Routes component with role handling
+// ✅ Main Routes
 const AppRoutes = () => {
-    const { isAuthenticated, isLoading } = useAuth0();
-    const location = useLocation();
-    const userRole = localStorage.getItem('userRole');
+  const { isAuthenticated, isLoading } = useAuth0();
+  const location = useLocation();
+  const userRole = localStorage.getItem("userRole");
 
-    // Handle automatic redirect after login
-    React.useEffect(() => {
-        if (!isLoading && isAuthenticated && userRole && location.pathname === '/') {
-            if (userRole === 'merchant') {
-                window.location.href = '/merchant/dashboard';
-            } else if (userRole === 'transporter') {
-                window.location.href = '/transporter/dashboard';
-            }
-            // For farmer role, we're already at the right location (/)
-        }
-    }, [isAuthenticated, isLoading, userRole, location.pathname]);
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && userRole && location.pathname === "/") {
+      if (userRole === "merchant") {
+        window.location.href = "/merchant/dashboard";
+      } else if (userRole === "transporter") {
+        window.location.href = "/transporter/dashboard";
+      }
+    }
+  }, [isAuthenticated, isLoading, userRole, location.pathname]);
 
-    return (
-        <Routes>
-            {/* Authentication Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+  return (
+    <Routes>
+      {/* Public */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/home" element={<HomePage />} />
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/contact" element={<ContactUs />} />
+      <Route path="/help" element={<Help />} />
 
-            {/* Home Page - Public */}
-            <Route path="/home" element={<HomePage />} />
+      {/* Farmer */}
+      <Route path="/" element={<ProtectedRoute allowedRole="farmer"><FarmerLayout /></ProtectedRoute>}>
+        <Route index element={<Dashboard />} />
+        <Route path="list-new-item" element={<ListNewItem />} />
+        <Route path="view-listed-items" element={<ViewListedItems />} />
+        <Route path="accept-reject-bids" element={<AcceptRejectBids />} />
+        <Route path="messages" element={<Messages />} />
+        <Route path="payment-approve" element={<PaymentApprove />} />
+        <Route path="order" element={<OrderPage />} />
+        <Route path="about" element={<About />} />
+        <Route path="contact" element={<ContactUs />} />
+        <Route path="help" element={<Help />} />
+      </Route>
 
-            {/* Protected Farmer Routes */}
-            <Route path="/" element={
-                <ProtectedRoute allowedRole="farmer">
-                    <FarmerLayout />
-                </ProtectedRoute>
-            }>
-                <Route index element={<Dashboard />} />
-                <Route path="list-new-item" element={<ListNewItem />} />
-                <Route path="view-listed-items" element={<ViewListedItems />} />
-                <Route path="accept-reject-bids" element={<AcceptRejectBids />} />
-                <Route path="messages" element={<Messages />} />
-                <Route path="payment-approve" element={<PaymentApprove />} />
-                <Route path="order" element={<OrderPage />} />
-                <Route path="about" element={<About />} />
-                <Route path="contact" element={<ContactUs />} />
-                <Route path="help" element={<Help />} />
-            </Route>
+      {/* Merchant */}
+      <Route path="/merchant" element={<ProtectedRoute allowedRole="merchant"><MerchantLayout /></ProtectedRoute>}>
+        <Route path="dashboard" element={<MerchantDashboard />} />
+        <Route path="listings" element={<MerchantBrowseListing />} />
+        <Route path="buy" element={<MerchantBuy />} />
+        <Route path="bids" element={<MerchantBids />} />
+        <Route path="purchase-history" element={<MerchantPurchaseHistory />} />
+        <Route path="messages" element={<MerchantMessages />} />
+        <Route path="payments" element={<MerchantPayments />} />
+      </Route>
 
-            {/* Protected Merchant Routes */}
-            <Route path="/merchant" element={
-                <ProtectedRoute allowedRole="merchant">
-                    <MerchantLayout />
-                </ProtectedRoute>
-            }>
-                <Route path="dashboard" element={<MerchantDashboard />} />
-                <Route path="listings" element={<MerchantBrowseListing />} />
-                <Route path="buy" element={<MerchantBuy />} />
-                <Route path="bids" element={<MerchantBids />} />
-                <Route path="purchase-history" element={<MerchantPurchaseHistory />} />
-                <Route path="messages" element={<MerchantMessages />} />
-                <Route path="payments" element={<MerchantPayments />} />
-            </Route>
+      {/* Transporter */}
+      <Route path="/transporter" element={<ProtectedRoute allowedRole="transporter"><TransporterLayout /></ProtectedRoute>}>
+        <Route path="dashboard" element={<TransporterDashboard />} />
+        <Route path="addVehicle" element={<AddVehicle />} />
+        <Route path="bookings" element={<Bookings />} />
+        <Route path="editListed" element={<EditListed />} />
+        <Route path="inbox" element={<Inbox />} />
+        <Route path="payments" element={<Paymentapproves />} />
+      </Route>
 
-            {/* Protected Transporter Routes */}
-            <Route path="/transporter" element={
-                <ProtectedRoute allowedRole="transporter">
-                    <TransporterLayout />
-                </ProtectedRoute>
-            }>
-                <Route path="dashboard" element={<TransporterDashboard />} />
-                <Route path="addVehicle" element={<AddVehicle />} />
-                <Route path="bookings" element={<Bookings />} />
-                <Route path="editListed" element={<EditListed />} />
-                <Route path="inbox" element={<Inbox />} />
-                <Route path="payments" element={<Paymentapproves />} /> {/* Both routes included */}
-            </Route>
-
-            {/* Other Public Routes */}
-            <Route path="/about" element={<AboutUs />} />
-            <Route path="/contact" element={<ContactUs />} />
-            <Route path="/help" element={<Help />} />
-
-            {/* Redirect unknown routes to home */}
-            <Route path="*" element={<Navigate to="/home" />} />
-        </Routes>
-    );
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/home" />} />
+    </Routes>
+  );
 };
 
-// Main app component
+// ✅ Final App Component
 const App = () => {
-    return (
-        <Auth0ProviderWithRedirect>
-            <Router>
-                <AppRoutes />
-            </Router>
-        </Auth0ProviderWithRedirect>
-    );
+  return (
+    <Auth0ProviderWithRedirect>
+      <Router>
+        <AuthWrapper>
+          <AppRoutes />
+        </AuthWrapper>
+      </Router>
+    </Auth0ProviderWithRedirect>
+  );
 };
 
 export default App;

@@ -2,6 +2,9 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
+const userRoutes = require("./routes/userRoutes");
+const bidRoutes = require("./routes/bidRoutes");
+const productsRoutes = require("./routes/productsRoutes");
 
 dotenv.config();
 
@@ -16,33 +19,19 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ✅ Default route
-app.get("/", (req, res) => {
-    res.send("API is running...");
-});
-
-// ✅ Test API route (ADD THIS HERE)
-app.get("/api/test", (req, res) => {
-    res.send("API is working!");
-});
-
-// Import routes
-const userRoutes = require("./routes/userRoutes");
-const bidRoutes = require("./routes/bidRoutes");
-const productsRoutes = require("./routes/productsRoutes");
-
+// Routes
 app.use("/api/users", userRoutes);
 app.use("/api/bids", bidRoutes);
 app.use("/api/products", productsRoutes);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({
-    message: "Server Error",
-    details: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-  });
+// Default route
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
+// Test route
+app.get("/api/test", (req, res) => {
+  res.send("API is working!");
 });
 
 // Error handling middleware

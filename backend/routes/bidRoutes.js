@@ -1,15 +1,17 @@
 const express = require('express');
-const { getBids, acceptBid, rejectBid } = require('../controllers/bidController'); // Import the controller functions
+const { createBid, acceptBid, rejectBid, getBids, updateBidStatus } = require('../controllers/bidController');
 
 const router = express.Router();
 
-// GET: Fetch all bids for a particular harvestId
-router.get('/bids/:harvestId', getBids);  // Use the getBids controller function
+// GET: Fetch all bids
+router.get("/", getBids);
 
-// PUT: Accept a specific bid by bidId
-router.put('/bids/accept/:bidId', acceptBid);  // Use the acceptBid controller function
+// POST: Create a new bid
+router.post("/", createBid);
 
-// PUT: Reject a specific bid by bidId
-router.put('/bids/reject/:bidId', rejectBid);  // Use the rejectBid controller function
+// PUT: Accept/Reject bid routes
+router.put('/accept/:bidId', acceptBid);
+router.put('/reject/:bidId', rejectBid);
+router.put('/status/:bidId', updateBidStatus);
 
 module.exports = router;

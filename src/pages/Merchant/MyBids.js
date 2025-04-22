@@ -1,24 +1,45 @@
-import React from "react";
-import { Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Typography, Table, TableBody, TableCell, TableContainer, 
+         TableHead, TableRow, Paper, Button, Box } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-
-const acceptedBids = [
-  { id: 1, product: "Carrot", bid: "Rs. 270 (1Kg)", quantity: "150Kg", finalPrice: "Rs. 40,500" },
-  { id: 2, product: "Onion", bid: "Rs. 170 (1Kg)", quantity: "200Kg", finalPrice: "Rs. 40,500" },
-];
-
-const rejectedBids = [
-  { id: 1, product: "Cabbage", bid: "Rs. 270 (1Kg)", reason: "Price too low" },
-];
-
-const pendingBids = [
-  { id: 1, product: "Tomato", bid: "Rs. 150 (1Kg)", quantity: "100Kg", finalPrice: "Rs. 15,000" },
-  { id: 2, product: "Potato", bid: "Rs. 120 (1Kg)", quantity: "250Kg", finalPrice: "Rs. 30,000" },
-];
+import axios from "axios";
 
 const MyBids = () => {
+  const [bids, setBids] = useState({
+    accepted: [],
+    pending: [],
+    rejected: []
+  });
+
+  // Fetch bids from backend
+  useEffect(() => {
+    const fetchBids = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/bids");
+        const allBids = response.data;
+
+        // Sort bids by status
+        const sortedBids = {
+          accepted: allBids.filter(bid => bid.status === "Accepted"),
+          pending: allBids.filter(bid => bid.status === "Pending"),
+          rejected: allBids.filter(bid => bid.status === "Rejected")
+        };
+
+        setBids(sortedBids);
+      } catch (error) {
+        console.error("Error fetching bids:", error);
+      }
+    };
+
+    fetchBids();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchBids, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+
   return (
     <Box sx={{ padding: "20px" }}>
       <Typography variant="h5" gutterBottom>My Bids</Typography>
@@ -39,12 +60,15 @@ const MyBids = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {acceptedBids.map((bid, index) => (
-              <TableRow key={bid.id}>
+            {bids.accepted.map((bid, index) => (
+              <TableRow key={bid._id}>
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{bid.product}</TableCell>
-                <TableCell>{bid.bid} <br /> {bid.quantity}</TableCell>
-                <TableCell>{bid.finalPrice}</TableCell>
+                <TableCell>{bid.productName}</TableCell>
+                <TableCell>
+                  Rs. {bid.bidAmount} (per Kg)<br />
+                  {bid.orderWeight} Kg
+                </TableCell>
+                <TableCell>Rs. {bid.bidAmount * bid.orderWeight}</TableCell>
                 <TableCell>
                   <Button variant="contained" color="warning">Confirm Order</Button>
                 </TableCell>
@@ -70,14 +94,17 @@ const MyBids = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {pendingBids.map((bid, index) => (
-              <TableRow key={bid.id}>
+            {bids.pending.map((bid, index) => (
+              <TableRow key={bid._id}>
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{bid.product}</TableCell>
-                <TableCell>{bid.bid} <br /> {bid.quantity}</TableCell>
-                <TableCell>{bid.finalPrice}</TableCell>
+                <TableCell>{bid.productName}</TableCell>
                 <TableCell>
-                <Typography color="info.main">Pending Approval</Typography>
+                  Rs. {bid.bidAmount} (per Kg)<br />
+                  {bid.orderWeight} Kg
+                </TableCell>
+                <TableCell>Rs. {bid.bidAmount * bid.orderWeight}</TableCell>
+                <TableCell>
+                  <Typography color="info.main">Pending Approval</Typography>
                 </TableCell>
               </TableRow>
             ))}
@@ -96,17 +123,20 @@ const MyBids = () => {
               <TableCell>No.</TableCell>
               <TableCell>Product</TableCell>
               <TableCell>Your Bid</TableCell>
-              <TableCell>Reason</TableCell>
+              <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {rejectedBids.map((bid, index) => (
-              <TableRow key={bid.id}>
+            {bids.rejected.map((bid, index) => (
+              <TableRow key={bid._id}>
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{bid.product}</TableCell>
-                <TableCell>{bid.bid}</TableCell>
-                <TableCell>{bid.reason}</TableCell>
+                <TableCell>{bid.productName}</TableCell>
+                <TableCell>
+                  Rs. {bid.bidAmount} (per Kg)<br />
+                  {bid.orderWeight} Kg
+                </TableCell>
+                <TableCell>Rejected</TableCell>
                 <TableCell>
                   <Button variant="contained" color="secondary">ReBid</Button>
                 </TableCell>

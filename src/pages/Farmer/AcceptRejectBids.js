@@ -1,6 +1,57 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const AcceptRejectBids = () => {
+  const [pendingBids, setPendingBids] = useState([]);
+
+  useEffect(() => {
+    fetchPendingBids();
+  }, []);
+
+  const fetchPendingBids = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/bids");
+      const pending = response.data.filter(bid => bid.status === "Pending");
+      setPendingBids(pending);
+    } catch (error) {
+      console.error("Error fetching pending bids:", error);
+    }
+  };
+
+  const handleBidAction = async (bidId, action) => {
+    try {
+      console.log(`Attempting to ${action} bid with ID:`, bidId);
+      
+      if (!bidId) {
+        throw new Error("Bid ID is missing");
+      }
+
+      const endpoint = `http://localhost:5000/api/bids/${action.toLowerCase()}/${bidId}`;
+      console.log("Calling endpoint:", endpoint);
+
+      const response = await axios.put(endpoint);
+      console.log("Server response:", response.data);
+
+      if (response.data) {
+        alert(`Bid ${action.toLowerCase()}ed successfully!`);
+        await fetchPendingBids(); // Refresh the list
+      }
+    } catch (error) {
+      console.error(`Error ${action.toLowerCase()}ing bid:`, error);
+      let errorMessage = `Failed to ${action.toLowerCase()} bid. `;
+      
+      if (error.response?.data?.message) {
+        errorMessage += error.response.data.message;
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Please try again.';
+      }
+      
+      alert(errorMessage);
+    }
+  };
+
   return (
     <div className="p-6 w-full overflow-x-auto">
       <h2 className="text-2xl font-semibold mb-3 mt-3">Accept / Reject Bids</h2>
@@ -18,22 +69,27 @@ const AcceptRejectBids = () => {
             </tr>
           </thead>
           <tbody>
-            {[ 
-              { id: 1, harvest: "Carrot", price: "Rs. 270", weight: "150kg", buyer: "Nimal Perera", phone: "077 325 8144" },
-              { id: 2, harvest: "Mango", price: "Rs. 350", weight: "90kg", buyer: "Ajith Silva", phone: "077 089 2564" },
-              { id: 3, harvest: "Onion", price: "Rs. 105", weight: "800kg", buyer: "Hemal Costa", phone: "077 200 6933" },
-              { id: 4, harvest: "Carrot", price: "Rs. 260", weight: "200kg", buyer: "Sunil Shantha", phone: "077 552 0014" }
-            ].map((bid) => (
-              <tr key={bid.id} className="bg-white border text-sm md:text-base">
-                <td className="border p-2 text-center">{bid.id}</td>
-                <td className="border p-2 text-center">{bid.harvest}</td>
-                <td className="border p-2 text-center">{bid.price}</td>
-                <td className="border p-2 text-center">{bid.weight}</td>
-                <td className="border p-2 text-center">{bid.buyer}</td>
-                <td className="border p-2 text-center">{bid.phone}</td>
+            {pendingBids.map((bid, index) => (
+              <tr key={bid._id} className="bg-white border text-sm md:text-base">
+                <td className="border p-2 text-center">{index + 1}</td>
+                <td className="border p-2 text-center">{bid.productName}</td>
+                <td className="border p-2 text-center">Rs. {bid.bidAmount}</td>
+                <td className="border p-2 text-center">{bid.orderWeight} kg</td>
+                <td className="border p-2 text-center">{bid.buyerName || "Anonymous"}</td>
+                <td className="border p-2 text-center">{bid.buyerPhone || "N/A"}</td>
                 <td className="border p-2 flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-2">
-                  <button className="accept-btn"> Accept</button>
-                  <button className="accept-btn"> Reject</button>
+                  <button 
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    onClick={() => handleBidAction(bid._id, "Accept")}
+                  >
+                    Accept
+                  </button>
+                  <button 
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    onClick={() => handleBidAction(bid._id, "Reject")}
+                  >
+                    Reject
+                  </button>
                 </td>
               </tr>
             ))}

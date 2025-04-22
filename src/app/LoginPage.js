@@ -46,17 +46,36 @@ function LoginPage() {
 
   // If already authenticated, redirect to appropriate dashboard
   useEffect(() => {
-    if (isAuthenticated) {
+    const checkUserExists = async () => {
       const userRole = localStorage.getItem('userRole');
-      if (userRole === 'farmer') {
-        navigate('/');
-      } else if (userRole === 'merchant') {
-        navigate('/merchant/dashboard');
-      } else if (userRole === 'transporter') {
-        navigate('/transporter/dashboard');
+  
+      if (isAuthenticated && user) {
+        try {
+          const res = await fetch(`http://localhost:5000/api/users/check/${user.sub}`);
+          const data = await res.json();
+  
+          if (data.exists) {
+            // If user exists, redirect to their role-specific dashboard
+            if (userRole === 'farmer') {
+              navigate('/');
+            } else if (userRole === 'merchant') {
+              navigate('/merchant/dashboard');
+            } else if (userRole === 'transporter') {
+              navigate('/transporter/dashboard');
+            }
+          } else {
+            // User does not exist, go to register
+            navigate('/register');
+          }
+        } catch (err) {
+          console.error("Error checking user existence", err);
+        }
       }
-    }
-  }, [isAuthenticated, navigate]);
+    };
+  
+    checkUserExists();
+  }, [isAuthenticated, user, navigate]);
+  
 
   return (
     <div className="container-fluid vh-100">

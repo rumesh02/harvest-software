@@ -79,7 +79,14 @@ const BrowseListing = () => {
                       backgroundColor: "#FFDBA4",
                     },
                   }}
-                  onClick={() => addToCart(product)}
+                  
+                  onClick={() => {
+                    console.log('Adding product with farmerID:', product.farmerID);
+                    addToCart({
+                      ...product,
+                      farmerID: product.farmerID
+                    });
+                  }}
                 >
                   Add to Cart
                 </Button>

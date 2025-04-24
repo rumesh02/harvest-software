@@ -2,7 +2,17 @@ const { MongoClient, ObjectId } = require("mongodb");
 const uri = "mongodb+srv://Piyumi:Piyu123@harvest-software.tgbx7.mongodb.net/harvest-sw?retryWrites=true&w=majority";
 
 const createBid = async (req, res) => {
-  const { productId, productName, bidAmount, orderWeight } = req.body;
+  
+  const { 
+    productId, 
+    productName, 
+    bidAmount, 
+    orderWeight,
+    merchantId,
+    merchantName,
+    merchantPhone,
+    farmerId
+  } = req.body;
 
   console.log("Incoming request body:", req.body); // Debugging
 
@@ -16,9 +26,25 @@ const createBid = async (req, res) => {
       productName,
       bidAmount,
       orderWeight,
-      status: "Pending", // Default status
+      merchantId,
+      merchantName,
+      merchantPhone,
+      farmerId,
+      status: "Pending",
       createdAt: new Date(),
+      updatedAt: new Date()
     };
+
+    // Validate required fields
+    const requiredFields = ['productId', 'productName', 'bidAmount', 'orderWeight', 'merchantId', 'merchantName', 'farmerId'];
+    const missingFields = requiredFields.filter(field => !newBid[field]);
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        missingFields
+      });
+    }
 
     const result = await collection.insertOne(newBid);
     res.status(201).json({
@@ -130,15 +156,20 @@ const rejectBid = async (req, res) => {
   }
 };
 
-// Get all bids
+// Get all bids for a specific farmer
 const getBids = async (req, res) => {
   try {
+    const { farmerId } = req.query; // Get farmerId from query parameters
+
     const client = await MongoClient.connect(uri);
     const db = client.db("harvest-sw");
     const collection = db.collection("bids");
 
+    // Filter bids by farmerId if provided
+    const query = farmerId ? { farmerId } : {};
+    const bids = await collection.find(query).toArray();
+
     // Convert _id to string in the response
-    const bids = await collection.find({}).toArray();
     const bidsWithStringId = bids.map(bid => ({
       ...bid,
       _id: bid._id.toString()

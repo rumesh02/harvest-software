@@ -8,21 +8,41 @@ const OrderPage = () => {
   useEffect(() => {
     const fetchBids = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/bids");
+        const farmerId = localStorage.getItem("user_id"); // Get logged-in farmer's ID
+        const response = await axios.get(`http://localhost:5000/api/bids?farmerId=${farmerId}`);
         const bids = response.data;
 
-        // Convert bids to orders format with conditional payment status
-        const transformedOrders = bids.map((bid) => ({
-          id: bid._id,
-          harvest: bid.productName,
-          price: `Rs. ${bid.bidAmount}`,
-          weight: `${bid.orderWeight}kg`,
-          buyer: bid.buyerName || "Anonymous",
-          phone: bid.buyerPhone || "N/A",
-          status: getOrderStatus(bid.status),
-          // Set payment status based on order status
-          paymentStatus: getPaymentStatus(bid.status, bid.paymentStatus)
-        }));
+        // Fetch merchant details for each bid
+        const transformedOrders = await Promise.all(
+          bids.map(async (bid) => {
+            let merchantName = "Anonymous";
+            let merchantPhone = "N/A";
+
+            // Fetch merchant details from the backend
+            if (bid.merchantId) {
+              try {
+                const merchantResponse = await axios.get(`http://localhost:5000/api/users/${bid.merchantId}`);
+                const merchant = merchantResponse.data;
+                merchantName = merchant.name || "Anonymous";
+                merchantPhone = merchant.phone || "N/A";
+              } catch (error) {
+                console.error(`Error fetching merchant details for ID ${bid.merchantId}:`, error);
+              }
+            }
+
+            // Transform bid to order format
+            return {
+              id: bid._id,
+              harvest: bid.productName,
+              price: `Rs. ${bid.bidAmount}`,
+              weight: `${bid.orderWeight}kg`,
+              buyer: merchantName, // Use fetched merchant name
+              phone: merchantPhone, // Use fetched merchant phone
+              status: getOrderStatus(bid.status),
+              paymentStatus: getPaymentStatus(bid.status, bid.paymentStatus),
+            };
+          })
+        );
 
         setOrders(transformedOrders);
       } catch (error) {
@@ -85,13 +105,15 @@ const OrderPage = () => {
 
       // Update bid status in backend
       await axios.put(`http://localhost:5000/api/bids/status/${id}`, {
-        status: bidStatus
+        status: bidStatus,
       });
 
       // Update local state
-      setOrders(orders.map(order => 
-        order.id === id ? { ...order, status: newStatus } : order
-      ));
+      setOrders(
+        orders.map((order) =>
+          order.id === id ? { ...order, status: newStatus } : order
+        )
+      );
     } catch (error) {
       console.error("Error updating order status:", error);
       alert("Failed to update order status");
@@ -129,9 +151,13 @@ const OrderPage = () => {
                     value={order.status}
                     onChange={(e) => handleStatusChange(order.id, e.target.value)}
                     className={`border p-1 rounded ${
-                      order.status === "Done" ? "bg-green-100" :
-                      order.status === "Pending" ? "bg-yellow-100" :
-                      order.status === "Reject" ? "bg-red-100" : ""
+                      order.status === "Done"
+                        ? "bg-green-100"
+                        : order.status === "Pending"
+                        ? "bg-yellow-100"
+                        : order.status === "Reject"
+                        ? "bg-red-100"
+                        : ""
                     }`}
                   >
                     <option value="Done">Done</option>
@@ -140,13 +166,20 @@ const OrderPage = () => {
                   </select>
                 </td>
                 <td className="border p-2 text-center">
-                  <span className={`px-2 py-1 rounded ${
-                    order.status === "Reject" ? "bg-red-100" :
-                    order.paymentStatus === "Completed" ? "bg-green-100" :
-                    order.paymentStatus === "Pending" ? "bg-yellow-100" :
-                    "bg-gray-100"
-                  }`}>
-                    {order.status === "Reject" ? "Cancelled" : order.paymentStatus}
+                  <span
+                    className={`px-2 py-1 rounded ${
+                      order.status === "Reject"
+                        ? "bg-red-100"
+                        : order.paymentStatus === "Completed"
+                        ? "bg-green-100"
+                        : order.paymentStatus === "Pending"
+                        ? "bg-yellow-100"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    {order.status === "Reject"
+                      ? "Cancelled"
+                      : order.paymentStatus}
                   </span>
                 </td>
               </tr>

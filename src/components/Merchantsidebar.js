@@ -13,7 +13,8 @@ const menuItems = [
   { text: "My Bids", icon: <AssignmentTurnedIn />, path: "/merchant/bids" },  // ✅ Changed icon
   { text: "Purchases", icon: <History />, path: "/merchant/purchase-history" },
   { text: "Messages/Chat", icon: <Chat />, path: "/merchant/messages" },
-  { text: "Payments", icon: <AccountBalanceWallet />, path: "/merchant/payments" } // 👛 Changed icon
+  { text: "Payments", icon: <AccountBalanceWallet />, path: "/merchant/payments" }, // 👛 Changed icon
+  {text: "Book Vehicle", icon: <MonetizationOn />, path: "/merchant/book-vehicle" } // 🚚 Added Book Vehicle
 ];
 
 const MerchantSidebar = () => {

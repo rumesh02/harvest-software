@@ -7,7 +7,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
+//import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 
 import AuthWrapper from "./components/AuthWrapper";
 
@@ -34,6 +34,7 @@ import MerchantBids from "./pages/Merchant/MyBids";
 import MerchantPurchaseHistory from "./pages/Merchant/PurchaseHistory";
 import MerchantMessages from "./pages/Merchant/Messages";
 import MerchantPayments from "./pages/Merchant/Payments";
+import BookVehicle from "./pages/Merchant/BookVehicle"; 
 
 // Transporter Pages
 import TransporterDashboard from "./pages/Transporter/TransporterDashboard";
@@ -49,20 +50,18 @@ import ContactUs from "./pages/ContactUs";
 import Help from "./pages/Help";
 import HomePage from "./pages/HomePage";
 import AboutUs from "./components/HOME/AboutUs";
-import LoginPage from "./app/LoginPage";
-import RegisterPage from "./app/RegisterPage";
+/*import LoginPage from "./app/LoginPage";
+import RegisterPage from "./app/RegisterPage";*/
 
-const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";
-const clientId = "TteW47136eGLVWWVHIFxAiViqCnittRm";
+//const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";
+//const clientId = "TteW47136eGLVWWVHIFxAiViqCnittRm";
 
 // ✅ Protected Route
-const ProtectedRoute = ({ children, allowedRole }) => {
-  const { isAuthenticated, isLoading } = useAuth0();
+/*const ProtectedRoute = ({ children, allowedRole }) => {
+  //const { isAuthenticated, isLoading } = useAuth0();
   const userRole = localStorage.getItem("userRole");
 
-  if (isLoading) return <div>Loading...</div>;
-  if (!isAuthenticated) return <Navigate to="/login" />;
-
+  // Ensure the user role matches the allowed role or redirect accordingly
   if (!allowedRole || userRole === allowedRole) return children;
 
   if (userRole === "farmer") return <Navigate to="/" />;
@@ -70,10 +69,10 @@ const ProtectedRoute = ({ children, allowedRole }) => {
   if (userRole === "transporter") return <Navigate to="/transporter/dashboard" />;
 
   return <Navigate to="/login" />;
-};
+};*/
 
 // ✅ Auth0 Provider Wrapper
-const Auth0ProviderWithRedirect = ({ children }) => {
+/*const Auth0ProviderWithRedirect = ({ children }) => {
   return (
     <Auth0Provider
       domain={domain}
@@ -86,28 +85,32 @@ const Auth0ProviderWithRedirect = ({ children }) => {
     </Auth0Provider>
   );
 };
+*/
 
 // ✅ Main Routes
 const AppRoutes = () => {
-  const { isAuthenticated, isLoading } = useAuth0();
+  //const { isAuthenticated, isLoading } = useAuth0();
   const location = useLocation();
-  const userRole = localStorage.getItem("userRole");
+  //const userRole = localStorage.getItem("userRole");
 
-  useEffect(() => {
-    if (!isLoading && isAuthenticated && userRole && location.pathname === "/") {
+  //useEffect(() => {
+    // Redirect users based on their role if they land on the root path
+    /*if (userRole && location.pathname === "/") {
       if (userRole === "merchant") {
         window.location.href = "/merchant/dashboard";
       } else if (userRole === "transporter") {
         window.location.href = "/transporter/dashboard";
       }
     }
-  }, [isAuthenticated, isLoading, userRole, location.pathname]);
+  }, [
+    isAuthenticated, isLoading,  userRole, location.pathname,
+  ]);*/
 
   return (
     <Routes>
       {/* Public */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      {/*<Route path="/login" element={<LoginPage />} />*/}
+      {/*<Route path="/register" element={<RegisterPage />} />*/}
       <Route path="/home" element={<HomePage />} />
       <Route path="/about" element={<AboutUs />} />
       <Route path="/contact" element={<ContactUs />} />
@@ -117,9 +120,9 @@ const AppRoutes = () => {
       <Route
         path="/"
         element={
-          <ProtectedRoute allowedRole="farmer">
+          //<ProtectedRoute allowedRole="farmer">
             <FarmerLayout />
-          </ProtectedRoute>
+          //</ProtectedRoute>
         }
       >
         <Route index element={<Dashboard />} />
@@ -138,9 +141,9 @@ const AppRoutes = () => {
       <Route
         path="/merchant"
         element={
-          <ProtectedRoute allowedRole="merchant">
+          //<ProtectedRoute allowedRole="merchant">
             <MerchantLayout />
-          </ProtectedRoute>
+          //</ProtectedRoute>
         }
       >
         <Route path="dashboard" element={<MerchantDashboard />} />
@@ -150,15 +153,16 @@ const AppRoutes = () => {
         <Route path="purchase-history" element={<MerchantPurchaseHistory />} />
         <Route path="messages" element={<MerchantMessages />} />
         <Route path="payments" element={<MerchantPayments />} />
+        <Route path="book-vehicle" element={<BookVehicle />} /> {/* New Route */}
       </Route>
 
       {/* Transporter */}
       <Route
         path="/transporter"
         element={
-          <ProtectedRoute allowedRole="transporter">
+          //<ProtectedRoute allowedRole="transporter">
             <TransporterLayout />
-          </ProtectedRoute>
+          //</ProtectedRoute>
         }
       >
         <Route path="dashboard" element={<TransporterDashboard />} />
@@ -175,18 +179,18 @@ const AppRoutes = () => {
   );
 };
 
-// ✅ Final App Component (with resolved merge)
+// ✅ Final App Component
 const App = () => {
   return (
-    <Auth0ProviderWithRedirect>
-      <CartProvider>
-        <Router>
-          <AuthWrapper>
-            <AppRoutes />
-          </AuthWrapper>
-        </Router>
-      </CartProvider>
-    </Auth0ProviderWithRedirect>
+    //<Auth0ProviderWithRedirect>
+    <CartProvider>
+      <Router>
+        <AuthWrapper>
+          <AppRoutes />
+        </AuthWrapper>
+      </Router>
+    </CartProvider>
+    //</Auth0ProviderWithRedirect>
   );
 };
 

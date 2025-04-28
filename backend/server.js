@@ -1,63 +1,50 @@
-const express = require("express");
-const dotenv = require("dotenv");
-const cors = require("cors");
-const connectDB = require("./config/db");
-const userRoutes = require("./routes/userRoutes");
-const bidRoutes = require("./routes/bidRoutes");
-const productsRoutes = require("./routes/productsRoutes");
-
-dotenv.config();
-
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type"]
-}));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // To serve uploaded images
 
-// Routes
-app.use("/api/users", userRoutes);
-app.use("/api/bids", bidRoutes);
-app.use("/api/products", productsRoutes);
-
-// Default route
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
-
-// Test route
-app.get("/api/test", (req, res) => {
-  res.send("API is working!");
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Server Error:', err);
-  res.status(500).json({
-    message: "Server Error",
-    error: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-  });
-});
-
-const PORT = process.env.PORT || 5000;
-
-// Start server with database connection check
-const startServer = async () => {
-  try {
-    await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log('Database connection successful');
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+// Set up multer storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Save inside uploads folder
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname); // get the file extension (.jpg, .png)
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
   }
-};
+});
 
-startServer();
+const upload = multer({ storage: storage });
+
+// POST route to handle vehicle upload
+app.post('/api/vehicles/add', upload.single('file'), (req, res) => {
+  try {
+    const { vehicleType, licensePlate, loadCapacity } = req.body;
+    const filePath = req.file ? req.file.path : null;
+
+    console.log('Vehicle Type:', vehicleType);
+    console.log('License Plate:', licensePlate);
+    console.log('Load Capacity:', loadCapacity);
+    console.log('File Path:', filePath);
+
+    // Now, you can insert vehicleType, licensePlate, loadCapacity, filePath into your database
+
+    res.status(200).json({ message: 'Vehicle added successfully!', filePath });
+  } catch (error) {
+    console.error('Error saving vehicle:', error);
+    res.status(500).json({ error: 'Failed to add vehicle' });
+  }
+});
+
+// Start server
+const PORT = 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});

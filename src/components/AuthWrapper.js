@@ -53,7 +53,7 @@ function AuthWrapper({ children }) {
     }
   }, [isAuthenticated, isLoading, user, navigate, checked, location.pathname]);
 
-  if (isLoading) return <div>Loading Authentication...</div>;
+  //if (isLoading) return <div>Loading Authentication...</div>;
   if (isAuthenticated && !checked) return <div>Checking User Registration...</div>;
 
   return <>{children}</>;

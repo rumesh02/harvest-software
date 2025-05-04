@@ -62,5 +62,19 @@ router.get('/check/:auth0Id', async (req, res) => {
     }
   });
   
+// Route to get user details by Auth0 ID
+router.get('/:auth0Id', async (req, res) => {
+  try {
+    const decodedAuth0Id = decodeURIComponent(req.params.auth0Id); // Decode the Auth0 ID
+    const user = await User.findOne({ auth0Id: decodedAuth0Id }); // Query by auth0Id
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;

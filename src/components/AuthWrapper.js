@@ -17,6 +17,14 @@ function AuthWrapper({ children }) {
     }
 
     if (isAuthenticated && user && user.sub && !checked) {
+      // Store Auth0 user ID and details in localStorage
+      localStorage.setItem('user_id', user.sub);
+      localStorage.setItem('user_email', user.email);
+      console.log('Stored Auth0 user details:', {
+        user_id: user.sub,
+        email: user.email
+      });
+
       const checkUser = async () => {
         let userExists = false;
         let userRole = null;
@@ -26,6 +34,21 @@ function AuthWrapper({ children }) {
           userExists = res.data.exists;
           userRole = res.data.role;
           console.log(`AuthWrapper: User exists? ${userExists}, Role: ${userRole}`);
+
+          // Store additional user details if user exists
+          if (userExists && userRole) {
+            localStorage.setItem('userRole', userRole);
+            // Store merchant-specific details if the role is merchant
+            if (userRole === 'merchant') {
+              const merchantDetails = {
+                id: user.sub,
+                name: user.name || user.email,
+                email: user.email,
+                role: userRole
+              };
+              localStorage.setItem('merchantDetails', JSON.stringify(merchantDetails));
+            }
+          }
         } catch (err) {
           console.error('AuthWrapper: Error checking user:', err);
         } finally {

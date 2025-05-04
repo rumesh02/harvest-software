@@ -10,7 +10,8 @@ const AcceptRejectBids = () => {
 
   const fetchPendingBids = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/bids");
+      const farmerId = localStorage.getItem("user_id"); // Get logged-in farmer's ID
+      const response = await axios.get(`http://localhost:5000/api/bids?farmerId=${farmerId}`);
       const pending = response.data.filter(bid => bid.status === "Pending");
       setPendingBids(pending);
     } catch (error) {
@@ -75,8 +76,8 @@ const AcceptRejectBids = () => {
                 <td className="border p-2 text-center">{bid.productName}</td>
                 <td className="border p-2 text-center">Rs. {bid.bidAmount}</td>
                 <td className="border p-2 text-center">{bid.orderWeight} kg</td>
-                <td className="border p-2 text-center">{bid.buyerName || "Anonymous"}</td>
-                <td className="border p-2 text-center">{bid.buyerPhone || "N/A"}</td>
+                <td className="border p-2 text-center">{bid.merchantName || "Anonymous"}</td>
+                <td className="border p-2 text-center">{bid.merchantPhone || "N/A"}</td>
                 <td className="border p-2 flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-2">
                   <button 
                     className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"

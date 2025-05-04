@@ -5,6 +5,7 @@ const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const bidRoutes = require("./routes/bidRoutes");
 const productsRoutes = require("./routes/productsRoutes");
+const revenueRoutes = require('./routes/revenueRoutes');
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use("/api/users", userRoutes);
 app.use("/api/bids", bidRoutes);
 app.use("/api/products", productsRoutes);
+app.use('/api/revenue', revenueRoutes);
 
 // Default route
 app.get("/", (req, res) => {

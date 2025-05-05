@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const ConfirmedBid = require('../models/Order'); // Using your existing Order model
+const ConfirmedBid = require('../models/ConfirmedBid'); // Updated model
 
 // POST - Create a new confirmed bid
 router.post('/', async (req, res) => {
@@ -31,7 +31,8 @@ router.get('/:id', async (req, res) => {
     }
     res.json(confirmedBid);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching confirmed bid:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -45,24 +46,61 @@ router.get('/merchant/:merchantId', async (req, res) => {
   }
 });
 
-// Change this route path to match what your frontend expects
+// GET pending payments for a merchant
 router.get('/merchant/:merchantId/pending', async (req, res) => {
   try {
     const { merchantId } = req.params;
     console.log(`Fetching pending payments for merchant: ${merchantId}`);
     
-    // Find confirmed bids with no associated payment
-    const pendingPayments = await ConfirmedBid.find({ 
+    // Find confirmed bids that are not paid and belong to this merchant
+    const pendingPayments = await ConfirmedBid.find({
       merchantId: merchantId,
-      status: 'confirmed', // This is correct, "confirmed" orders that need payment
-      paymentId: { $exists: false } // No payment record exists
-    }).sort({ createdAt: -1 }); // Newest first
+      status: { $in: ['confirmed', 'processing'] } // Any status that's not 'paid' or 'canceled'
+    }).sort({ createdAt: -1 });
     
     console.log(`Found ${pendingPayments.length} pending payments`);
     res.json(pendingPayments);
   } catch (error) {
     console.error('Error fetching pending payments:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Update payment status
+router.put('/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    const confirmedBid = await ConfirmedBid.findById(id);
+    if (!confirmedBid) {
+      return res.status(404).json({ message: 'Confirmed bid not found' });
+    }
+    
+    confirmedBid.status = status;
+    
+    // If there are additional payment details, add them
+    if (req.body.paymentMethod) {
+      confirmedBid.paymentMethod = req.body.paymentMethod;
+    }
+    
+    if (req.body.paymentId) {
+      confirmedBid.paymentId = req.body.paymentId;
+    }
+    
+    // Add payment attempt if provided
+    if (req.body.paymentAttempt) {
+      confirmedBid.paymentAttempts.push({
+        date: new Date(),
+        ...req.body.paymentAttempt
+      });
+    }
+    
+    await confirmedBid.save();
+    res.json(confirmedBid);
+  } catch (error) {
+    console.error('Error updating payment status:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

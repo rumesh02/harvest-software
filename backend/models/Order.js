@@ -1,54 +1,23 @@
 const mongoose = require('mongoose');
 
-const OrderSchema = new mongoose.Schema({
-  orderId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  merchantId: {
-    type: String,
-    required: true,
-    index: true
-  },
+const orderSchema = new mongoose.Schema({
   farmerId: {
+    type: String,  // Changed to String to match Auth0 ID format
+    required: true
+  },
+  status: {
     type: String,
     required: true,
-    index: true
+    enum: ['pending', 'completed', 'cancelled']
   },
-  amount: {
+  totalAmount: {
     type: Number,
     required: true
   },
-  items: [{
-    productId: String,
-    name: String,
-    quantity: Number,
-    price: Number
-  }],
-  status: {
-    type: String,
-    enum: ['confirmed', 'processing', 'paid', 'canceled'],
-    default: 'confirmed',
-    index: true
-  },
-  paymentMethod: String,
-  paymentId: String,
-  paymentAttempts: [{
-    date: Date,
-    cardNumber: String,
-    status: String,
-    error: String
-  }],
-  notes: String,
-  shippingAddress: {
-    street: String,
-    city: String,
-    state: String,
-    zip: String
+  completedDate: {
+    type: Date,
+    default: Date.now
   }
-}, {
-  timestamps: true // Automatically add createdAt and updatedAt
 });
 
-module.exports = mongoose.model('ConfirmedBid', OrderSchema, 'confirmedBids');
+module.exports = mongoose.model('Order', orderSchema);

@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const revenueController = require('../controllers/revenueController');  
 
-// GET total revenue
+// Get monthly revenue for a farmer
+router.get('/farmer/:farmerId', revenueController.getMonthlyRevenue);
+
+// GET total revenue (placeholder endpoint)
 router.get('/', (req, res) => {
   res.json({ message: 'Revenue route is working' });
 });
-
-// This is a placeholder file - add your actual revenue calculation logic here
 
 module.exports = router;

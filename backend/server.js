@@ -7,6 +7,7 @@ const bidRoutes = require("./routes/bidRoutes");
 const productsRoutes = require("./routes/productsRoutes");
 const revenueRoutes = require('./routes/revenueRoutes');
 const confirmedBidRoutes = require('./routes/confirmedBidRoutes');
+const vehicleRoutes = require('./routes/vehicleRoutes'); // Add this line
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use("/api/bids", bidRoutes);
 app.use("/api/products", productsRoutes);
 app.use('/api/revenue', revenueRoutes);
 app.use('/api/confirmedbids', confirmedBidRoutes);
+app.use('/api/vehicles', vehicleRoutes); // Add this line
 
 // Default route
 app.get("/", (req, res) => {
@@ -49,6 +51,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
 
 // Start server with database connection check
 const startServer = async () => {

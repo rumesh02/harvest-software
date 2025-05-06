@@ -168,7 +168,6 @@ const AppRoutes = () => {
         <Route path="inbox" element={<Inbox />} />
         <Route path="payments" element={<Paymentapproves />} />
       </Route>
-
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/home" />} />
     </Routes>

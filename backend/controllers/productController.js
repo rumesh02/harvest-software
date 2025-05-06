@@ -4,7 +4,7 @@ const mongoose = require("mongoose"); // Add this import
 // Fetch all products
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find({}, "name price quantity image listedDate");
+    const products = await Product.find({}, "name price quantity image listedDate farmerID"); // Added farmerID
     if (products.length === 0) {
       return res.status(404).json({ message: "No products found." });
     }

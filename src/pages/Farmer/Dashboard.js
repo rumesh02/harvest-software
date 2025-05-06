@@ -1,30 +1,41 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useAuth0 } from "@auth0/auth0-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
-const Dashboard = ({
-  monthlyRevenue = "Rs. 65,600",
-  yearlyRevenue = "Rs. 425,300",
-  totalOrders = 27,
-  monthlyData = [
-    { name: "Jan", revenue: 50000 },
-    { name: "Feb", revenue: 42000 },
-    { name: "March", revenue: 65000 },
-    { name: "April", revenue: 70000 },
-    { name: "May", revenue: 62000 },
-    { name: "June", revenue: 54000 },
-    { name: "July", revenue: 68000 },
-    { name: "Aug", revenue: 72000 },
-    { name: "Sep", revenue: 58000 },
-    { name: "Oct", revenue: 64000 },
-    { name: "Nov", revenue: 75000 },
-    { name: "Dec", revenue: 80000 },
-  ],
-  topBuyers = [
-    { name: "Nimal Silva", avatar: "./images/nimal.jpg" },
-    { name: "Arjuna Perera", avatar: "./images/farmer.jpg" },
-    { name: "Ajith Bandara", avatar: "./images/nimal.jpg" },
-    { name: "Supun Silva", avatar: "./images/farmer.jpg" },
-  ],
-}) => {
+const Dashboard = () => {
+  const [revenueData, setRevenueData] = useState({
+    monthlyRevenue: 0,
+    yearlyRevenue: 0,
+    monthlyData: [],
+    totalOrders: 27 // You might want to fetch this separately
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { user } = useAuth0();
+
+  useEffect(() => {
+    const fetchRevenueData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `http://localhost:5000/api/revenue/farmer/${user.sub}`
+        );
+        setRevenueData(response.data);
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching revenue data:", error);
+        setError(error.response?.data?.message || "Failed to load revenue data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.sub) {
+      fetchRevenueData();
+    }
+  }, [user]);
+
   return (
     <div className="p-4 bg-white rounded">
       <h4 className="mb-4">Dashboard</h4>
@@ -34,21 +45,21 @@ const Dashboard = ({
         <div className="col-md-4">
           <div className="p-3 rounded" style={{ backgroundColor: "#f1f8e9" }}>
             <h6 className="text-muted">Revenue This Month</h6>
-            <h2 className="text-center my-3">{monthlyRevenue}</h2>
+            <h2 className="text-center my-3">Rs. {revenueData.monthlyRevenue.toLocaleString()}</h2>
           </div>
         </div>
 
         <div className="col-md-4">
           <div className="p-3 rounded" style={{ backgroundColor: "#f1f8e9" }}>
             <h6 className="text-muted">Revenue This Year</h6>
-            <h2 className="text-center my-3">{yearlyRevenue}</h2>
+            <h2 className="text-center my-3">Rs. {revenueData.yearlyRevenue.toLocaleString()}</h2>
           </div>
         </div>
 
         <div className="col-md-4">
           <div className="p-3 rounded" style={{ backgroundColor: "#f1f8e9" }}>
             <h6 className="text-muted">Total Orders</h6>
-            <h2 className="text-center my-3">{totalOrders}</h2>
+            <h2 className="text-center my-3">{revenueData.totalOrders}</h2>
           </div>
         </div>
       </div>
@@ -60,7 +71,7 @@ const Dashboard = ({
             <h5 className="mb-3">Monthly Revenue</h5>
             <div className="flex-grow-1">
               <ResponsiveContainer width="100%" height="100%" minHeight={220}>
-                <BarChart data={monthlyData}>
+                <BarChart data={revenueData.monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" />
                   <YAxis />
@@ -75,20 +86,10 @@ const Dashboard = ({
           <div className="p-3 rounded h-100" style={{ backgroundColor: "#f1f8e9" }}>
             <h5 className="mb-3">Top Buyers</h5>
             <ul className="list-unstyled">
-              {topBuyers.map((buyer, index) => (
-                <li
-                  key={index}
-                  className="d-flex align-items-center py-2"
-                >
-                  <img
-                    src={buyer.avatar || "/placeholder.svg"}
-                    alt={buyer.name}
-                    className="rounded-circle me-3"
-                    style={{ width: "40px", height: "40px", objectFit: "cover" }}
-                  />
-                  <span>{buyer.name}</span>
-                </li>
-              ))}
+              {/* Placeholder for top buyers */}
+              <li className="d-flex align-items-center py-2">
+                <span>No data available</span>
+              </li>
             </ul>
           </div>
         </div>

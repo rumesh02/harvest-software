@@ -34,6 +34,7 @@ import MerchantBids from "./pages/Merchant/MyBids";
 import MerchantPurchaseHistory from "./pages/Merchant/PurchaseHistory";
 import MerchantMessages from "./pages/Merchant/Messages";
 import MerchantPayments from "./pages/Merchant/Payments";
+import FindVehicles from "./pages/Merchant/FindVehicles";
 
 // Transporter Pages
 import TransporterDashboard from "./pages/Transporter/TransporterDashboard";
@@ -150,6 +151,7 @@ const AppRoutes = () => {
         <Route path="purchase-history" element={<MerchantPurchaseHistory />} />
         <Route path="messages" element={<MerchantMessages />} />
         <Route path="payments" element={<MerchantPayments />} />
+        <Route path="find-vehicles" element={<FindVehicles />} />
       </Route>
 
       {/* Transporter */}

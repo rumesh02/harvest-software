@@ -1,13 +1,20 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./AddVehicle.css";
 import { UploadCloud } from "lucide-react";
-
+import { addVehicle } from "../../services/api";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const AddVehicle = () => {
+  const { user } = useAuth0();
   const [vehicleType, setVehicleType] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
   const [loadCapacity, setLoadCapacity] = useState("");
   const [file, setFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
@@ -23,9 +30,46 @@ const AddVehicle = () => {
     setFile(file);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    alert("Vehicle Added Successfully!");
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      if (!file) {
+        setError("Please upload a vehicle image");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const vehicleData = {
+        vehicleType,
+        licensePlate,
+        loadCapacity,
+        transporterAuth0Id: user.sub, // Use user.sub for Auth0
+        file
+      };
+
+      await addVehicle(vehicleData);
+
+      setVehicleType("");
+      setLicensePlate("");
+      setLoadCapacity("");
+      setFile(null);
+
+      alert("Vehicle added successfully!");
+      window.location.reload(); // Refresh the page after alert
+
+    } catch (err) {
+      console.error("Failed to add vehicle:", err);
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Failed to add vehicle. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -33,6 +77,8 @@ const AddVehicle = () => {
       <h1>Add New</h1>
       <div className="form-container">
       <h2>Add Your New Vehicle</h2>
+      {error && <p className="error-message">{error}</p>}
+      {success && <p className="success-message">Vehicle added successfully!</p>}
       <form onSubmit={handleSubmit}>
         <label>Vehicle Type</label>
         <input
@@ -50,35 +96,34 @@ const AddVehicle = () => {
           required
         />
 
-<label className="upload-label">Upload Vehicle Photo</label>
-<div
-  className="file-upload-box"
-  onDragOver={handleDragOver}
-  onDrop={handleDrop}
->
-  <input
-    type="file"
-    id="fileUpload"
-    className="hidden-input"
-    accept="image/png, image/jpeg, image/jpg"
-    onChange={handleFileChange}
-  />
-  <label htmlFor="fileUpload" className="upload-content">
-    <UploadCloud className="upload-icon" />
-    {file ? (
-      <p className="file-name">{file.name}</p>
-    ) : (
-      <>
-        <p>
-          <span className="click-text">Click to upload</span> or{" "}
-          <span className="drag-text">drag and drop</span>
-        </p>
-        <p className="file-info">JPG, JPEG, PNG less than 1MB</p>
-      </>
-    )}
-  </label>
-</div>
-
+        <label className="upload-label">Upload Vehicle Photo</label>
+        <div
+          className="file-upload-box"
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          <input
+            type="file"
+            id="fileUpload"
+            className="hidden-input"
+            accept="image/png, image/jpeg, image/jpg"
+            onChange={handleFileChange}
+          />
+          <label htmlFor="fileUpload" className="upload-content">
+            <UploadCloud className="upload-icon" />
+            {file ? (
+              <p className="file-name">{file.name}</p>
+            ) : (
+              <>
+                <p>
+                  <span className="click-text">Click to upload</span> or{" "}
+                  <span className="drag-text">drag and drop</span>
+                </p>
+                <p className="file-info">JPG, JPEG, PNG less than 1MB</p>
+              </>
+            )}
+          </label>
+        </div>
 
         <label>Load Capacity</label>
         <input
@@ -88,7 +133,9 @@ const AddVehicle = () => {
           required
         />
 
-        <button type="submit">Submit</button>
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Adding Vehicle..." : "Submit"}
+        </button>
       </form>
       </div>
     </div>

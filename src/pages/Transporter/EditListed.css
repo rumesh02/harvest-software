@@ -22,44 +22,39 @@
     padding: 20px;
   }
   
-  /* Compact Card styling */
+  /* Card styling */
   .card {
-    background: #fff;
-    padding: 12px 10px 16px 10px;
-    border-radius: 16px;
+    background-color: #f0f9ff;
+    padding: 20px;
+    border-radius: 12px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: box-shadow 0.2s;
-    width: 200px;
-    min-width: 180px;
-    margin: auto;
-    position: relative;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
   }
   
   .card:hover {
-    box-shadow: 0 6px 18px rgba(0,0,0,0.16);
+    transform: scale(1.05);
   }
   
   /* Image container */
   .image-container {
-    background: #f4f8fb;
-    border-radius: 12px;
-    padding: 6px;
+    background-color: white;
+    padding: 10px;
+ 
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 90px;
-    height: 90px;
-    margin: 0 auto 8px auto;
+    width: 150px;
+    height: 150px;
+    margin: auto;
   }
   
   /* Image styling */
   .lorry-image {
-    width: 140px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1.5px solid #e3e3e3;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 10px;
   }
   
   /* Divider */
@@ -76,132 +71,20 @@
     font-weight: bold;
   }
   
-  .vehicle-details {
-    margin: 8px 0;
-    font-size: 14px;
-  }
-  
-  .vehicle-type {
-    font-weight: 600;
-    color: #1a1a3d;
-    margin-bottom: 2px;
-  }
-  
-  .license-plate {
-    color: #007bff;
-    font-weight: 500;
-    margin-bottom: 2px;
-  }
-  
-  .load-capacity {
-    color: #555;
-    font-size: 13px;
-  }
-  
-  /* Shared button styles for edit and remove */
-  .edit-button,
-  .remove-button {
-    width: 100%;
-    padding: 6px 0;
-    border: none;
-    border-radius: 7px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 500;
-    transition: background 0.2s;
-    margin-top: 6px;
-  }
-
-  /* Edit button specific */
+  /* Edit button */
   .edit-button {
-    background: linear-gradient(90deg, #007bff 60%, #00c6ff 100%);
-    color: #fff;
-  }
-  .edit-button:hover {
-    background: linear-gradient(90deg, #0056b3 60%, #0099cc 100%);
-  }
-
-  /* Remove button specific */
-  .remove-button {
-    background: #ff4d4f;
-    color: #fff;
-  }
-  .remove-button:hover {
-    background: #d9363e;
-  }
-  
-  /* Compact Popup Edit Card */
-  .popup-edit-card {
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 20;
-    background: #f9fafe;
-    border: 2px solid #007bff;
-    border-radius: 14px;
-    padding: 18px 16px 10px 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    width: 220px;
-    min-width: 180px;
-    max-width: 90vw;
-    font-size: 14px;
-  }
-  
-  .popup-edit-card h2 {
-    font-size: 16px;
-    margin-bottom: 10px;
-    color: #1a1a3d;
-  }
-  
-  .popup-edit-card label {
-    display: block;
-    text-align: left;
-    font-size: 13px;
-    margin: 4px 0 2px 2px;
-    color: #007bff;
-  }
-  
-  .popup-edit-card input[type="text"],
-  .popup-edit-card input[type="file"] {
-    width: 100%;
-    font-size: 13px;
-    padding: 4px 6px;
-    margin-bottom: 7px;
-    border-radius: 6px;
-    border: 1px solid #cce0ff;
-    background: #fff;
-  }
-  
-  .popup-edit-card .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 6px;
-  }
-  
-  .popup-edit-card button {
-    padding: 5px 12px;
-    border-radius: 6px;
+    background-color: #1a1a3d;
+    color: white;
+    padding: 10px 20px;
     border: none;
-    font-size: 13px;
-    font-weight: 500;
+    border-radius: 8px;
     cursor: pointer;
-    background: #007bff;
-    color: #fff;
-    transition: background 0.2s;
+    width: 100%;
+    font-size: 16px;
+    margin-top: 10px;
   }
   
-  .popup-edit-card button[disabled] {
-    background: #b3d1ff;
-    cursor: not-allowed;
+  .edit-button:hover {
+    background-color: #333366;
   }
   
-  .popup-edit-card button:first-child {
-    background: #e3e3e3;
-    color: #333;
-  }
-  
-  .popup-edit-card button:first-child:hover {
-    background: #ccc;
-  }

@@ -1,7 +1,6 @@
 import React from "react";
 import { List, ListItemButton, ListItemIcon, ListItemText} from "@mui/material";
 import { Home, ShoppingCart, MonetizationOn, AssignmentTurnedIn, History, Chat, AccountBalanceWallet, Settings, ExitToApp } from "@mui/icons-material";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar"; // Add this import at the top
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import Avatar from "@mui/material/Avatar";
@@ -10,13 +9,11 @@ import Badge from "@mui/material/Badge";
 const menuItems = [
   { text: "Dashboard", icon: <Home />, path: "/merchant/dashboard" },
   { text: "Browse Listing", icon: <ShoppingCart />, path: "/merchant/listings" },
-  { text: "Place Bids", icon: <MonetizationOn />, path: "/merchant/buy" },
-  { text: "My Bids", icon: <AssignmentTurnedIn />, path: "/merchant/bids" },
+  { text: "Place Bids", icon: <MonetizationOn />, path: "/merchant/buy" },  // 💰 Changed icon
+  { text: "My Bids", icon: <AssignmentTurnedIn />, path: "/merchant/bids" },  // ✅ Changed icon
   { text: "Purchases", icon: <History />, path: "/merchant/purchase-history" },
   { text: "Messages/Chat", icon: <Chat />, path: "/merchant/messages" },
-  { text: "Payments", icon: <AccountBalanceWallet />, path: "/merchant/payments" },
-  // Add this line for Find Vehicles
-  { text: "Find Vehicles", icon: <DirectionsCarIcon />, path: "/merchant/find-vehicles" }
+  { text: "Payments", icon: <AccountBalanceWallet />, path: "/merchant/payments" } // 👛 Changed icon
 ];
 
 const MerchantSidebar = () => {

@@ -36,10 +36,18 @@ const Payments = () => {
   const [showPendingPayments, setShowPendingPayments] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [showSwitchNotification, setShowSwitchNotification] = useState(false);
+  const [isPayHereLoaded, setIsPayHereLoaded] = useState(false);
   
   // Store initial searchParams in a ref to access it once without dependencies
   const initialSearchParams = useRef(searchParams);
   
+  // Check if PayHere is loaded
+  useEffect(() => {
+    if (window.payhere && window.payhere.startPayment) {
+      setIsPayHereLoaded(true);
+    }
+  }, []);
+
   // Regular payment data loading (on initial mount)
   useEffect(() => {
     const loadPaymentData = async () => {
@@ -188,8 +196,81 @@ const Payments = () => {
     }
   }, [searchParams, user]);
 
-  // Update handlePayment function to use user-specific storage
-  const handlePayment = () => {
+  const handlePayHerePayment = () => {
+    if (!window.payhere) {
+      alert("PayHere is not ready yet. Please wait.");
+      return;
+    }
+
+    // Set payment in progress status
+    setPaymentStatus('processing');
+
+    // Generate a hash for security
+    const generateHash = () => {
+      // You'll need to implement this properly on your backend
+      // This is just a placeholder for the frontend
+      return "TEMPORARY_HASH_FOR_TESTING"; // Replace with actual hash from backend
+    };
+
+    const payment = {
+      sandbox: true,
+      merchant_id: process.env.REACT_APP_PAYHERE_MERCHANT_ID || "1215000", // Use your sandbox ID
+      return_url: "http://localhost:3000/merchant/purchase-history",
+      cancel_url: "http://localhost:3000/merchant/payments",
+      notify_url: "http://localhost:5000/api/payments/payhere-notify", // Replace with your backend endpoint
+    
+      order_id: orderId || "TEST_" + Math.floor(Math.random() * 10000),
+      items: "Farm Produce Payment",
+      amount: amount.toFixed(2),
+      currency: "LKR",
+      first_name: user?.given_name || "User",
+      last_name: user?.family_name || "Name",
+      email: user?.email || "user@example.com",
+      phone: "0771234567", // You might want to get this from user profile
+      address: "123 Farm Address",
+      city: "Colombo",
+      country: "Sri Lanka",
+      hash: generateHash() // Important security feature
+    };
+
+    window.payhere.onCompleted = function onCompleted(orderId) {
+      console.log("Payment completed. OrderID:" + orderId);
+      setPaymentStatus('success');
+      
+      // Update the confirmed bid status
+      if (confirmedBidId) {
+        try {
+          console.log(`Updating payment status for bid: ${confirmedBidId}`);
+          
+          // Clear user-specific localStorage after successful payment
+          removeUserStorageItem(user.sub, 'payment_amount');
+          removeUserStorageItem(user.sub, 'confirmed_bid_id');
+          removeUserStorageItem(user.sub, 'order_id');
+        } catch (error) {
+          console.error("Error updating payment status:", error);
+        }
+      }
+      
+      // Redirect after successful payment
+      setTimeout(() => {
+        navigate('/merchant/purchase-history');
+      }, 2000);
+    };
+
+    window.payhere.onDismissed = function onDismissed() {
+      console.log("Payment dismissed");
+      setPaymentStatus('dismissed');
+    };
+
+    window.payhere.onError = function onError(error) {
+      console.log("Error:" + error);
+      setPaymentStatus('error');
+    };
+
+    window.payhere.startPayment(payment);
+  };
+
+  const handleRegularPayment = () => {
     if (!user?.sub) return; // Security check
     
     // Set payment in progress status
@@ -202,7 +283,6 @@ const Payments = () => {
       // Update the confirmed bid status (you can implement this in your orderService)
       if (confirmedBidId) {
         try {
-          // You could add a real API call here
           console.log(`Updating payment status for bid: ${confirmedBidId}`);
           
           // Clear user-specific localStorage after successful payment
@@ -282,7 +362,13 @@ const Payments = () => {
           
           {paymentStatus === 'error' && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              Please enter a valid card number to continue.
+              Payment failed. Please try again.
+            </Alert>
+          )}
+          
+          {paymentStatus === 'dismissed' && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Payment was cancelled. You can try again.
             </Alert>
           )}
           
@@ -298,28 +384,7 @@ const Payments = () => {
             <Typography variant="body2" color="textSecondary">{orderId ? `Order No:${orderId}` : 'Loading Order ID...'}</Typography>
           </Box>
 
-          <Typography variant="body2" color="textSecondary" gutterBottom>Other payment methods</Typography>
-
-          <Box sx={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
-            <Button variant="contained" startIcon={<AppleIcon />} sx={{ background: "black", color: "white" }}>
-              Apple Pay
-            </Button>
-            <Button variant="contained" sx={{ background: "#6772E5", color: "white" }}>
-              Stripe
-            </Button>
-            <Button variant="contained" sx={{ background: "#0070BA", color: "white" }}>
-              PayPal
-            </Button>
-            <Button variant="contained" sx={{ background: "orange", color: "white" }}>
-              Bitcoin
-            </Button>
-            <Button variant="contained" startIcon={<CreditCardIcon />} sx={{ background: "#EB001B", color: "white" }}>
-              MasterCard
-            </Button>
-            <Button variant="contained" startIcon={<CreditCardIcon />} sx={{ background: "#1A1F71", color: "white" }}>
-              Visa Card
-            </Button>
-          </Box>
+          
 
           <Button
             variant="contained"
@@ -329,14 +394,34 @@ const Payments = () => {
               background: amount && !paymentStatus ? "#FFA500" : 
                          paymentStatus === 'success' ? "#4CAF50" : 
                          paymentStatus === 'processing' ? "#3498DB" : "#E0E0E0", 
-              color: "white" 
+              color: "white",
+              mb: 2
             }}
-            onClick={handlePayment}
+            onClick={handleRegularPayment}
             disabled={!amount || paymentStatus === 'processing' || paymentStatus === 'success'}
           >
             {paymentStatus === 'processing' ? 'Processing...' : 
              paymentStatus === 'success' ? 'Payment Successful' : 
-             `Pay Rs.${amount.toFixed(2)}`}
+             `Pay Rs.${amount.toFixed(2)} (Test)`}
+          </Button>
+
+          <Button
+            variant="contained"
+            startIcon={<PaymentIcon />}
+            fullWidth
+            sx={{ 
+              background: amount && isPayHereLoaded && !paymentStatus ? "#5C6BC0" : 
+                         paymentStatus === 'success' ? "#4CAF50" : 
+                         paymentStatus === 'processing' ? "#3498DB" : "#E0E0E0", 
+              color: "white" 
+            }}
+            onClick={handlePayHerePayment}
+            disabled={!amount || !isPayHereLoaded || paymentStatus === 'processing' || paymentStatus === 'success'}
+          >
+            {!isPayHereLoaded ? 'Loading PayHere...' : 
+             paymentStatus === 'processing' ? 'Processing...' : 
+             paymentStatus === 'success' ? 'Payment Successful' : 
+             `Pay Rs.${amount.toFixed(2)} with PayHere`}
           </Button>
         </>
       )}

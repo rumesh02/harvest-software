@@ -36,6 +36,7 @@ export const addVehicle = async (vehicleData) => {
   formData.append('vehicleType', vehicleData.vehicleType);
   formData.append('licensePlate', vehicleData.licensePlate);
   formData.append('loadCapacity', vehicleData.loadCapacity);
+  formData.append("transporterAuth0Id", vehicleData.transporterAuth0Id);
   
   if (vehicleData.file) {
     formData.append('vehicleImage', vehicleData.file);
@@ -70,6 +71,7 @@ export const updateVehicle = async (id, vehicleData) => {
   formData.append('vehicleType', vehicleData.vehicleType);
   formData.append('licensePlate', vehicleData.licensePlate);
   formData.append('loadCapacity', vehicleData.loadCapacity);
+  formData.append("transporterAuth0Id", vehicleData.transporterAuth0Id);
   if (vehicleData.file) {
     formData.append('vehicleImage', vehicleData.file);
   }

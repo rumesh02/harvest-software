@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import "./AddVehicle.css";
 import { UploadCloud } from "lucide-react";
 import { addVehicle } from "../../services/api";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const AddVehicle = () => {
+  const { user } = useAuth0();
   const [vehicleType, setVehicleType] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
   const [loadCapacity, setLoadCapacity] = useState("");
@@ -44,6 +46,7 @@ const AddVehicle = () => {
         vehicleType,
         licensePlate,
         loadCapacity,
+        transporterAuth0Id: user.sub, // Use user.sub for Auth0
         file
       };
 

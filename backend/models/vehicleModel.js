@@ -15,9 +15,18 @@ const vehicleSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    image: {  // Changed from imageUrl to image
+    image: {
       type: String,
       required: false,
+    },
+    transporterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    district: {
+      type: String,
+      required: true,
     },
     isAvailable: {
       type: Boolean,

@@ -16,11 +16,19 @@ import {
   MenuItem,
 } from "@mui/material";
 
+const allDistricts = [
+  "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo", "Galle",
+  "Gampaha", "Hambantota", "Jaffna", "Kalutara", "Kandy", "Kegalle",
+  "Kilinochchi", "Kurunegala", "Mannar", "Matale", "Matara", "Monaragala",
+  "Mullaitivu", "Nuwara Eliya", "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee"
+];
+
 const FindVehicles = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [capacityFilter, setCapacityFilter] = useState("");
+  const [districtFilter, setDistrictFilter] = useState("");
 
   const capacityRanges = [
     { label: "All Capacities", value: "" },
@@ -43,15 +51,23 @@ const FindVehicles = () => {
     fetchVehicles();
   }, []);
 
-  // Filter vehicles by selected capacity only
+  const uniqueDistricts = [
+    ...new Set(vehicles.map((v) => v.district).filter(Boolean)),
+  ];
+
+  // Filter vehicles by selected capacity and district
   const filteredVehicles = vehicles.filter((v) => {
     const cap = parseInt(v.loadCapacity, 10);
-    return (
+    const matchesCapacity =
       !capacityFilter ||
       (capacityFilter === "below5000" && cap < 5000) ||
       (capacityFilter === "5000to10000" && cap >= 5000 && cap <= 10000) ||
-      (capacityFilter === "above10000" && cap > 10000)
-    );
+      (capacityFilter === "above10000" && cap > 10000);
+
+    const matchesDistrict =
+      !districtFilter || v.district === districtFilter;
+
+    return matchesCapacity && matchesDistrict;
   });
 
   const handleBook = (vehicle) => {
@@ -105,6 +121,29 @@ const FindVehicles = () => {
               {capacityRanges.map((range) => (
                 <MenuItem key={range.value} value={range.value}>
                   {range.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Typography sx={{ fontWeight: 500, color: "#333" }}>District:</Typography>
+          <FormControl
+            size="small"
+            sx={{
+              minWidth: 180,
+              background: "#fff",
+              borderRadius: 2,
+              boxShadow: 1,
+            }}
+          >
+            <Select
+              value={districtFilter}
+              onChange={(e) => setDistrictFilter(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">All Districts</MenuItem>
+              {allDistricts.map((district) => (
+                <MenuItem key={district} value={district}>
+                  {district}
                 </MenuItem>
               ))}
             </Select>
@@ -184,6 +223,13 @@ const FindVehicles = () => {
                       sx={{ mb: 1, mt: 0.5 }}
                     >
                       Capacity: <b>{vehicle.loadCapacity}</b>
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 1 }}
+                    >
+                      District: <b>{vehicle.district || "N/A"}</b>
                     </Typography>
                   </CardContent>
                   <Button

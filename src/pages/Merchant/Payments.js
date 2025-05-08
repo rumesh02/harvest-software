@@ -8,6 +8,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { fetchConfirmedBidById } from "../../services/orderService";
 import { useAuth0 } from "@auth0/auth0-react";
 import PendingPayments from "./PendingPayments";
+import axios from "axios"; // Add this import
 
 // Helper functions for user-specific localStorage 
 const getUserKey = (userId, key) => `user_${userId}_${key}`;
@@ -196,29 +197,37 @@ const Payments = () => {
     }
   }, [searchParams, user]);
 
-  const handlePayHerePayment = () => {
+  const handlePayHerePayment = async () => {
     if (!window.payhere) {
       alert("PayHere is not ready yet. Please wait.");
       return;
     }
 
-    // Set payment in progress status
     setPaymentStatus('processing');
 
-    // Generate a hash for security
-    const generateHash = () => {
-      // You'll need to implement this properly on your backend
-      // This is just a placeholder for the frontend
-      return "TEMPORARY_HASH_FOR_TESTING"; // Replace with actual hash from backend
-    };
+    // Fetch the hash from backend
+    let hash = "";
+    try {
+      const response = await axios.get("http://localhost:5000/api/payments/generate-hash", {
+        params: {
+          orderId: orderId || "TEST_" + Math.floor(Math.random() * 10000),
+          amount: amount.toFixed(2),
+          currency: "LKR"
+        }
+      });
+      hash = response.data.hash;
+    } catch (error) {
+      setPaymentStatus('error');
+      alert("Failed to generate payment hash. Please try again.");
+      return;
+    }
 
     const payment = {
       sandbox: true,
-      merchant_id: process.env.REACT_APP_PAYHERE_MERCHANT_ID || "1215000", // Use your sandbox ID
+      merchant_id: process.env.REACT_APP_PAYHERE_MERCHANT_ID || "1215000",
       return_url: "http://localhost:3000/merchant/purchase-history",
       cancel_url: "http://localhost:3000/merchant/payments",
-      notify_url: "http://localhost:5000/api/payments/payhere-notify", // Replace with your backend endpoint
-    
+      notify_url: "http://localhost:5000/api/payments/payhere-notify",
       order_id: orderId || "TEST_" + Math.floor(Math.random() * 10000),
       items: "Farm Produce Payment",
       amount: amount.toFixed(2),
@@ -226,11 +235,11 @@ const Payments = () => {
       first_name: user?.given_name || "User",
       last_name: user?.family_name || "Name",
       email: user?.email || "user@example.com",
-      phone: "0771234567", // You might want to get this from user profile
+      phone: "0771234567",
       address: "123 Farm Address",
       city: "Colombo",
       country: "Sri Lanka",
-      hash: generateHash() // Important security feature
+      hash // Use the hash from backend
     };
 
     window.payhere.onCompleted = function onCompleted(orderId) {

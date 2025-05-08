@@ -15,34 +15,12 @@ dotenv.config();
 const app = express();
 
 // PayHere Hash Generator Function
-const generatePayHereHash = (paymentData, merchantSecret) => {
-  const {
-    merchant_id,
-    order_id,
-    payhere_amount,
-    payhere_currency,
-    status_code
-  } = paymentData;
-
-  const hashString = [
-    merchant_id,
-    order_id,
-    payhere_amount,
-    payhere_currency,
-    status_code,
-    crypto
-      .createHash('md5')
-      .update(merchantSecret)
-      .digest('hex')
-      .toUpperCase()
-  ].join('');
-
-  return crypto
-    .createHash('md5')
-    .update(hashString)
-    .digest('hex')
-    .toUpperCase();
-};
+function generatePayHereHash({ merchant_id, order_id, amount, currency }, merchant_secret) {
+  const formattedAmount = Number(amount).toFixed(2);
+  const secretHash = crypto.createHash('md5').update(merchant_secret).digest('hex').toUpperCase();
+  const hashString = merchant_id + order_id + formattedAmount + currency + secretHash;
+  return crypto.createHash('md5').update(hashString).digest('hex').toUpperCase();
+}
 
 // Middleware
 app.use(cors({
@@ -120,20 +98,21 @@ app.post('/api/payments/payhere-notify', async (req, res) => {
 app.get('/api/payments/generate-hash', (req, res) => {
   try {
     const { orderId, amount, currency = "LKR" } = req.query;
-    
+    const merchant_id = process.env.PAYHERE_MERCHANT_ID;
+    const merchant_secret = process.env.PAYHERE_MERCHANT_SECRET;
+
     if (!orderId || !amount) {
       return res.status(400).json({ error: "Missing required parameters" });
     }
 
     const hash = generatePayHereHash({
-      merchant_id: process.env.PAYHERE_MERCHANT_ID,
+      merchant_id,
       order_id: orderId,
-      payhere_amount: amount,
-      payhere_currency: currency,
-      status_code: "2" // Using 2 as default for generation
-    }, process.env.PAYHERE_MERCHANT_SECRET);
+      amount,
+      currency
+    }, merchant_secret);
 
-    res.json({ hash });
+    res.json({ hash, merchant_id }); // Also return merchant_id for frontend
   } catch (error) {
     console.error('Hash generation error:', error);
     res.status(500).json({ error: "Hash generation failed" });

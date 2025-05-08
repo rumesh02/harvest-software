@@ -14,6 +14,11 @@ import {
   FormControl,
   Select,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from "@mui/material";
 
 const allDistricts = [
@@ -29,6 +34,17 @@ const FindVehicles = () => {
   const [error, setError] = useState(null);
   const [capacityFilter, setCapacityFilter] = useState("");
   const [districtFilter, setDistrictFilter] = useState("");
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+
+  // Booking form state
+  const [bookingForm, setBookingForm] = useState({
+    phone: "",
+    startLocation: "",
+    endLocation: "",
+    items: "",
+    weight: "",
+  });
 
   const capacityRanges = [
     { label: "All Capacities", value: "" },
@@ -51,10 +67,6 @@ const FindVehicles = () => {
     fetchVehicles();
   }, []);
 
-  const uniqueDistricts = [
-    ...new Set(vehicles.map((v) => v.district).filter(Boolean)),
-  ];
-
   // Filter vehicles by selected capacity and district
   const filteredVehicles = vehicles.filter((v) => {
     const cap = parseInt(v.loadCapacity, 10);
@@ -70,8 +82,42 @@ const FindVehicles = () => {
     return matchesCapacity && matchesDistrict;
   });
 
+  // Handle opening the booking modal
   const handleBook = (vehicle) => {
-    alert(`Booking requested for vehicle: ${vehicle.licensePlate}`);
+    setSelectedVehicle(vehicle);
+    setOpenModal(true);
+  };
+
+  // Handle closing the modal
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedVehicle(null);
+    setBookingForm({
+      phone: "",
+      startLocation: "",
+      endLocation: "",
+      items: "",
+      weight: "",
+    });
+  };
+
+  // Handle booking form field changes
+  const handleBookingInputChange = (e) => {
+    const { name, value } = e.target;
+    setBookingForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle booking form submit
+  const handleBookingSubmit = (e) => {
+    e.preventDefault();
+    // You can send bookingForm and selectedVehicle to your backend here
+    alert(
+      `Booking submitted!\n\nVehicle: ${selectedVehicle.licensePlate}\nPhone: ${bookingForm.phone}\nFrom: ${bookingForm.startLocation}\nTo: ${bookingForm.endLocation}\nItems: ${bookingForm.items}\nWeight: ${bookingForm.weight}`
+    );
+    handleCloseModal();
   };
 
   if (loading)
@@ -252,6 +298,62 @@ const FindVehicles = () => {
           )}
         </Grid>
       </Box>
+
+      {/* Booking Modal */}
+      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="xs" fullWidth>
+        <DialogTitle>Book Vehicle</DialogTitle>
+        <DialogContent>
+          <Box
+            component="form"
+            onSubmit={handleBookingSubmit}
+            sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
+          >
+            <TextField
+              label="Merchant Telephone Number"
+              name="phone"
+              value={bookingForm.phone}
+              onChange={handleBookingInputChange}
+              required
+            />
+            <TextField
+              label="Start Delivery Location"
+              name="startLocation"
+              value={bookingForm.startLocation}
+              onChange={handleBookingInputChange}
+              required
+            />
+            <TextField
+              label="End Delivery Location"
+              name="endLocation"
+              value={bookingForm.endLocation}
+              onChange={handleBookingInputChange}
+              required
+            />
+            <TextField
+              label="Items to Transport"
+              name="items"
+              value={bookingForm.items}
+              onChange={handleBookingInputChange}
+              required
+            />
+            <TextField
+              label="Weight to Transport"
+              name="weight"
+              value={bookingForm.weight}
+              onChange={handleBookingInputChange}
+              required
+            />
+            <DialogActions sx={{ px: 0 }}>
+              <Button onClick={handleCloseModal} color="secondary">
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" color="primary">
+                Submit
+              </Button>
+            </DialogActions>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };

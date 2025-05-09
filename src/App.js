@@ -34,6 +34,7 @@ import MerchantBids from "./pages/Merchant/MyBids";
 import MerchantPurchaseHistory from "./pages/Merchant/PurchaseHistory";
 import MerchantMessages from "./pages/Merchant/Messages";
 import MerchantPayments from "./pages/Merchant/Payments";
+import FindVehicles from "./pages/Merchant/FindVehicles";
 
 // Transporter Pages
 import TransporterDashboard from "./pages/Transporter/TransporterDashboard";
@@ -47,8 +48,8 @@ import Paymentapproves from "./pages/Transporter/PaymentApproves";
 import About from "./pages/About";
 import ContactUs from "./pages/ContactUs";
 import Help from "./pages/Help";
-import HomePage from "./pages/HomePage";
-import AboutUs from "./components/HOME/AboutUs";
+import HomePage from "./pages/HOME/HomePage";
+import AboutUs from "./pages/HOME/AboutUs";
 import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
 
@@ -150,6 +151,7 @@ const AppRoutes = () => {
         <Route path="purchase-history" element={<MerchantPurchaseHistory />} />
         <Route path="messages" element={<MerchantMessages />} />
         <Route path="payments" element={<MerchantPayments />} />
+        <Route path="find-vehicles" element={<FindVehicles />} />
       </Route>
 
       {/* Transporter */}
@@ -168,7 +170,6 @@ const AppRoutes = () => {
         <Route path="inbox" element={<Inbox />} />
         <Route path="payments" element={<Paymentapproves />} />
       </Route>
-
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/home" />} />
     </Routes>

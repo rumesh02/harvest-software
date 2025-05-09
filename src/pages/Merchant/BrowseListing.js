@@ -7,16 +7,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney'; // Add this impor
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
 
-const staticProducts = [
-  { name: "Cabbage", img: "/images/cabbage.jpg" },
-  { name: "Carrots", img: "/images/carrot.jpg" },
-  { name: "Long Beans", img: "/images/beans.jpg" },
-  { name: "Red Onions", img: "/images/onions.jpg" },
-  { name: "Potatoes", img: "/images/potato.jpg" },
-  { name: "Spring Onions", img: "/images/springonions.jpg" },
-  { name: "Pineapple", img: "/images/pineapples.webp" },
-  { name: "Mangoes", img: "/images/mangoes.jpg" },
-];
+const staticProducts = [];
 
 // Sri Lankan districts for dropdown
 const districts = [

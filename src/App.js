@@ -47,8 +47,8 @@ import Paymentapproves from "./pages/Transporter/PaymentApproves";
 import About from "./pages/About";
 import ContactUs from "./pages/ContactUs";
 import Help from "./pages/Help";
-import HomePage from "./pages/HomePage";
-import AboutUs from "./components/HOME/AboutUs";
+import HomePage from "./pages/HOME/HomePage";
+import AboutUs from "./pages/HOME/AboutUs";
 import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
 

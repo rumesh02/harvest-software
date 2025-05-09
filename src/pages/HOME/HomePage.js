@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -56,117 +56,12 @@ import {
   PhoneAndroid
 } from '@mui/icons-material';
 import { HeaderWithTheme } from './Header';
+import { ColorModeContext } from './Header';
 import AboutUs from './AboutUs';
 import ContactUs from './ContactUs';
 import Services from './Services';
 import Footer from './Footer';
 import { motion } from 'framer-motion'; // You'll need to install framer-motion for animations
-
-// Create theme with light/dark mode support
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#4CAF50',
-      light: '#81c784',
-      dark: '#388e3c',
-      contrastText: '#fff',
-    },
-    secondary: {
-      main: '#f1c40f',
-      light: '#f4d03f',
-      dark: '#f39c12',
-      contrastText: '#000',
-    },
-    success: {
-      main: '#2ecc71',
-      contrastText: '#fff',
-    },
-    error: {
-      main: '#e74c3c',
-    },
-    background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
-    },
-  },
-  typography: {
-    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontSize: '3.5rem',
-      fontWeight: 700,
-      marginBottom: '1rem',
-      '@media (max-width:600px)': {
-        fontSize: '2.5rem',
-      },
-    },
-    h2: {
-      fontSize: '2.8rem',
-      fontWeight: 600,
-      '@media (max-width:600px)': {
-        fontSize: '2rem',
-      },
-    },
-    h3: {
-      fontSize: '2.2rem',
-      fontWeight: 600,
-      '@media (max-width:600px)': {
-        fontSize: '1.8rem',
-      },
-    },
-    h4: {
-      fontSize: '1.8rem',
-      fontWeight: 600,
-    },
-    h5: {
-      fontSize: '1.4rem',
-      fontWeight: 500,
-    },
-    h6: {
-      fontSize: '1.2rem',
-      fontWeight: 500,
-    },
-    body1: {
-      fontSize: '1.1rem',
-      lineHeight: 1.7,
-    },
-    body2: {
-      fontSize: '0.95rem',
-      lineHeight: 1.6,
-    },
-    button: {
-      fontWeight: 600,
-      textTransform: 'none',
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          padding: '10px 20px',
-        },
-        contained: {
-          boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 16,
-          boxShadow: '0 8px 20px rgba(0,0,0,0.09)',
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 16,
-        },
-      },
-    },
-  },
-});
 
 // Stats Data
 const statsData = [
@@ -289,6 +184,7 @@ const HomePage = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [isVisible, setIsVisible] = useState({});
+  const [mode, setMode] = useState('light'); 
   
   const navigate = useNavigate();
   //const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -374,14 +270,146 @@ useEffect(() => {
     ref.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Create the color mode context value
+  const colorMode = useMemo(
+    () => ({
+      toggleColorMode: () => {
+        setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+      },
+    }),
+    [],
+  );
+
+  // Create the theme based on mode
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+          primary: {
+            main: '#4CAF50',
+            light: '#81c784',
+            dark: '#388e3c',
+            contrastText: '#fff',
+          },
+          secondary: {
+            main: '#f1c40f',
+            light: '#f4d03f',
+            dark: '#f39c12',
+            contrastText: '#000',
+          },
+          success: {
+            main: '#2ecc71',
+            contrastText: '#fff',
+          },
+          error: {
+            main: '#e74c3c',
+          },
+          background: {
+            default: '#f5f5f5',
+            paper: '#ffffff',
+          },
+          text: {
+          primary: mode === 'dark' ? '#f5f5f5' : '#2d472d',
+          secondary: mode === 'dark' ? '#C0C0C0' : '#4d4d4d',
+          },
+        },
+        typography: {
+          fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+          h1: {
+            fontSize: '3.5rem',
+            fontWeight: 700,
+            marginBottom: '1rem',
+            '@media (max-width:600px)': {
+              fontSize: '2.5rem',
+            },
+          },
+          h2: {
+            fontSize: '2.8rem',
+            fontWeight: 600,
+            '@media (max-width:600px)': {
+              fontSize: '2rem',
+            },
+          },
+          h3: {
+            fontSize: '2.2rem',
+            fontWeight: 600,
+            '@media (max-width:600px)': {
+              fontSize: '1.8rem',
+            },
+          },
+          h4: {
+            fontSize: '1.8rem',
+            fontWeight: 600,
+          },
+          h5: {
+            fontSize: '1.4rem',
+            fontWeight: 500,
+          },
+          h6: {
+            fontSize: '1.2rem',
+            fontWeight: 500,
+          },
+          body1: {
+            fontSize: '1.1rem',
+            lineHeight: 1.7,
+          },
+          body2: {
+            fontSize: '0.95rem',
+            lineHeight: 1.6,
+          },
+          button: {
+            fontWeight: 600,
+            textTransform: 'none',
+          },
+        },
+        components: {
+          MuiButton: {
+            styleOverrides: {
+              root: {
+                borderRadius: 8,
+                padding: '10px 20px',
+              },
+              contained: {
+                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+              },
+            },
+          },
+          MuiCard: {
+            styleOverrides: {
+              root: {
+                borderRadius: 16,
+                boxShadow: '0 8px 20px rgba(0,0,0,0.09)',
+              },
+            },
+          },
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                borderRadius: 16,
+              },
+            },
+          },
+        },
+      }),
+    [mode],
+  );
+
+  // Apply dark mode to body (optional)
+  useEffect(() => {
+    document.body.style.backgroundColor = mode === 'dark' ? '#121212' : '#ffffff';
+  }, [mode]);
+
   return (
-    <ThemeProvider theme={theme}>
-      <HeaderWithTheme language={language} setLanguage={setLanguage} />
+    <ColorModeContext.Provider value={colorMode}>
+      <ThemeProvider theme={theme}>
+        <HeaderWithTheme language={language} setLanguage={setLanguage} />
 
     {/* Main content container with margin-top to avoid header overlap */}
     <Box
         sx={{
           pt: '60px', // Add padding-top to account for the fixed header height
+        
          
         }}
       ></Box>
@@ -411,7 +439,18 @@ useEffect(() => {
           <HeaderWithTheme language={language} setLanguage={setLanguage} />
 
           {/* Hero Content */}
-          <Container maxWidth="lg" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 1, mt: { xs: 8, md: 0 } }}>
+          <Container
+            maxWidth="lg"
+            sx={{
+              flexGrow: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1,
+              mt: 10,
+            }}
+          >
             <Grid container spacing={4} alignItems="center" justifyContent="center">
               <Grid item xs={12} md={7} component={motion.div} variants={itemVariants}>
                 <Box sx={{ textAlign: { xs: 'center', md: 'left' }, mb: 5 }}>
@@ -423,7 +462,8 @@ useEffect(() => {
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       mb: 2,
-                      maxWidth: { xs: '100%', md: '90%' }
+                      maxWidth: { xs: '100%', md: '90%' },
+                      
                     }}
                   >
                     Revolutionizing Farm-to-Market
@@ -443,7 +483,6 @@ useEffect(() => {
                     variant="body1" 
                     sx={{ 
                       mb: 4,
-                      color: theme => theme.palette.mode === 'dark' ? '#C0C0C0' : '#2d472d',
                       fontWeight: 400,
                       fontSize: { xs: '1.1rem', md: '1.3rem' },
                       maxWidth: { xs: '100%', md: '80%' },
@@ -603,41 +642,8 @@ useEffect(() => {
               </IconButton>
             </Box>
           </Container>
-          
-          {/* Decorative Elements */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '5%',
-              right: '5%',
-              width: '150px',
-              height: '150px',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0) 70%)',
-              animation: 'pulse 15s ease infinite',
-              '@keyframes pulse': {
-                '0%': { transform: 'scale(1)', opacity: 1 },
-                '50%': { transform: 'scale(1.2)', opacity: 0.8 },
-                '100%': { transform: 'scale(1)', opacity: 1 },
-              },
-              display: { xs: 'none', md: 'block' }
-            }}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: '10%',
-              left: '5%',
-              width: '100px',
-              height: '100px',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(241, 196, 15, 0.1) 0%, rgba(241, 196, 15, 0) 70%)',
-              animation: 'pulse 10s ease infinite 1s',
-              display: { xs: 'none', md: 'block' }
-            }}
-          />
         </Box>
-        
+                  
         {/* How It Works Section */}
         <Box
           ref={howItWorksRef}
@@ -662,7 +668,12 @@ useEffect(() => {
                   fontSize: '0.875rem'
                 }} 
               />
-              <Typography variant="h2" gutterBottom sx={{ fontWeight: 700 }}>
+              <Typography
+                variant="h2"
+                gutterBottom
+                color="text.primary"
+                sx={{ fontWeight: 700, textAlign: 'center' }} // keep other styles
+              >
                 Your Journey with Farm-to-Market
               </Typography>
               <Typography variant="body1" sx={{ maxWidth: '800px', mx: 'auto', mb: 4 }}>
@@ -1178,7 +1189,7 @@ useEffect(() => {
                   fontSize: '0.875rem'
                 }} 
               />
-              <Typography variant="h2" gutterBottom sx={{ fontWeight: 700 }}>
+              <Typography variant="h2" gutterBottom  color="text.primary" sx={{ fontWeight: 700 , textAlign: 'center' }}>
                 Success Stories
               </Typography>
               <Typography variant="body1" sx={{ maxWidth: '700px', mx: 'auto' }}>
@@ -1324,7 +1335,7 @@ useEffect(() => {
                   fontSize: '0.875rem'
                 }} 
               />
-              <Typography variant="h2" gutterBottom sx={{ fontWeight: 700 }}>
+              <Typography variant="h2" color="text.primary"  gutterBottom sx={{ fontWeight: 700 , textAlign: 'center'}}>
                 Frequently Asked Questions
               </Typography>
               <Typography variant="body1" sx={{ maxWidth: '700px', mx: 'auto', mb: 2 }}>
@@ -1356,17 +1367,32 @@ useEffect(() => {
                         <AccordionSummary
                           expandIcon={<ExpandMore />}
                           sx={{
+                            transition: 'background 0.2s',
+                            '&:hover': {
+                              backgroundColor: theme => theme.palette.mode === 'dark' ? '#333366' : 'rgba(76,175,80,0.08)',
+                              '& .MuiTypography-root': {
+                                color: theme => theme.palette.mode === 'dark' ? '#fefcfb' : '#388e3c',
+                              },
+                            },
                             '& .MuiAccordionSummary-content': {
                               margin: '16px 0',
                             }
                           }}
                         >
-                          <Typography variant="h6" fontWeight={500}>
+                          <Typography
+                            variant="h6"
+                            fontWeight={500}
+                            sx={{
+                              color: theme => theme.palette.mode === 'dark' ? '#388e3c' : theme.palette.text.primary,
+                              transition: 'color 0.2s'
+                            }}
+                          >
                             {faq.question}
                           </Typography>
                         </AccordionSummary>
+
                         <AccordionDetails>
-                          <Typography variant="body1" color="text.secondary">
+                          <Typography variant="body1" color="#283618">
                             {faq.answer}
                           </Typography>
                         </AccordionDetails>
@@ -1421,7 +1447,7 @@ useEffect(() => {
                   fontSize: '0.875rem'
                 }} 
               />
-              <Typography variant="h2" gutterBottom sx={{ fontWeight: 700 }}>
+              <Typography variant="h2"  color="text.primary"  gutterBottom sx={{ fontWeight: 700 , textAlign: 'center' }}>
                 Why Choose Farm-to-Market?
               </Typography>
               <Typography variant="body1" sx={{ maxWidth: '700px', mx: 'auto', mb: 4 }}>
@@ -1483,15 +1509,15 @@ useEffect(() => {
                     <Box sx={{ mb: 2 }}>
                       {benefit.icon}
                     </Box>
-                    <Typography variant="h5" gutterBottom fontWeight={600}>
+                    <Typography variant="h5" color="#0f1c0f"  gutterBottom fontWeight={600}>
                       {benefit.title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="#0f1c0f">
                       {benefit.description}
                     </Typography>
                   </Paper>
                 </Grid>
-              ))}
+              ))} 
             </Grid>
           </Container>
         </Box>
@@ -1620,6 +1646,7 @@ useEffect(() => {
         <Footer />
       </Box>
     </ThemeProvider>
+    </ColorModeContext.Provider>
   );
 };
 

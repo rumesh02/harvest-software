@@ -19,7 +19,7 @@ import {
   Divider,
   Fade
 } from '@mui/material';
-import { useTheme, ThemeProvider, createTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import { 
   DarkMode, 
   LightMode, 
@@ -364,66 +364,11 @@ const Header = ({ language, setLanguage }) => {
   );
 };
 
-// Parent component with theme toggling functionality
+
 export const HeaderWithTheme = ({ language, setLanguage }) => {
-  const [mode, setMode] = React.useState('light');
-  
-  const colorMode = React.useMemo(
-    () => ({
-      toggleColorMode: () => {
-        setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
-      },
-    }),
-    [],
-  );
-
-  const theme = React.useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode,
-          primary: {
-            main: mode === 'dark' ? '#1a201a' : '#ffffff',
-          },
-          background: {
-            default: mode === 'dark' ? '#121212' : '#ffffff',
-            paper: mode === 'dark' ? '#1a201a' : '#ffffff',
-          },
-        },
-        typography: {
-          fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
-        },
-        components: {
-          MuiButton: {
-            styleOverrides: {
-              root: {
-                borderRadius: 8,
-                textTransform: 'none',
-              },
-            },
-          },
-        },
-      }),
-    [mode],
-  );
-
-  // Apply dark mode to body
-  useEffect(() => {
-    if (mode === 'dark') {
-      document.body.classList.add("dark-mode");
-      document.body.style.backgroundColor = '#121212';
-    } else {
-      document.body.classList.remove("dark-mode");
-      document.body.style.backgroundColor = '#ffffff';
-    }
-  }, [mode]);
 
   return (
-    <ColorModeContext.Provider value={colorMode}>
-      <ThemeProvider theme={theme}>
-        <Header language={language} setLanguage={setLanguage} />
-      </ThemeProvider>
-    </ColorModeContext.Provider>
+    <Header language={language} setLanguage={setLanguage} />
   );
 };
 

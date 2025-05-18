@@ -1,6 +1,5 @@
 const Vehicle = require('../models/vehicleModel');
 const asyncHandler = require('express-async-handler');
-const fs = require('fs');
 const User = require('../models/User'); // Import your User model
 
 // @desc    Add a new vehicle

@@ -8,7 +8,7 @@ const bidRoutes = require("./routes/bidRoutes");
 const productsRoutes = require("./routes/productsRoutes");
 const revenueRoutes = require('./routes/revenueRoutes');
 const confirmedBidRoutes = require('./routes/confirmedBidRoutes');
-//const Order = require('./models/orderModel');
+const vehicleRoutes = require('./routes/vehicleRoutes'); // Add this line
 
 dotenv.config();
 
@@ -40,6 +40,7 @@ app.use("/api/bids", bidRoutes);
 app.use("/api/products", productsRoutes);
 app.use('/api/revenue', revenueRoutes);
 app.use('/api/confirmedbids', confirmedBidRoutes);
+app.use('/api/vehicles', vehicleRoutes); // Add this line after other app.use() routes
 
 // PayHere Notification Webhook
 app.post('/api/payments/payhere-notify', async (req, res) => {

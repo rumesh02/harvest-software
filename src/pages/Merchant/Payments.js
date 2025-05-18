@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Box, Typography, Button, Alert, Paper } from "@mui/material";
-import AppleIcon from "@mui/icons-material/Apple";
 import PaymentIcon from "@mui/icons-material/Payment";
-import CreditCardIcon from "@mui/icons-material/CreditCard";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { fetchConfirmedBidById } from "../../services/orderService";

@@ -32,26 +32,23 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 export const addVehicle = async (vehicleData) => {
   const formData = new FormData();
-  
   formData.append('vehicleType', vehicleData.vehicleType);
   formData.append('licensePlate', vehicleData.licensePlate);
   formData.append('loadCapacity', vehicleData.loadCapacity);
-  formData.append("transporterAuth0Id", vehicleData.transporterAuth0Id);
-  
+  formData.append('transporterId', vehicleData.transporterId);
+  formData.append('district', vehicleData.district);
   if (vehicleData.file) {
     formData.append('vehicleImage', vehicleData.file);
   }
-  
+
   try {
     const response = await axios.post('http://localhost:5000/api/vehicles', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       },
     });
-    
     return response.data;
   } catch (error) {
-    console.error('Error adding vehicle:', error.response?.data || error);
     throw error;
   }
 };
@@ -98,6 +95,20 @@ export const deleteVehicle = async (id) => {
   } catch (error) {
     throw error;
   }
+};
+
+export const getBookingsForTransporter = async (transporterId) => {
+  try {
+    const response = await axios.get(`http://localhost:5000/api/bookings/transporter/${transporterId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const createBooking = async (bookingData) => {
+  const response = await axios.post('http://localhost:5000/api/bookings', bookingData);
+  return response.data;
 };
 
 export default api;

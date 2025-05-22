@@ -46,7 +46,8 @@ const AddVehicle = () => {
         vehicleType,
         licensePlate,
         loadCapacity,
-        transporterAuth0Id: user.sub, // Use user.sub for Auth0
+        transporterId: user.sub, // Auth0 user.sub
+        district: user['https://your-app/district'] || "Colombo", // Replace with actual path or form value
         file
       };
 
@@ -58,7 +59,7 @@ const AddVehicle = () => {
       setFile(null);
 
       alert("Vehicle added successfully!");
-      window.location.reload(); // Refresh the page after alert
+      window.location.reload();
 
     } catch (err) {
       console.error("Failed to add vehicle:", err);

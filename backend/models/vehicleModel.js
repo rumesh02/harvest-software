@@ -20,8 +20,7 @@ const vehicleSchema = mongoose.Schema(
       required: false,
     },
     transporterId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: String, // Store Auth0 user.sub
       required: true,
     },
     district: {

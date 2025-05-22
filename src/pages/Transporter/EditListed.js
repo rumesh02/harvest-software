@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import "./EditListed.css";
 import { getVehicles, updateVehicle, deleteVehicle } from "../../services/api";
 import placeholderImage from "../../assets/lorry.jpg"; // Fallback image
 
 export default function EditListed() {
+  const { user } = useAuth0();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,7 +27,8 @@ export default function EditListed() {
     const fetchVehicles = async () => {
       try {
         const data = await getVehicles();
-        setVehicles(data);
+        // Filter vehicles for this transporter
+        setVehicles(data.filter((v) => v.transporterId === user.sub));
       } catch (err) {
         console.error("Error fetching vehicles:", err);
         setError("Failed to load vehicles. Please try again later.");
@@ -35,7 +38,7 @@ export default function EditListed() {
     };
 
     fetchVehicles();
-  }, []);
+  }, [user]);
 
   // Open modal and populate fields
   const handleEdit = (vehicle) => {

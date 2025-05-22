@@ -1,15 +1,18 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const crypto = require('crypto'); // Added for PayHere hash generation
+const crypto = require('crypto'); // For PayHere hash generation
+
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const bidRoutes = require("./routes/bidRoutes");
 const productsRoutes = require("./routes/productsRoutes");
 const revenueRoutes = require('./routes/revenueRoutes');
 const confirmedBidRoutes = require('./routes/confirmedBidRoutes');
-const vehicleRoutes = require('./routes/vehicleRoutes'); // Add this line
-const bookingRoutes = require('./routes/bookingRoutes'); // Add this line
+const merchantRoutes = require('./routes/merchantRoutes');
+const vehicleRoutes = require('./routes/vehicleRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const Order = require('./models/orderModel'); // Make sure this exists
 
 dotenv.config();
 
@@ -41,8 +44,9 @@ app.use("/api/bids", bidRoutes);
 app.use("/api/products", productsRoutes);
 app.use('/api/revenue', revenueRoutes);
 app.use('/api/confirmedbids', confirmedBidRoutes);
-app.use('/api/vehicles', vehicleRoutes); // Add this line after other app.use() routes
-app.use('/api/bookings', bookingRoutes); // Add this line after other app.use() routes
+app.use('/api/merchant', merchantRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // PayHere Notification Webhook
 app.post('/api/payments/payhere-notify', async (req, res) => {
@@ -61,17 +65,17 @@ app.post('/api/payments/payhere-notify', async (req, res) => {
       paymentData,
       process.env.PAYHERE_MERCHANT_SECRET
     );
-    
+
     if (paymentData.md5sig !== expectedHash) {
       console.error('Invalid hash received');
       return res.status(400).send("Invalid hash");
     }
 
-    // 3. Update database for successful payments (status_code 2)
+    // 3. Update database for successful payments (status_code === "2")
     if (paymentData.status_code === "2") {
       const updatedOrder = await Order.findOneAndUpdate(
         { orderId: paymentData.order_id },
-        { 
+        {
           paymentStatus: "completed",
           paymentId: paymentData.payment_id,
           amountPaid: paymentData.payhere_amount,
@@ -87,7 +91,6 @@ app.post('/api/payments/payhere-notify', async (req, res) => {
       }
 
       console.log("Payment verified and order updated:", updatedOrder);
-      // Add any additional post-payment processing here
     }
 
     res.status(200).send("Notification received");
@@ -115,7 +118,7 @@ app.get('/api/payments/generate-hash', (req, res) => {
       currency
     }, merchant_secret);
 
-    res.json({ hash, merchant_id }); // Also return merchant_id for frontend
+    res.json({ hash, merchant_id });
   } catch (error) {
     console.error('Hash generation error:', error);
     res.status(500).json({ error: "Hash generation failed" });
@@ -144,7 +147,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Start server with database connection check
+// Start server with DB connection
 const startServer = async () => {
   try {
     await connectDB();

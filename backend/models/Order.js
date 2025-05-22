@@ -1,14 +1,42 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
+  productId: {
+    type: String,
+    required: true
+  },
+  productName: {
+    type: String,
+    required: true
+  },
+  bidAmount: {
+    type: Number,
+    required: true
+  },
+  orderWeight: {
+    type: Number,
+    required: true
+  },
+  merchantId: {
+    type: String,
+    required: true
+  },
+  merchantName: {
+    type: String,
+    required: true
+  },
+  merchantPhone: {
+    type: String,
+    required: true
+  },
   farmerId: {
-    type: String,  // Changed to String to match Auth0 ID format
+    type: String,
     required: true
   },
   status: {
     type: String,
     required: true,
-    enum: ['pending', 'completed', 'cancelled']
+    enum: ['PENDING', 'COMPLETED', 'CANCELLED', 'Rejected']
   },
   totalAmount: {
     type: Number,
@@ -18,6 +46,8 @@ const orderSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true // This will add createdAt and updatedAt fields automatically
 });
 
 module.exports = mongoose.model('Order', orderSchema);

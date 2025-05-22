@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 console.log("MONGO_URI:", process.env.MONGO_URI); // Debugging step
 
@@ -10,11 +9,7 @@ const connectDB = async () => {
     console.log("Database name:", new URL(process.env.MONGO_URI).pathname.substr(1));
 
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 15000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 15000,
+      serverSelectionTimeoutMS: 5000
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);

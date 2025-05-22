@@ -1,31 +1,49 @@
+import React, { useEffect, useState } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
-const MerchantDashboard = ({
-  
-  PendingPayments = "Rs. 425,300",
-  ActiveBids =15,
-  totalOrders = 27,
-  monthlyData = [
-    { name: "Jan", revenue: 50000 },
-    { name: "Feb", revenue: 42000 },
-    { name: "March", revenue: 65000 },
-    { name: "April", revenue: 70000 },
-    { name: "May", revenue: 62000 },
-    { name: "June", revenue: 54000 },
-    { name: "July", revenue: 68000 },
-    { name: "Aug", revenue: 72000 },
-    { name: "Sep", revenue: 58000 },
-    { name: "Oct", revenue: 64000 },
-    { name: "Nov", revenue: 75000 },
-    { name: "Dec", revenue: 80000 },
-  ],
-  topFarmers = [
-    { name: "Nimal Silva", avatar: "../images/nimal.jpg" },
-    { name: "Arjuna Perera", avatar: "../images/farmer.jpg" },
-    { name: "Ajith Bandara", avatar: "../images/nimal.jpg" },
-    { name: "Supun Silva", avatar: "../images/farmer.jpg" },
-  ],
-}) => {
+const MerchantDashboard = () => {
+  const [dashboardData, setDashboardData] = useState({
+    PendingPayments: "Rs. 0",
+    PendingBids: 0,
+    totalOrders: 0,
+    monthlyData: [],
+    topFarmers: []
+  });
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth0();
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        if (!user?.sub) return;
+        
+        // Encode the merchantId properly
+        const encodedMerchantId = encodeURIComponent(user.sub);
+        console.log('Encoded merchant ID:', encodedMerchantId);
+        
+        const response = await axios.get(
+          `http://localhost:5000/api/merchant/dashboard/${encodedMerchantId}`
+        );
+        
+        console.log('Dashboard response:', response.data);
+        setDashboardData(response.data);
+        
+      } catch (error) {
+        console.error('Error details:', error.response?.data || error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user]);
+
+  if (loading) return <div>Loading...</div>;
+
+  const { PendingPayments, ActiveBids, totalOrders, monthlyData, topFarmers } = dashboardData;
+
   return (
     <div className="p-4 bg-white rounded">
       <h4 className="mb-4">Dashboard</h4>
@@ -41,7 +59,7 @@ const MerchantDashboard = ({
 
         <div className="col-md-4">
           <div className="p-3 rounded" style={{ backgroundColor: "#FFEDD5" }}>
-            <h6 className="text-muted">Active Bids</h6>
+            <h6 className="text-muted">Pending Bids</h6>
             <h2 className="text-center my-3">{ActiveBids}</h2>
           </div>
         </div>

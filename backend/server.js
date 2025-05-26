@@ -12,7 +12,7 @@ const confirmedBidRoutes = require('./routes/confirmedBidRoutes');
 const merchantRoutes = require('./routes/merchantRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const Order = require('./models/orderModel'); // Make sure this exists
+const Order = require('./models/Order'); // Make sure this exists
 
 dotenv.config();
 

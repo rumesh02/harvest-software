@@ -42,7 +42,7 @@ const MerchantDashboard = () => {
 
   if (loading) return <div>Loading...</div>;
 
-  const { PendingPayments, ActiveBids, totalOrders, monthlyData, topFarmers } = dashboardData;
+  const { PendingPayments, PendingBids, totalOrders, monthlyData, topFarmers } = dashboardData;
 
   return (
     <div className="p-4 bg-white rounded">
@@ -60,7 +60,7 @@ const MerchantDashboard = () => {
         <div className="col-md-4">
           <div className="p-3 rounded" style={{ backgroundColor: "#FFEDD5" }}>
             <h6 className="text-muted">Pending Bids</h6>
-            <h2 className="text-center my-3">{ActiveBids}</h2>
+            <h2 className="text-center my-3">{PendingBids}</h2>
           </div>
         </div>
 
@@ -94,18 +94,15 @@ const MerchantDashboard = () => {
           <div className="p-3 rounded h-100" style={{ backgroundColor: "#FFEDD5" }}>
             <h5 className="mb-3">Top Farmers</h5>
             <ul className="list-unstyled">
-              {topFarmers.map((Farmer, index) => (
-                <li
-                  key={index}
-                  className="d-flex align-items-center py-2"
-                >
+              {(topFarmers || []).map((Farmer, index) => (
+                <li key={index} className="d-flex align-items-center py-2">
                   <img
                     src={Farmer.avatar || "/placeholder.svg"}
                     alt={Farmer.name}
                     className="rounded-circle me-3"
                     style={{ width: "40px", height: "40px", objectFit: "cover" }}
                   />
-                  <span>{ Farmer.name}</span>
+                  <span>{Farmer.name}</span>
                 </li>
               ))}
             </ul>

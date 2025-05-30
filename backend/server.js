@@ -7,12 +7,13 @@ const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const bidRoutes = require("./routes/bidRoutes");
 const productsRoutes = require("./routes/productsRoutes");
-const revenueRoutes = require('./routes/revenueRoutes');
+const revenueRoutes = require('./routes/farmerDashboardRoutes');
 const confirmedBidRoutes = require('./routes/confirmedBidRoutes');
 const merchantRoutes = require('./routes/merchantRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const Order = require('./models/Order'); // Make sure this exists
+const farmerDashboardRoutes = require('./routes/farmerDashboardRoutes');
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ app.use('/api/merchant', merchantRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use(merchantRoutes); 
+app.use(farmerDashboardRoutes);
 
 // PayHere Notification Webhook
 app.post('/api/payments/payhere-notify', async (req, res) => {

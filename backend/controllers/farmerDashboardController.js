@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const ConfirmedBid = require('../models/ConfirmedBid');
 
 const revenueController = {
   getMonthlyRevenue: async (req, res) => {
@@ -46,6 +47,55 @@ const revenueController = {
         message: "Error calculating revenue",
         error: error.message 
       });
+    }
+  },
+
+  getFarmerDashboard: async (req, res) => {
+    try {
+      const { farmerId } = req.params;
+
+      // Only get confirmed bids for this farmer
+      const confirmedBids = await ConfirmedBid.find({
+        farmerId,
+        status: "confirmed" // must match your document's status exactly (case-sensitive)
+      });
+
+      // Calculate stats
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      let monthlyRevenue = 0;
+      let yearlyRevenue = 0;
+      let totalOrders = confirmedBids.length;
+      let monthlyDataArr = Array(12).fill(0);
+
+      confirmedBids.forEach(bid => {
+        const bidDate = new Date(bid.createdAt);
+        const revenue = bid.amount; // use .amount field from your document
+
+        if (bidDate.getFullYear() === currentYear) {
+          yearlyRevenue += revenue;
+          monthlyDataArr[bidDate.getMonth()] += revenue;
+          if (bidDate.getMonth() === currentMonth) {
+            monthlyRevenue += revenue;
+          }
+        }
+      });
+
+      const monthlyData = monthlyDataArr.map((revenue, i) => ({
+        name: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
+        revenue
+      }));
+
+      res.json({
+        monthlyRevenue,
+        yearlyRevenue,
+        monthlyData,
+        totalOrders
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to load farmer dashboard", error: error.message });
     }
   }
 };

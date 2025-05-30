@@ -47,6 +47,7 @@ app.use('/api/confirmedbids', confirmedBidRoutes);
 app.use('/api/merchant', merchantRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use(merchantRoutes); 
 
 // PayHere Notification Webhook
 app.post('/api/payments/payhere-notify', async (req, res) => {

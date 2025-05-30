@@ -1,61 +1,51 @@
-const Order = require('../models/Order');
 const Bid = require('../models/Bid');
 
 const merchantController = {
   getDashboardData: async (req, res) => {
     try {
       const { userSub } = req.params;
-      console.log('1. Received userSub:', userSub);
 
-      // Get completed orders only
-      const totalOrders = await Order.countDocuments({ 
+      // Total Orders (Confirmed Bids)
+      const totalOrders = await Bid.countDocuments({
         merchantId: userSub,
-        status: 'COMPLETED'  // Changed to match the enum in Order model
+        status: 'Confirmed'
       });
-      console.log('2. Completed orders found:', totalOrders);
 
-      // Get pending bids from Bid collection
+      // Pending Bids
       const pendingBids = await Bid.countDocuments({
         merchantId: userSub,
-        status: 'Pending'  // Matches the enum in Bid model
+        status: 'Pending'
       });
-      console.log('3. Pending bids found:', pendingBids);
 
-      // Calculate pending payments from confirmed bids
-      const pendingPayments = await Bid.aggregate([
+      // Pending Payments (sum of bidAmount * orderWeight for pending bids)
+      const pendingPaymentsAgg = await Bid.aggregate([
         {
           $match: {
             merchantId: userSub,
-            status: 'Accepted'  // Changed to get accepted bids for pending payments
+            status: 'Pending'
           }
         },
         {
           $group: {
             _id: null,
-            total: { 
-              $sum: { $multiply: ['$bidAmount', '$orderWeight'] }
-            }
+            total: { $sum: { $multiply: ['$bidAmount', '$orderWeight'] } }
           }
         }
       ]);
-      console.log('4. Pending payments:', pendingPayments);
+      const pendingPayments = pendingPaymentsAgg[0]?.total || 0;
 
-      // Get monthly data from completed orders
-      const monthlyData = await Order.aggregate([
+      // Monthly Data (Confirmed Bids)
+      const monthlyData = await Bid.aggregate([
         {
           $match: {
             merchantId: userSub,
-            status: 'COMPLETED'
+            status: 'Confirmed'
           }
         },
         {
           $group: {
-            _id: { 
-              $month: '$completedDate'
-            },
-            revenue: { 
-              $sum: '$totalAmount'
-            }
+            _id: { $month: '$createdAt' },
+            revenue: { $sum: { $multiply: ['$bidAmount', '$orderWeight'] } }
           }
         },
         {
@@ -63,7 +53,10 @@ const merchantController = {
             name: {
               $let: {
                 vars: {
-                  months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                  months: [
+                    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                  ]
                 },
                 in: { $arrayElemAt: ['$$months', { $subtract: ['$_id', 1] }] }
               }
@@ -72,52 +65,40 @@ const merchantController = {
             _id: 0
           }
         },
-        {
-          $sort: { name: 1 }
-        }
+        { $sort: { name: 1 } }
       ]);
-      console.log('5. Monthly data:', monthlyData);
 
-      // Get top farmers from completed orders
-      const topFarmers = await Order.aggregate([
+      // Top Farmers (assuming this is what you want to include)
+      const topFarmers = await Bid.aggregate([
         {
           $match: {
             merchantId: userSub,
-            status: 'COMPLETED'
+            status: 'Confirmed'
           }
         },
         {
           $group: {
             _id: '$farmerId',
-            totalAmount: { $sum: '$totalAmount' }
+            totalRevenue: { $sum: { $multiply: ['$bidAmount', '$orderWeight'] } }
           }
         },
         {
-          $sort: { totalAmount: -1 }
+          $sort: { totalRevenue: -1 }
         },
         {
           $limit: 5
         }
       ]);
-      console.log('6. Top farmers:', topFarmers);
 
-      const response = {
+      res.json({
         totalOrders,
-        ActiveBids: pendingBids,  // Changed to use pending bids count
-        PendingPayments: `Rs. ${pendingPayments[0]?.total || 0}`,
-        monthlyData: monthlyData.length ? monthlyData : Array(12).fill(0).map((_, i) => ({
-          name: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
-          revenue: 0
-        })),
-        topFarmers: topFarmers.map(farmer => ({
-          name: `Farmer ${farmer._id}`,
-          avatar: null,
-          amount: farmer.totalAmount
-        }))
-      };
-
-      console.log('7. Final response:', response);
-      res.json(response);
+        PendingBids: pendingBids,
+        PendingPayments: `Rs. ${pendingPayments}`,
+        monthlyData,
+        topFarmers: (topFarmers || []).map((Farmer, index) => (
+          { ...Farmer, rank: index + 1 }
+        )) || []
+      });
 
     } catch (error) {
       console.error('Dashboard error:', error);

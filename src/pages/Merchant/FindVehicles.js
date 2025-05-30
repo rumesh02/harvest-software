@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getVehicles } from "../../services/api";
+import { getVehicles, createBooking } from "../../services/api";
 import placeholderImage from "../../assets/lorry.jpg";
 import {
   Box,
@@ -59,7 +59,7 @@ const FindVehicles = () => {
         const data = await getVehicles();
         setVehicles(data);
       } catch (err) {
-        setError("Failed to load vehicles.");
+        setError("Failed to load vehicles");
       } finally {
         setLoading(false);
       }
@@ -111,13 +111,51 @@ const FindVehicles = () => {
   };
 
   // Handle booking form submit
-  const handleBookingSubmit = (e) => {
+  const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    // You can send bookingForm and selectedVehicle to your backend here
-    alert(
-      `Booking submitted!\n\nVehicle: ${selectedVehicle.licensePlate}\nPhone: ${bookingForm.phone}\nFrom: ${bookingForm.startLocation}\nTo: ${bookingForm.endLocation}\nItems: ${bookingForm.items}\nWeight: ${bookingForm.weight}`
-    );
-    handleCloseModal();
+
+    // Validation
+    if (
+      !selectedVehicle._id ||
+      !selectedVehicle.transporterId ||
+      !bookingForm.phone ||
+      !bookingForm.startLocation ||
+      !bookingForm.endLocation ||
+      !bookingForm.items ||
+      !bookingForm.weight ||
+      isNaN(Number(bookingForm.weight))
+    ) {
+      alert("Please fill all fields correctly.");
+      return;
+    }
+
+    console.log({
+      vehicleId: selectedVehicle._id,
+      transporterId: selectedVehicle.transporterId,
+      phone: bookingForm.phone,
+      startLocation: bookingForm.startLocation,
+      endLocation: bookingForm.endLocation,
+      items: bookingForm.items,
+      weight: bookingForm.weight,
+      weightIsNumber: !isNaN(Number(bookingForm.weight)),
+    });
+
+    const bookingData = {
+      vehicleId: selectedVehicle._id,
+      transporterId: selectedVehicle.transporterId,
+      merchantPhone: bookingForm.phone,
+      startLocation: bookingForm.startLocation,
+      endLocation: bookingForm.endLocation,
+      items: bookingForm.items,
+      weight: Number(bookingForm.weight),
+    };
+
+    try {
+      await createBooking(bookingData);
+      handleCloseModal();
+    } catch (err) {
+      alert("Booking failed: " + (err.response?.data?.error || err.message));
+    }
   };
 
   if (loading)
@@ -301,12 +339,23 @@ const FindVehicles = () => {
 
       {/* Booking Modal */}
       <Dialog open={openModal} onClose={handleCloseModal} maxWidth="xs" fullWidth>
-        <DialogTitle>Book Vehicle</DialogTitle>
+        <DialogTitle sx={{ textAlign: "center", fontWeight: 700, color: "#1976d2" }}>
+          Book Vehicle
+        </DialogTitle>
         <DialogContent>
           <Box
             component="form"
             onSubmit={handleBookingSubmit}
-            sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2.5,
+              mt: 1,
+              background: "#f5faff",
+              borderRadius: 2,
+              p: 2,
+              boxShadow: 1,
+            }}
           >
             <TextField
               label="Merchant Telephone Number"
@@ -314,6 +363,11 @@ const FindVehicles = () => {
               value={bookingForm.phone}
               onChange={handleBookingInputChange}
               required
+              fullWidth
+              variant="outlined"
+              InputProps={{
+                style: { borderRadius: 10 }
+              }}
             />
             <TextField
               label="Start Delivery Location"
@@ -321,6 +375,11 @@ const FindVehicles = () => {
               value={bookingForm.startLocation}
               onChange={handleBookingInputChange}
               required
+              fullWidth
+              variant="outlined"
+              InputProps={{
+                style: { borderRadius: 10 }
+              }}
             />
             <TextField
               label="End Delivery Location"
@@ -328,6 +387,11 @@ const FindVehicles = () => {
               value={bookingForm.endLocation}
               onChange={handleBookingInputChange}
               required
+              fullWidth
+              variant="outlined"
+              InputProps={{
+                style: { borderRadius: 10 }
+              }}
             />
             <TextField
               label="Items to Transport"
@@ -335,19 +399,31 @@ const FindVehicles = () => {
               value={bookingForm.items}
               onChange={handleBookingInputChange}
               required
+              fullWidth
+              variant="outlined"
+              InputProps={{
+                style: { borderRadius: 10 }
+              }}
             />
             <TextField
-              label="Weight to Transport"
+              label="Weight to Transport (Kg)"
               name="weight"
               value={bookingForm.weight}
               onChange={handleBookingInputChange}
               required
+              fullWidth
+              variant="outlined"
+              InputProps={{
+                style: { borderRadius: 10 }
+              }}
+              type="number"
+              inputProps={{ min: 1 }}
             />
-            <DialogActions sx={{ px: 0 }}>
-              <Button onClick={handleCloseModal} color="secondary">
+            <DialogActions sx={{ px: 0, mt: 1 }}>
+              <Button onClick={handleCloseModal} color="secondary" variant="outlined" sx={{ borderRadius: 2 }}>
                 Cancel
               </Button>
-              <Button type="submit" variant="contained" color="primary">
+              <Button type="submit" variant="contained" color="primary" sx={{ borderRadius: 2 }}>
                 Submit
               </Button>
             </DialogActions>

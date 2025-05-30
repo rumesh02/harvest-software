@@ -1,26 +1,17 @@
 const Vehicle = require('../models/vehicleModel');
 const asyncHandler = require('express-async-handler');
-const fs = require('fs');
 const User = require('../models/User'); // Import your User model
 
 // @desc    Add a new vehicle
 // @route   POST /api/vehicles
 // @access  Public
 const addVehicle = asyncHandler(async (req, res) => {
-  const { vehicleType, licensePlate, loadCapacity, transporterAuth0Id } = req.body;
+  const { vehicleType, licensePlate, loadCapacity, transporterId, district } = req.body;
 
-  // Check if vehicle with license plate already exists
   const vehicleExists = await Vehicle.findOne({ licensePlate });
   if (vehicleExists) {
     res.status(400);
     throw new Error('A vehicle with this license plate already exists');
-  }
-
-  // Find the transporter by Auth0 ID
-  const transporter = await User.findOne({ auth0Id: transporterAuth0Id });
-  if (!transporter) {
-    res.status(400);
-    throw new Error('Transporter not found');
   }
 
   let image = null;
@@ -33,9 +24,9 @@ const addVehicle = asyncHandler(async (req, res) => {
     vehicleType,
     licensePlate,
     loadCapacity,
-    transporterId: transporter._id, // MongoDB ObjectId
-    district: transporter.district, // From user profile
-    image: image,
+    transporterId, // Auth0 user.sub
+    district,
+    image,
   });
 
   const createdVehicle = await vehicle.save();

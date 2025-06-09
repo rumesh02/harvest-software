@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const mongoose = require('mongoose');
 
 // Route to create a new user
 router.post('/register', async (req, res) => {
@@ -62,18 +63,26 @@ router.get('/check/:auth0Id', async (req, res) => {
     }
   });
   
-// Route to get user details by Auth0 ID
-router.get('/:auth0Id', async (req, res) => {
+// Get user by MongoDB _id or Auth0 id
+router.get('/:id', async (req, res) => {
   try {
-    const decodedAuth0Id = decodeURIComponent(req.params.auth0Id); // Decode the Auth0 ID
-    const user = await User.findOne({ auth0Id: decodedAuth0Id }); // Query by auth0Id
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    let user;
+    // Try MongoDB ObjectId first
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      user = await User.findById(req.params.id);
     }
-    res.json(user);
-  } catch (error) {
-    console.error('Error fetching user details:', error);
-    res.status(500).json({ message: 'Server error' });
+    // If not found, or not a valid ObjectId, try Auth0 id
+    if (!user) {
+      user = await User.findOne({ auth0Id: req.params.id });
+    }
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({
+      name: user.name,
+      farmerRatings: user.farmerRatings || 0
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

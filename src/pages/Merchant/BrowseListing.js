@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Box, Container, Typography, TextField, Grid, Card, CardMedia, CardActions, Button, 
- InputAdornment, Stack, Autocomplete } from "@mui/material";
+ InputAdornment, Stack, Autocomplete, Dialog, DialogTitle, DialogContent, IconButton, CircularProgress } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney'; // Add this import for the price icon
+import CloseIcon from '@mui/icons-material/Close';
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
+import Rating from "@mui/material/Rating";
 
 const staticProducts = [];
 
@@ -25,6 +27,11 @@ const BrowseListing = () => {
   const [districtFilter, setDistrictFilter] = useState("All Districts");
   const [maxPrice, setMaxPrice] = useState(1000);
   const { addToCart } = useCart();
+  const [seeMoreOpen, setSeeMoreOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [farmerInfo, setFarmerInfo] = useState(null);
+  const [loadingFarmer, setLoadingFarmer] = useState(false);
+  const [farmerRatings, setFarmerRatings] = useState({});
 
   useEffect(() => {
     fetchProducts();
@@ -68,8 +75,8 @@ const BrowseListing = () => {
 
   // Apply filters whenever any filter changes
   useEffect(() => {
-    applyFilters();
-  }, [applyFilters]); // Now applyFilters is properly listed as a dependency
+    applyFilters(); // Call applyFilters whenever filter values change
+  }, [searchQuery, districtFilter, maxPrice, fetchedProducts]); // Dependencies ensure filters are applied
 
   // Combine static products with dynamically filtered ones
   const allProducts = [
@@ -78,6 +85,39 @@ const BrowseListing = () => {
     ), 
     ...filteredProducts
   ];
+
+  const handleSeeMore = async (product) => {
+    setSelectedProduct(product);
+    setSeeMoreOpen(true);
+    setLoadingFarmer(true);
+    try {
+      // Assuming product.farmerID is available and your backend has this endpoint:
+      const res = await axios.get(`http://localhost:5000/api/users/${product.farmerID}`);
+      setFarmerInfo(res.data);
+    } catch (err) {
+      setFarmerInfo({ name: "Unknown" });
+    }
+    setLoadingFarmer(false);
+  };
+
+  // Fetch farmer ratings after products are fetched
+  useEffect(() => {
+    const fetchRatings = async () => {
+      const ratings = {};
+      for (const product of fetchedProducts) {
+        if (product.farmerID && !ratings[product.farmerID]) {
+          try {
+            const res = await axios.get(`http://localhost:5000/api/users/${product.farmerID}`);
+            ratings[product.farmerID] = res.data.farmerRatings || 0;
+          } catch {
+            ratings[product.farmerID] = 0;
+          }
+        }
+      }
+      setFarmerRatings(ratings);
+    };
+    if (fetchedProducts.length > 0) fetchRatings();
+  }, [fetchedProducts]);
 
   return (
     <Container sx={{ mt: 4 }}>
@@ -213,6 +253,14 @@ const BrowseListing = () => {
                       Listed: {new Date(product.listedDate).toLocaleDateString()}
                     </Typography>
                   )}
+                  {/* SEE MORE link moved here */}
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "blue", cursor: "pointer", textDecoration: "underline", mt: 1 }}
+                    onClick={() => handleSeeMore(product)}
+                  >
+                    SEE MORE
+                  </Typography>
                 </Box>
                 <CardActions>
                   <Button
@@ -227,7 +275,6 @@ const BrowseListing = () => {
                       },
                     }}
                     onClick={() => {
-                      console.log('Adding product with farmerID:', product.farmerID);
                       addToCart({
                         ...product,
                         farmerID: product.farmerID
@@ -246,6 +293,61 @@ const BrowseListing = () => {
           No products found matching your criteria
         </Typography>
       )}
+
+      {/* See More Dialog */}
+      <Dialog open={seeMoreOpen} onClose={() => setSeeMoreOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ m: 0, p: 2 }}>
+          Product Details
+          <IconButton
+            aria-label="close"
+            onClick={() => setSeeMoreOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedProduct && (
+            <>
+              <Typography variant="subtitle1" fontWeight={600}>
+                {selectedProduct.name}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                <strong>Farmer:</strong>{" "}
+                {loadingFarmer ? <CircularProgress size={14} /> : (farmerInfo?.name || "Unknown")}
+              </Typography>
+              {/* Farmer Rating Box */}
+              <Box sx={{ display: "flex", alignItems: "center", mt: 1, mb: 1 }}>
+                <Rating
+                  value={farmerInfo?.farmerRatings || 0}
+                  precision={0.1}
+                  readOnly
+                  size="medium"
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                  {farmerInfo?.farmerRatings
+                    ? `${farmerInfo.farmerRatings.toFixed(1)} / 5`
+                    : "No ratings"}
+                </Typography>
+              </Box>
+              <Typography variant="body2">
+                <strong>Listed Date:</strong> {selectedProduct.listedDate ? new Date(selectedProduct.listedDate).toLocaleDateString() : "N/A"}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Price:</strong> Rs. {selectedProduct.price}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Quantity:</strong> {selectedProduct.quantity}
+              </Typography>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 };

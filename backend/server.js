@@ -4,7 +4,7 @@ const cors = require("cors");
 const crypto = require('crypto'); // For PayHere hash generation
 
 const connectDB = require("./config/db");
-const userRoutes = require("./routes/userRoutes");
+const userRoutes = require('./routes/userRoutes');
 const bidRoutes = require("./routes/bidRoutes");
 const productsRoutes = require("./routes/productsRoutes");
 const revenueRoutes = require('./routes/farmerDashboardRoutes');
@@ -14,6 +14,8 @@ const vehicleRoutes = require('./routes/vehicleRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const Order = require('./models/Order'); // Make sure this exists
 const farmerDashboardRoutes = require('./routes/farmerDashboardRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+
 
 dotenv.config();
 
@@ -40,7 +42,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
-app.use("/api/users", userRoutes);
+app.use('/api/users', userRoutes);
 app.use("/api/bids", bidRoutes);
 app.use("/api/products", productsRoutes);
 app.use('/api/revenue', revenueRoutes);
@@ -50,6 +52,7 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use(merchantRoutes); 
 app.use(farmerDashboardRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // PayHere Notification Webhook
 app.post('/api/payments/payhere-notify', async (req, res) => {

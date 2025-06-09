@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import Rating from "@mui/material/Rating";
 
 const Dashboard = () => {
   const [revenueData, setRevenueData] = useState({
@@ -12,6 +13,9 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [farmerRating, setFarmerRating] = useState(0);
   const { user } = useAuth0();
 
   useEffect(() => {
@@ -31,8 +35,28 @@ const Dashboard = () => {
       }
     };
 
+    const fetchReviewsData = async () => {
+      try {
+        const reviewsResponse = await axios.get(`http://localhost:5000/api/reviews/farmer/${user.sub}`);
+        setReviews(reviewsResponse.data);
+
+        const avgRatingResponse = await axios.get(`http://localhost:5000/api/reviews/farmer/${user.sub}/average`);
+        setAvgRating(avgRatingResponse.data.avgRating || 0);
+      } catch (error) {
+        console.error("Error fetching reviews data:", error);
+      }
+    };
+
     if (user?.sub) {
       fetchRevenueData();
+      fetchReviewsData();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.sub) {
+      axios.get(`http://localhost:5000/api/users/${user.sub}`)
+        .then(res => setFarmerRating(res.data.farmerRatings || 0));
     }
   }, [user]);
 
@@ -92,6 +116,28 @@ const Dashboard = () => {
               </li>
             </ul>
           </div>
+        </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="mt-4">
+        <h5 className="mb-3">Your Reviews</h5>
+        <div className="p-3 rounded" style={{ backgroundColor: "#f1f8e9" }}>
+          <h6 className="text-muted">My Average Rating</h6>
+          <Rating value={avgRating} precision={0.1} readOnly size="large" />
+          <div>{avgRating ? `${avgRating.toFixed(1)} / 5` : "No ratings yet"}</div>
+        </div>
+
+        <div className="p-3 rounded mt-3" style={{ backgroundColor: "#f1f8e9" }}>
+          <h6 className="text-muted">Recent Reviews</h6>
+          {reviews.length === 0 && <div>No reviews yet.</div>}
+          {reviews.map((review, idx) => (
+            <div key={idx} style={{ borderBottom: "1px solid #eee", marginBottom: 8 }}>
+              <Rating value={review.rating} readOnly size="small" />
+              <div>{review.comment}</div>
+              <small>{new Date(review.createdAt).toLocaleDateString()}</small>
+            </div>
+          ))}
         </div>
       </div>
     </div>

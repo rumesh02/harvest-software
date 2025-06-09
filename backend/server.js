@@ -1,5 +1,5 @@
+require("dotenv").config();
 const express = require("express");
-const dotenv = require("dotenv");
 const cors = require("cors");
 const crypto = require('crypto'); // For PayHere hash generation
 
@@ -14,8 +14,6 @@ const vehicleRoutes = require('./routes/vehicleRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const Order = require('./models/Order'); // Make sure this exists
 const farmerDashboardRoutes = require('./routes/farmerDashboardRoutes');
-
-dotenv.config();
 
 const app = express();
 

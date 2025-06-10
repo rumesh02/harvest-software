@@ -1,7 +1,13 @@
-import React from "react";
+import React from 'react';
+import ChatContainer from '../../components/ChatContainer';
+import { useAuth0 } from '@auth0/auth0-react';
 
-const Messages = () => {
-  return <h2>Messages Page</h2>;
+const FarmerMessage = () => {
+  const { user, isLoading } = useAuth0();
+
+  if (isLoading) return <div>Loading...</div>;
+
+  return <ChatContainer currentUserId={user.sub} />;
 };
 
-export default Messages;
+export default FarmerMessage;

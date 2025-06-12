@@ -79,7 +79,32 @@ router.get('/merchant/:merchantId/completed', async (req, res) => {
     }).sort({ createdAt: -1 });
     
     console.log(`Found ${completedPayments.length} completed payments`);
-    res.json(completedPayments);
+    
+    // Fetch farmer information for each payment
+    const User = require('../models/User');
+    const paymentsWithFarmerInfo = await Promise.all(
+      completedPayments.map(async (payment) => {
+        try {
+          const farmer = await User.findOne({ auth0Id: payment.farmerId });
+          return {
+            ...payment.toObject(),
+            farmerName: farmer ? farmer.name : 'Unknown Farmer',
+            farmerPhone: farmer ? farmer.phone : 'N/A',
+            farmerEmail: farmer ? farmer.email : 'N/A'
+          };
+        } catch (error) {
+          console.error(`Error fetching farmer details for payment ${payment._id}:`, error);
+          return {
+            ...payment.toObject(),
+            farmerName: 'Unknown Farmer',
+            farmerPhone: 'N/A',
+            farmerEmail: 'N/A'
+          };
+        }
+      })
+    );
+    
+    res.json(paymentsWithFarmerInfo);
   } catch (error) {
     console.error('Error fetching completed payments:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

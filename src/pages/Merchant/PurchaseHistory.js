@@ -62,14 +62,16 @@ const PurchaseHistory = () => {
                 height="200" 
                 image={purchase.items[0]?.imageUrl || "https://via.placeholder.com/200?text=Farm+Product"} 
                 alt={purchase.items[0]?.name || "Farm Product"} 
-              />
-              <CardContent>
+              />              <CardContent>
                 <Typography variant="h6">{purchase.items[0]?.name || "Farm Product"}</Typography>
                 <Typography variant="body1">
                   <strong>Purchased on:</strong> {format(new Date(purchase.createdAt), 'yyyy-MM-dd')}
                 </Typography>
                 <Typography variant="body1">
                   <strong>Order ID:</strong> {purchase.orderId}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Farmer:</strong> {purchase.farmerName || "Unknown Farmer"}
                 </Typography>
                 <Typography variant="body1">
                   <strong>Price:</strong> Rs. {purchase.amount.toFixed(2)}

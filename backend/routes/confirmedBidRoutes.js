@@ -66,6 +66,26 @@ router.get('/merchant/:merchantId/pending', async (req, res) => {
   }
 });
 
+// GET completed payments for a merchant
+router.get('/merchant/:merchantId/completed', async (req, res) => {
+  try {
+    const { merchantId } = req.params;
+    console.log(`Fetching completed payments for merchant: ${merchantId}`);
+    
+    // Find confirmed bids that are paid and belong to this merchant
+    const completedPayments = await ConfirmedBid.find({
+      merchantId: merchantId,
+      status: "paid" // Only paid orders
+    }).sort({ createdAt: -1 });
+    
+    console.log(`Found ${completedPayments.length} completed payments`);
+    res.json(completedPayments);
+  } catch (error) {
+    console.error('Error fetching completed payments:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Update payment status
 router.put('/:id/status', async (req, res) => {
   try {

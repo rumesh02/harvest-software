@@ -6,6 +6,8 @@ const ConfirmedBid = require('../models/ConfirmedBid'); // Updated model
 router.post('/', async (req, res) => {
   try {
     console.log('Received confirmed bid data:', req.body);
+    console.log('Items in request:', req.body.items);
+    console.log('First item quantity:', req.body.items && req.body.items[0] ? req.body.items[0].quantity : 'No items');
     
     // Create a new confirmed bid document
     const newConfirmedBid = new ConfirmedBid(req.body);
@@ -13,6 +15,8 @@ router.post('/', async (req, res) => {
     // Save to database
     const savedBid = await newConfirmedBid.save();
     console.log('Successfully created confirmed bid:', savedBid);
+    console.log('Saved items:', savedBid.items);
+    console.log('Saved first item quantity:', savedBid.items && savedBid.items[0] ? savedBid.items[0].quantity : 'No items');
     
     // Return the created bid with its ID
     res.status(201).json(savedBid);
@@ -80,31 +84,82 @@ router.get('/merchant/:merchantId/completed', async (req, res) => {
     
     console.log(`Found ${completedPayments.length} completed payments`);
     
-    // Fetch farmer information for each payment
+    // Fetch farmer information and product images for each payment
     const User = require('../models/User');
-    const paymentsWithFarmerInfo = await Promise.all(
+    const Product = require('../models/Product');
+    const paymentsWithCompleteInfo = await Promise.all(
       completedPayments.map(async (payment) => {
         try {
+          // Fetch farmer information
           const farmer = await User.findOne({ auth0Id: payment.farmerId });
+          
+          // Fetch product image for the first item (or all items if needed)
+          let productImage = null;
+          if (payment.items && payment.items.length > 0) {
+            const productId = payment.items[0].productId;
+            if (productId) {
+              try {
+                const product = await Product.findById(productId);
+                productImage = product ? product.image : null;
+              } catch (productError) {
+                console.error(`Error fetching product ${productId}:`, productError);
+              }
+            }
+          }
+            // Enhance items with product images
+          const enhancedItems = await Promise.all(
+            (payment.items || []).map(async (item) => {
+              console.log(`Processing item:`, item); // Debug log
+              console.log(`Item quantity:`, item.quantity); // Debug log for quantity
+              
+              let itemImage = null;
+              if (item.productId) {
+                try {
+                  const product = await Product.findById(item.productId);
+                  itemImage = product ? product.image : null;
+                } catch (productError) {
+                  console.error(`Error fetching product ${item.productId}:`, productError);
+                }
+              }
+              
+              // Fix: Properly spread all item properties and add imageUrl
+              const enhancedItem = {
+                productId: item.productId,
+                name: item.name,
+                quantity: item.quantity,  // Explicitly preserve quantity
+                price: item.price,
+                _id: item._id,
+                imageUrl: itemImage
+              };
+              
+              console.log(`Enhanced item:`, enhancedItem); // Debug log
+              console.log(`Enhanced item quantity:`, enhancedItem.quantity); // Debug log
+              
+              return enhancedItem;
+            })
+          );
+          
           return {
             ...payment.toObject(),
             farmerName: farmer ? farmer.name : 'Unknown Farmer',
             farmerPhone: farmer ? farmer.phone : 'N/A',
-            farmerEmail: farmer ? farmer.email : 'N/A'
+            farmerEmail: farmer ? farmer.email : 'N/A',
+            items: enhancedItems
           };
         } catch (error) {
-          console.error(`Error fetching farmer details for payment ${payment._id}:`, error);
+          console.error(`Error fetching complete info for payment ${payment._id}:`, error);
           return {
             ...payment.toObject(),
             farmerName: 'Unknown Farmer',
             farmerPhone: 'N/A',
-            farmerEmail: 'N/A'
+            farmerEmail: 'N/A',
+            items: payment.items || []
           };
         }
       })
     );
     
-    res.json(paymentsWithFarmerInfo);
+    res.json(paymentsWithCompleteInfo);
   } catch (error) {
     console.error('Error fetching completed payments:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

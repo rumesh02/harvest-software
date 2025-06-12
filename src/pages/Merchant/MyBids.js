@@ -72,9 +72,11 @@ const MyBids = () => {
       const statusUpdateResponse = await axios.put(`http://localhost:5000/api/bids/status/${bid._id}`, {
         status: "Confirmed"
       });
-      console.log('Status update response:', statusUpdateResponse.data);
-  
-      // Create a new confirmed bid record
+      console.log('Status update response:', statusUpdateResponse.data);      // Create a new confirmed bid record
+      console.log('Creating confirmed bid from bid:', bid);
+      console.log('Bid orderWeight:', bid.orderWeight, 'Type:', typeof bid.orderWeight);
+      console.log('Bid bidAmount:', bid.bidAmount, 'Type:', typeof bid.bidAmount);
+      
       const confirmedBidData = {
         orderId: `ORD-${Date.now().toString().slice(-6)}`,
         merchantId: user?.sub,
@@ -88,6 +90,9 @@ const MyBids = () => {
         }],
         bidId: bid._id // Reference to original bid
       };
+      
+      console.log('Confirmed bid data being sent:', confirmedBidData);
+      console.log('Item quantity being sent:', confirmedBidData.items[0].quantity);
       
       console.log('Sending confirmed bid data to backend:', confirmedBidData);
       const response = await axios.post('http://localhost:5000/api/confirmedbids', confirmedBidData);

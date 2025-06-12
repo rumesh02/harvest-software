@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Box, Typography, Card, CardMedia, CardContent, Button, Grid, CircularProgress } from "@mui/material";
 import { useAuth0 } from "@auth0/auth0-react";
 import { fetchCompletedPayments } from "../../services/orderService";
-import { format } from 'date-fns'; // You'll need to install this package
+import { format } from 'date-fns';
 
 const PurchaseHistory = () => {
   const { user } = useAuth0();
@@ -62,7 +62,8 @@ const PurchaseHistory = () => {
                 height="200" 
                 image={purchase.items[0]?.imageUrl || "https://via.placeholder.com/200?text=Farm+Product"} 
                 alt={purchase.items[0]?.name || "Farm Product"} 
-              />              <CardContent>
+              />
+              <CardContent>
                 <Typography variant="h6">{purchase.items[0]?.name || "Farm Product"}</Typography>
                 <Typography variant="body1">
                   <strong>Purchased on:</strong> {format(new Date(purchase.createdAt), 'yyyy-MM-dd')}

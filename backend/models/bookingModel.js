@@ -14,6 +14,10 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  merchantName: {
+    type: String,
+    required: true,
+  },
   startLocation: {
     type: String,
     required: true,

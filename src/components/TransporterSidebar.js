@@ -1,6 +1,6 @@
 import React from "react";
 import { List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { Home, Gavel, Payment, Settings, ExitToApp, MessageRounded } from "@mui/icons-material";
+import { Home, Gavel, Settings, ExitToApp, MessageRounded } from "@mui/icons-material";
 import { Link, useLocation } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
@@ -12,8 +12,7 @@ const menuItems = [
   { text: "Add New", icon: <PlusCircleFill />, path: "addVehicle" },
   { text: "Bookings", icon: <Gavel />, path: "bookings" },
   { text: "Edit Listed", icon: <PenFill />, path: "editListed" },
-  { text: "Go to Inbox", icon: <MessageRounded />, path: "inbox" }, // Updated to include the full path
-  { text: "PaymentApproves", icon: <Payment />, path: "payments" } // Updated to include the full path
+  { text: "Go to Inbox", icon: <MessageRounded />, path: "inbox" }
 ];
 
 const TransporterSidebar = () => {

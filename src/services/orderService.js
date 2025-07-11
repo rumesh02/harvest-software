@@ -48,3 +48,32 @@ export const fetchPendingPayments = async (merchantId) => {
     return []; // Return empty array on error
   }
 };
+
+// Add this new function to update payment status
+export const updatePaymentStatus = async (confirmedBidId, status, paymentDetails = {}) => {
+  try {
+    console.log(`Updating payment status for confirmedBid: ${confirmedBidId} to ${status}`);
+    const response = await api.put(`/confirmedbids/${confirmedBidId}/status`, {
+      status,
+      paymentMethod: paymentDetails.paymentMethod,
+      paymentId: paymentDetails.paymentId,
+      paymentAttempt: paymentDetails.paymentAttempt
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating payment status:", error);
+    throw error;
+  }
+};
+
+// Add function to fetch completed payments (paid status)
+export const fetchCompletedPayments = async (merchantId) => {
+  try {
+    console.log(`Fetching completed payments for merchant: ${merchantId}`);
+    const response = await api.get(`/confirmedbids/merchant/${merchantId}/completed`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching completed payments:", error);
+    return []; // Return empty array on error
+  }
+};

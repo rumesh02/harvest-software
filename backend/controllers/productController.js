@@ -1,14 +1,34 @@
 const Product = require("../models/Product");
 const mongoose = require("mongoose"); // Add this import
 
-// Fetch all products
+// Fetch all products with backend filtering and pagination
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find({}, "name price quantity image listedDate farmerID"); // Added farmerID
-    if (products.length === 0) {
-      return res.status(404).json({ message: "No products found." });
+    const { search, district, maxPrice, page = 1, limit = 8 } = req.query;
+    let filter = {};
+
+    if (search) {
+      filter.name = { $regex: search, $options: "i" };
     }
-    res.json(products);
+    if (district && district !== "All Districts") {
+      filter["harvestDetails.location"] = { $regex: district, $options: "i" };
+    }
+    if (maxPrice) {
+      filter.price = { $lte: Number(maxPrice) };
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const products = await Product.find(filter, "name price quantity image listedDate farmerID harvestDetails")
+      .skip(skip)
+      .limit(Number(limit));
+    const total = await Product.countDocuments(filter);
+
+    res.json({
+      products,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / Number(limit))
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server Error", details: err.message });

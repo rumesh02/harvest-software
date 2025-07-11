@@ -12,6 +12,7 @@ const MyBids = () => {
   const { user } = useAuth0(); // Get the current user from Auth0
   const [bids, setBids] = useState({
     accepted: [],
+    confirmed: [],
     pending: [],
     rejected: []
   });
@@ -40,7 +41,8 @@ const MyBids = () => {
         
         // Sort filtered bids by status
         const sortedBids = {
-          accepted: merchantBids.filter(bid => bid.status === "Accepted" || bid.status === "Confirmed"),
+          accepted: merchantBids.filter(bid => bid.status === "Accepted"),
+          confirmed: merchantBids.filter(bid => bid.status === "Confirmed"),
           pending: merchantBids.filter(bid => bid.status === "Pending"),
           rejected: merchantBids.filter(bid => bid.status === "Rejected")
         };
@@ -70,9 +72,11 @@ const MyBids = () => {
       const statusUpdateResponse = await axios.put(`http://localhost:5000/api/bids/status/${bid._id}`, {
         status: "Confirmed"
       });
-      console.log('Status update response:', statusUpdateResponse.data);
-  
-      // Create a new confirmed bid record
+      console.log('Status update response:', statusUpdateResponse.data);      // Create a new confirmed bid record
+      console.log('Creating confirmed bid from bid:', bid);
+      console.log('Bid orderWeight:', bid.orderWeight, 'Type:', typeof bid.orderWeight);
+      console.log('Bid bidAmount:', bid.bidAmount, 'Type:', typeof bid.bidAmount);
+      
       const confirmedBidData = {
         orderId: `ORD-${Date.now().toString().slice(-6)}`,
         merchantId: user?.sub,
@@ -87,6 +91,9 @@ const MyBids = () => {
         bidId: bid._id // Reference to original bid
       };
       
+      console.log('Confirmed bid data being sent:', confirmedBidData);
+      console.log('Item quantity being sent:', confirmedBidData.items[0].quantity);
+      
       console.log('Sending confirmed bid data to backend:', confirmedBidData);
       const response = await axios.post('http://localhost:5000/api/confirmedbids', confirmedBidData);
       console.log('Confirmed bid creation response:', response.data);
@@ -98,6 +105,13 @@ const MyBids = () => {
       // Don't delete existing payment info, just add the new one to localStorage
       localStorage.setItem('payment_amount', finalPrice);
       localStorage.setItem('confirmed_bid_id', response.data._id);
+
+      // After successful confirmation, update UI state
+      setBids(prev => ({
+        ...prev,
+        accepted: prev.accepted.filter(b => b._id !== bid._id),
+        confirmed: [...prev.confirmed, { ...bid, status: "Confirmed" }]
+      }));
 
       navigate(`/merchant/payments?amount=${finalPrice}&confirmedBidId=${response.data._id}`);
     } catch (error) {
@@ -233,6 +247,48 @@ const MyBids = () => {
                   <TableCell>Rs. {bid.bidAmount * bid.orderWeight}</TableCell>
                   <TableCell>
                     <Typography color="info.main">Pending Approval</Typography>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Confirmed Bids */}
+      <Typography variant="h6" sx={{ display: "flex", alignItems: "center", color: "#388E3C", mb: 1 }}>
+        <CheckCircleIcon sx={{ mr: 1 }} /> Confirmed Bids
+      </Typography>
+      <TableContainer component={Paper} sx={{ mb: 3 }}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+              <TableCell>No.</TableCell>
+              <TableCell>Product</TableCell>
+              <TableCell>Winning Bid</TableCell>
+              <TableCell>Final Price</TableCell>
+              <TableCell>Status</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {bids.confirmed.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center">No confirmed bids yet</TableCell>
+              </TableRow>
+            ) : (
+              bids.confirmed.map((bid, index) => (
+                <TableRow key={bid._id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{bid.productName}</TableCell>
+                  <TableCell>
+                    Rs. {bid.bidAmount} (per Kg)<br />
+                    {bid.orderWeight} Kg
+                  </TableCell>
+                  <TableCell>Rs. {bid.bidAmount * bid.orderWeight}</TableCell>
+                  <TableCell>
+                    <Button variant="contained" color="success" disabled>
+                      Confirmed
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))

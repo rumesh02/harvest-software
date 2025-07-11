@@ -18,10 +18,10 @@
     "axios": "^1.8.4",
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.8",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "express-jwt": "^8.5.1",
     "framer-motion": "^12.12.1",
-
     "jwks-rsa": "^3.2.0",
     "lucide-react": "^0.477.0",
     "react": "^18.3.1",

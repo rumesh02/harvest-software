@@ -1,10 +1,9 @@
-require("dotenv").config();
-console.log("MONGO_URI:", process.env.MONGO_URI); // Debugging step
-
+//require("dotenv").config();
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
+    console.log("MONGO_URI:", process.env.MONGO_URI); // Debugging step
     console.log("Attempting to connect to MongoDB...");
     console.log("Database name:", new URL(process.env.MONGO_URI).pathname.substr(1));
 

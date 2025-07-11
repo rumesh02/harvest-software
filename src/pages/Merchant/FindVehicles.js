@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getVehicles, createBooking } from "../../services/api";
+import { useAuth0 } from "@auth0/auth0-react";
 import placeholderImage from "../../assets/lorry.jpg";
 import {
   Box,
@@ -29,6 +30,7 @@ const allDistricts = [
 ];
 
 const FindVehicles = () => {
+  const { user } = useAuth0();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -144,6 +146,7 @@ const FindVehicles = () => {
       vehicleId: selectedVehicle._id,
       transporterId: selectedVehicle.transporterId,
       merchantPhone: bookingForm.phone,
+      merchantName: user?.name || "",
       startLocation: bookingForm.startLocation,
       endLocation: bookingForm.endLocation,
       items: bookingForm.items,

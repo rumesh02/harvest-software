@@ -59,6 +59,11 @@ import HomePage from "./pages/HOME/HomePage";
 import AboutUs from "./pages/HOME/AboutUs";
 import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
+
+import FarmerSidebar from "./components/Sidebar";
+import TransporterSidebar from "./components/TransporterSidebar";
+import MerchantSidebar from "./components/Merchantsidebar";
 
 const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";
 const clientId = "TteW47136eGLVWWVHIFxAiViqCnittRm";
@@ -203,6 +208,11 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
+      {/* Profile */}
+      <Route path="/profile" element={<ProfilePage SidebarComponent={FarmerSidebar} />} />
+      <Route path="/transporter/profile" element={<ProfilePage SidebarComponent={TransporterSidebar} />} />
+      <Route path="/merchant/profile" element={<ProfilePage SidebarComponent={MerchantSidebar} />} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/home" />} />

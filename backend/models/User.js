@@ -10,7 +10,8 @@ const userSchema = new mongoose.Schema({
   address: { type: String },
   province: { type: String },
   district: { type: String },
-  role: { type: String, required: true } // farmer / merchant / transporter
+  role: { type: String, required: true }, // farmer / merchant / transporter
+  picture: { type: String } // ✅ NEW field to store base64 image
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

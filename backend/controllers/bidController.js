@@ -56,9 +56,28 @@ const createBid = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    // Validate bid amount against product price
     if (Number(bidAmount) < Number(product.price)) {
       client.close();
       return res.status(400).json({ message: "Bid amount must be at least the farmer's listed price." });
+    }
+
+    // Validate order weight against available quantity
+    const orderWeightNum = Number(orderWeight);
+    const availableQuantity = Number(product.quantity);
+    
+    if (orderWeightNum <= 0) {
+      client.close();
+      return res.status(400).json({ message: "Order weight must be greater than 0." });
+    }
+    
+    if (orderWeightNum > availableQuantity) {
+      client.close();
+      return res.status(400).json({ 
+        message: `Order weight (${orderWeightNum} kg) cannot exceed available quantity (${availableQuantity} kg). Please reduce your order weight.`,
+        availableQuantity: availableQuantity,
+        requestedWeight: orderWeightNum
+      });
     }
 
     res.status(201).json({
@@ -86,6 +105,9 @@ const acceptBid = async (req, res) => {
     const db = client.db("harvest-sw");
     const bidsCollection = db.collection("bids");
     const productsCollection = db.collection("products");
+    
+    // Get the global io instance
+    const io = req.app.get('io');
 
     // Find the bid to get productId and orderWeight
     const bid = await bidsCollection.findOne({ _id: new ObjectId(bidId) });
@@ -121,10 +143,29 @@ const acceptBid = async (req, res) => {
       }
     );
 
+    // Get the updated product to return current quantity
+    const updatedProduct = await productsCollection.findOne({ _id: new ObjectId(bid.productId) });
+
     client.close();
+    
+    // Emit socket event for real-time updates
+    if (io) {
+      io.emit('bidAccepted', {
+        merchantId: bid.merchantId,
+        productId: bid.productId,
+        updatedProduct: updatedProduct
+      });
+    }
+    
     res.json({
       message: "Bid accepted successfully",
-      modifiedCount: result.modifiedCount
+      modifiedCount: result.modifiedCount,
+      updatedProduct: updatedProduct,
+      acceptedBid: {
+        ...bid,
+        status: "Accepted",
+        _id: bidId
+      }
     });
 
   } catch (error) {

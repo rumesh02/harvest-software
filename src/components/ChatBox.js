@@ -16,6 +16,14 @@ const ChatBox = ({ currentUserId, targetUserId, targetUser }) => {
       .catch(err => console.error('Error fetching messages:', err));
   }, [currentUserId, targetUserId]);
 
+  // Mark messages as read when chat is opened
+  useEffect(() => {
+    if (currentUserId && targetUserId) {
+      axios.put(`http://localhost:5000/api/messages/read/${currentUserId}/${targetUserId}`)
+        .catch(err => console.error('Error marking messages as read:', err));
+    }
+  }, [currentUserId, targetUserId]);
+
   useEffect(() => {
     socket.emit('joinRoom', { senderId: currentUserId, receiverId: targetUserId });
 
@@ -25,6 +33,12 @@ const ChatBox = ({ currentUserId, targetUserId, targetUser }) => {
         (message.senderId === targetUserId && message.receiverId === currentUserId)
       ) {
         setMessages((prev) => [...prev, message]);
+        
+        // Mark message as read if we're the receiver
+        if (message.receiverId === currentUserId) {
+          axios.put(`http://localhost:5000/api/messages/read/${currentUserId}/${message.senderId}`)
+            .catch(err => console.error('Error marking message as read:', err));
+        }
       }
     });
 
@@ -46,6 +60,7 @@ const ChatBox = ({ currentUserId, targetUserId, targetUser }) => {
       receiverId: targetUserId,
       message: input,
       timestamp: new Date(),
+      senderName: targetUser?.name || 'Unknown User'
     };
 
     socket.emit('sendMessage', messageData);

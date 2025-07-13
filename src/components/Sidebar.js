@@ -12,6 +12,11 @@ import {
   BoxArrowRight,
   Cart3, // Import Cart3 icon for Orders
 } from "react-bootstrap-icons";
+import { 
+  Box, 
+  Snackbar, 
+  Alert 
+} from '@mui/material';
 import axios from "axios";
 
 const Sidebar = ({ userRole = "Farmer" }) => {
@@ -20,6 +25,7 @@ const Sidebar = ({ userRole = "Farmer" }) => {
   const { logout, user, isAuthenticated } = useAuth0(); // Get Auth0 user details
   const [activePage, setActivePage] = useState(location.pathname);
   const [profile, setProfile] = useState({ picture: "" });
+
 
   useEffect(() => {
     setActivePage(location.pathname);
@@ -39,10 +45,14 @@ const Sidebar = ({ userRole = "Farmer" }) => {
     fetchProfile();
   }, [isAuthenticated, user]);
 
+
+
   const handleLogout = () => {
     logout({ returnTo: window.location.origin }); // Logs out user
     navigate("/login"); // Redirect to login page
   };
+
+
 
   // Get the profile picture from MongoDB if available, else fallback
   const profilePicture =
@@ -62,6 +72,8 @@ const Sidebar = ({ userRole = "Farmer" }) => {
         />
         <h5 className="mb-0 fw-bold">Farm-to-Market</h5>
       </div>
+
+
 
       {/* Navigation Menu */}
       <nav className="flex-grow-1">
@@ -131,6 +143,8 @@ const Sidebar = ({ userRole = "Farmer" }) => {
           </button>
         </li>
       </ul>
+
+
     </div>
   );
 };

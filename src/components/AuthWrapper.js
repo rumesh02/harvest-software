@@ -63,6 +63,11 @@ function AuthWrapper({ children }) {
           } else if (userRole) {
             localStorage.setItem('userRole', userRole);
             console.log(`AuthWrapper: User exists, role ${userRole} stored.`);
+            // Add this block:
+            if (userRole === 'admin' && location.pathname !== '/admin/dashboard') {
+              console.log("AuthWrapper: Redirecting admin to /admin/dashboard");
+              navigate('/admin/dashboard');
+            }
           }
         }
       };

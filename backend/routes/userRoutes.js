@@ -2,7 +2,17 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 
-// Route to create a new user
+// GET all users (for chat)
+router.get('/', async (req, res) => {
+  try {
+    const users = await User.find({}, 'name role auth0Id');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST register new user
 router.post('/register', async (req, res) => {
   const {
     auth0Id,
@@ -14,11 +24,11 @@ router.post('/register', async (req, res) => {
     address,
     province,
     district,
-    role
+    role,
+    picture = ""
   } = req.body;
 
   try {
-    // Check if user already exists
     const existingUser = await User.findOne({ auth0Id });
     if (existingUser) {
       return res.status(400).json({ message: 'User already registered' });
@@ -34,7 +44,8 @@ router.post('/register', async (req, res) => {
       address,
       province,
       district,
-      role
+      role,
+      picture
     });
 
     await newUser.save();
@@ -46,34 +57,76 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Route to check if user exists by Auth0 ID
+// GET user exists by auth0 ID
 router.get('/check/:auth0Id', async (req, res) => {
-    try {
-      const decodedAuth0Id = decodeURIComponent(req.params.auth0Id);
-      const user = await User.findOne({ auth0Id: decodedAuth0Id });
-  
-      res.json({
-        exists: !!user,
-        role: user?.role || null
-      });
-    } catch (error) {
-      console.error('Error checking user existence:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
-  
-// Route to get user details by Auth0 ID
+  try {
+    const decodedAuth0Id = decodeURIComponent(req.params.auth0Id);
+    const user = await User.findOne({ auth0Id: decodedAuth0Id });
+
+    res.json({
+      exists: !!user,
+      role: user?.role || null
+    });
+  } catch (error) {
+    console.error('Error checking user existence:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET user details by auth0 ID
 router.get('/:auth0Id', async (req, res) => {
   try {
-    const decodedAuth0Id = decodeURIComponent(req.params.auth0Id); // Decode the Auth0 ID
-    const user = await User.findOne({ auth0Id: decodedAuth0Id }); // Query by auth0Id
+    const decodedAuth0Id = decodeURIComponent(req.params.auth0Id);
+    let user = await User.findOne({ auth0Id: decodedAuth0Id });
+
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      user = new User({
+        auth0Id: decodedAuth0Id,
+        name: req.query.name || "",
+        email: req.query.email || "",
+        phone: "",
+        nic: "",
+        gender: "",
+        address: "",
+        province: "",
+        district: "",
+        picture: ""
+      });
+      await user.save();
     }
+
     res.json(user);
   } catch (error) {
     console.error('Error fetching user details:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT update user by auth0 ID
+router.put('/:auth0Id', async (req, res) => {
+  try {
+    const decodedAuth0Id = decodeURIComponent(req.params.auth0Id);
+
+    // Optional: validate picture is a base64 string
+    const { picture, ...rest } = req.body;
+    if (picture && typeof picture !== "string") {
+      return res.status(400).json({ error: "Invalid image format" });
+    }
+
+    const updatedUser = await User.findOneAndUpdate(
+      { auth0Id: decodedAuth0Id },
+      { ...rest, picture },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    res.json({ message: "User updated successfully", user: updatedUser });
+  } catch (err) {
+    console.error("Error updating user:", err);
+    res.status(400).json({ error: err.message });
   }
 });
 

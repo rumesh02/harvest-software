@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { List, ListItemButton, ListItemIcon, ListItemText} from "@mui/material";
 import { Home, ShoppingCart, MonetizationOn, AssignmentTurnedIn, History, Chat, AccountBalanceWallet, Settings, ExitToApp } from "@mui/icons-material";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar"; // Add this import at the top
@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
+import axios from "axios";
 
 const menuItems = [
   { text: "Dashboard", icon: <Home />, path: "/merchant/dashboard" },
@@ -23,6 +24,26 @@ const MerchantSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user, isAuthenticated } = useAuth0();
+  const [profile, setProfile] = useState({ picture: "" });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (isAuthenticated && user?.sub) {
+        try {
+          const res = await axios.get(`/api/users/${user.sub}`);
+          setProfile(res.data);
+        } catch {
+          setProfile({ picture: "" });
+        }
+      }
+    };
+    fetchProfile();
+  }, [isAuthenticated, user]);
+
+  const profilePicture =
+    isAuthenticated && profile.picture
+      ? profile.picture
+      : "/images/placeholder.svg";
 
   const handleLogout = () => {
     logout({ returnTo: window.location.origin });
@@ -74,11 +95,16 @@ const MerchantSidebar = () => {
         <hr style={{ margin: "20px 0", border: "1px solid #E5E7EB" }} />
 
         {/* Profile Section */}
-        <div style={{ textAlign: "center", marginBottom: "15px" }}>
+        <div
+          style={{ textAlign: "center", marginBottom: "15px", cursor: "pointer" }}
+          onClick={() => navigate("/merchant/profile")}
+        >
           <Badge overlap="circular" badgeContent={"Merchant"} color="primary">
-            <Avatar src={isAuthenticated ? user.picture : "/images/placeholder.svg"} sx={{ width: 56, height: 56, margin: "0 auto" }} />
+            <Avatar src={profilePicture} sx={{ width: 56, height: 56, margin: "0 auto" }} />
           </Badge>
-          <h4 style={{ marginTop: 10, fontSize: "16px", fontWeight: "bold" }}>{isAuthenticated ? user.name : "Guest"}</h4>
+          <h4 style={{ marginTop: 10, fontSize: "16px", fontWeight: "bold" }}>
+            {isAuthenticated ? user.name : "Guest"}
+          </h4>
         </div>
 
         {/* Settings and Logout */}

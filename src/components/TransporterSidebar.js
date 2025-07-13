@@ -1,49 +1,70 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { Home, Gavel, Payment, Settings, ExitToApp, MessageRounded } from "@mui/icons-material";
-import { Link, useLocation } from "react-router-dom";
+import { Home, Gavel, Settings, ExitToApp, MessageRounded } from "@mui/icons-material";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
 import { PenFill, PlusCircleFill } from "react-bootstrap-icons";
 import { useAuth0 } from "@auth0/auth0-react";
+import axios from "axios";
 
 const menuItems = [
   { text: "Dashboard", icon: <Home />, path: "dashboard" },
   { text: "Add New", icon: <PlusCircleFill />, path: "addVehicle" },
   { text: "Bookings", icon: <Gavel />, path: "bookings" },
   { text: "Edit Listed", icon: <PenFill />, path: "editListed" },
-  { text: "Go to Inbox", icon: <MessageRounded />, path: "inbox" }, // Updated to include the full path
-  { text: "PaymentApproves", icon: <Payment />, path: "payments" } // Updated to include the full path
+  { text: "Go to Inbox", icon: <MessageRounded />, path: "inbox" }
 ];
 
 const TransporterSidebar = () => {
   const location = useLocation();
-  const { user, logout } = useAuth0();
+  const navigate = useNavigate();
+  const { user, logout, isAuthenticated } = useAuth0();
+  const [profile, setProfile] = useState({ picture: "" });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (isAuthenticated && user?.sub) {
+        try {
+          const res = await axios.get(`/api/users/${user.sub}`);
+          setProfile(res.data);
+        } catch {
+          setProfile({ picture: "" });
+        }
+      }
+    };
+    fetchProfile();
+  }, [isAuthenticated, user]);
+
+  const profilePicture =
+    isAuthenticated && profile.picture
+      ? profile.picture
+      : "/placeholder.svg";
 
   return (
-    <div style={{ 
-      width: 240, 
-      background: "#ffffff", 
-      height: "100vh", 
-      padding: "20px", 
-      borderRadius: "0", 
+    <div style={{
+      width: 240,
+      background: "#ffffff",
+      height: "100vh",
+      padding: "20px",
+      borderRadius: "0",
       boxShadow: "0 0 10px rgba(0,0,0,0.05)",
       display: "flex",
       flexDirection: "column"
     }}>
       {/* Logo and Title */}
-      <div style={{ 
-        display: "flex", 
-        alignItems: "center", 
-        gap: "10px", 
-        marginBottom: "30px" 
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        marginBottom: "30px"
       }}>
         <img src="/images/logo.png" alt="Logo" width={30} height={30} />
-        <h2 style={{ 
-          fontSize: "16px", 
-          fontWeight: "bold", 
-          margin: 0, 
-          color: "#333" 
+        <h2 style={{
+          fontSize: "16px",
+          fontWeight: "bold",
+          margin: 0,
+          color: "#333"
         }}>Farm-to-Market</h2>
       </div>
 
@@ -53,20 +74,20 @@ const TransporterSidebar = () => {
           <ListItemButton
             key={item.text}
             component={Link}
-            to={item.path}  // Full path provided here
+            to={item.path}
             sx={{
               borderRadius: "8px",
               marginBottom: "8px",
               padding: "8px 12px",
               backgroundColor: location.pathname.includes(item.path) ? "rgba(13, 110, 253, 0.1)" : "transparent",
-              "&:hover": { 
+              "&:hover": {
                 backgroundColor: "rgba(13, 110, 253, 0.1)",
                 color: "#0d6efd"
               },
             }}
           >
-            <ListItemIcon 
-              sx={{ 
+            <ListItemIcon
+              sx={{
                 color: location.pathname.includes(item.path) ? "#0d6efd" : "#6B7280",
                 minWidth: "36px"
               }}
@@ -89,45 +110,49 @@ const TransporterSidebar = () => {
       <hr style={{ margin: "20px 0", border: "0", borderTop: "1px solid #E5E7EB" }} />
 
       {/* Profile Section */}
-      <div style={{ 
-        display: "flex", 
-        alignItems: "center", 
-        padding: "10px 0", 
-        marginBottom: "15px" 
-      }}>
-        <Avatar 
-          src={user?.picture} 
-          sx={{ 
-            width: 40, 
-            height: 40, 
-            marginRight: "10px" 
-          }} 
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          padding: "10px 0",
+          marginBottom: "15px",
+          cursor: "pointer"
+        }}
+        onClick={() => navigate("/transporter/profile")}
+      >
+        <Avatar
+          src={profilePicture}
+          sx={{
+            width: 40,
+            height: 40,
+            marginRight: "10px"
+          }}
         />
         <div>
-          <h4 style={{ 
-            margin: 0, 
-            fontSize: "14px", 
-            fontWeight: "500", 
-            color: "#333" 
+          <h4 style={{
+            margin: 0,
+            fontSize: "14px",
+            fontWeight: "500",
+            color: "#333"
           }}>
             {user?.name}
           </h4>
-          <span style={{ 
-            fontSize: "12px", 
-            color: "#6B7280", 
-            display: "block" 
+          <span style={{
+            fontSize: "12px",
+            color: "#6B7280",
+            display: "block"
           }}>
-            <Badge 
-              sx={{ 
-                "& .MuiBadge-badge": { 
-                  fontSize: "10px", 
-                  height: "18px", 
-                  minWidth: "18px", 
-                  padding: "0 6px" 
-                } 
-              }} 
-              color="primary" 
-              badgeContent="Transporter" 
+            <Badge
+              sx={{
+                "& .MuiBadge-badge": {
+                  fontSize: "10px",
+                  height: "18px",
+                  minWidth: "18px",
+                  padding: "0 6px"
+                }
+              }}
+              color="primary"
+              badgeContent="Transporter"
             />
           </span>
         </div>

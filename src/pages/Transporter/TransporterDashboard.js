@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 import "./TransporterDashboard.css";
-import axios from "axios";
+import api from "../../services/api"; // Use your configured axios instance
+import { useAuth0 } from "@auth0/auth0-react";
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -17,17 +18,20 @@ const TransporterDashboard = ({ user }) => {
   useEffect(() => {
     const fetchDashboard = async () => {
       if (!user || !user.sub) return;
-      const res = await axios.get(`/api/dashboard/transporter/${user.sub}`);
-      setDashboardData(res.data);
+      try {
+        const res = await api.get(`/dashboard/transporter/${user.sub}`);
+        console.log("Dashboard data:", res.data);
+        setDashboardData(res.data);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+      }
     };
     fetchDashboard();
   }, [user]);
 
   // Prepare chart data
   const chartData = {
-    labels: [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ],
+    labels: dashboardData.monthlyData.map(m => m.name),
     datasets: [
       {
         label: "Orders",
@@ -55,7 +59,9 @@ const TransporterDashboard = ({ user }) => {
       <div className="stats-container" style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
         <div className="stats-card" style={{ flex: "1 1 250px", minWidth: 200 }}>
           <h4>Total Bookings</h4>
-          <p className="amount">{dashboardData.totalBookings}</p>
+          <p className="amount">
+            {dashboardData.totalBookings !== undefined ? dashboardData.totalBookings : "Loading..."}
+          </p>
         </div>
       </div>
 
@@ -72,6 +78,7 @@ const TransporterDashboard = ({ user }) => {
                   style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", marginRight: 12 }}
                 />
                 <span>{driver.name}</span>
+                <span style={{ marginLeft: "auto", fontWeight: 600, color: "#007BFF" }}>{driver.count} bookings</span>
               </li>
             ))}
           </ul>
@@ -88,4 +95,9 @@ const TransporterDashboard = ({ user }) => {
   );
 };
 
-export default TransporterDashboard;
+function TransporterDashboardWrapper() {
+  const { user } = useAuth0();
+  return <TransporterDashboard user={user} />;
+}
+
+export default TransporterDashboardWrapper;

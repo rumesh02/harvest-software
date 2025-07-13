@@ -223,7 +223,7 @@ const Payments = () => {
 
     const payment = {
       sandbox: true,
-      merchant_id: process.env.REACT_APP_PAYHERE_MERCHANT_ID || "1215000",
+      merchant_id: process.env.REACT_APP_PAYHERE_MERCHANT_ID || "1230340",
       return_url: "http://localhost:3000/merchant/purchase-history",
       cancel_url: "http://localhost:3000/merchant/payments",
       notify_url: "http://localhost:5000/api/payments/payhere-notify",

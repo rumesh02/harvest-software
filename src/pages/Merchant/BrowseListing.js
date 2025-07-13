@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Box, Container, Typography, TextField, Grid, Card, CardMedia, CardActions, Button, 
- InputAdornment, Autocomplete, Skeleton } from "@mui/material"; // <-- Add Skeleton import
+ InputAdornment, Autocomplete, Skeleton, Snackbar } from "@mui/material"; // <-- Add Skeleton import
+import MuiAlert from "@mui/material/Alert";
 import SearchIcon from '@mui/icons-material/Search';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; // Add this import
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
 
@@ -24,6 +26,8 @@ const BrowseListing = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false); // <-- Add loading state
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState("");
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -49,6 +53,20 @@ const BrowseListing = () => {
     } finally {
       setLoading(false); // <-- End loading
     }
+  };
+
+  const handleAddToCart = (product) => {
+    addToCart({
+      ...product,
+      farmerID: product.farmerID
+    });
+    setSnackbarMsg(
+      <span>
+        <ShoppingCartIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+        <b>{product.name}</b> added to your cart!
+      </span>
+    );
+    setSnackbarOpen(true);
   };
 
   const allProducts = fetchedProducts;
@@ -218,12 +236,7 @@ const BrowseListing = () => {
                         backgroundColor: "#FFA000", // Dark Amber
                       },
                     }}
-                    onClick={() => {
-                      addToCart({
-                        ...product,
-                        farmerID: product.farmerID
-                      });
-                    }}
+                    onClick={() => handleAddToCart(product)}
                   >
                     Add to Cart
                   </Button>
@@ -267,6 +280,24 @@ const BrowseListing = () => {
           Next
         </Button>
       </Box>
+
+      {/* Snackbar for Add to Cart */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={2000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }} // <-- Change "bottom" to "top"
+      >
+        <MuiAlert
+          onClose={() => setSnackbarOpen(false)}
+          severity="success"
+          elevation={6}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMsg}
+        </MuiAlert>
+      </Snackbar>
     </Container>
   );
 };

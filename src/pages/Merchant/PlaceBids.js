@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -16,7 +16,7 @@ import { useCart } from "../../context/CartContext";
 import axios from "axios";
 
 const PlaceBids = () => {
-  const { cartItems, removeFromCart } = useCart();
+  const { cartItems, removeFromCart, updateCartItem } = useCart(); // <-- Add updateCartItem if not present
   const [open, setOpen] = useState(false); // State to control the dialog
   const [selectedProduct, setSelectedProduct] = useState(null); // State to store the selected product
   const [bidAmount, setBidAmount] = useState(""); // State for bid amount
@@ -116,19 +116,56 @@ const PlaceBids = () => {
       const response = await axios.post("http://localhost:5000/api/bids", bidData);
       console.log("Bid Submitted:", response.data);
 
+      // Update the product in the cart with the new quantity
+      if (response.data.updatedProduct) {
+        updateCartItem(response.data.updatedProduct._id, {
+          ...selectedProduct,
+          quantity: response.data.updatedProduct.quantity
+        });
+      }
+
       // Close dialog and reset form fields but DON'T remove from cart
       setOpen(false);
       setBidAmount("");
       setOrderWeight("");
       setSelectedProduct(null);
-      
-      // Show success message that indicates the product remains in your cart for additional bids until you remove it.
       alert("Bid successfully submitted! The product remains in your cart for additional bids until you remove it.");
     } catch (error) {
       console.error("Error submitting bid:", error);
       alert(`Bid submission failed: ${error.response?.data?.message || error.message}`);
     }
   };
+
+  // Add this inside PlaceBids.js
+  const refreshCartProduct = async (productId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/products/${productId}`);
+      const updatedProduct = response.data;
+      updateCartItem(productId, { ...updatedProduct, quantity: updatedProduct.quantity });
+    } catch (error) {
+      console.error("Failed to refresh product in cart:", error);
+    }
+  };
+
+  useEffect(() => {
+    const refreshAllCartItems = async () => {
+      for (const item of cartItems) {
+        await refreshCartProduct(item._id || item.productID);
+      }
+    };
+    refreshAllCartItems();
+    // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      cartItems.forEach(item => {
+        refreshCartProduct(item._id || item.productID);
+      });
+    }, 30000); // every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [cartItems]);
 
   return (
     <div style={{ padding: "20px" }}>
@@ -166,9 +203,10 @@ const PlaceBids = () => {
             <Button
                 variant="contained"
                 color="secondary"
-                onClick={() => handlePlaceBidClick(product)} // Open the dialog
+                onClick={() => handlePlaceBidClick(product)}
+                disabled={product.quantity <= 0} // Disable if out of stock
               >
-                Place Bid
+                {product.quantity <= 0 ? "Out of Stock" : "Place Bid"}
               </Button>
 
               <Button

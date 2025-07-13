@@ -69,6 +69,7 @@ const createProduct = async (req, res) => {
       name,
       price: Number(price),
       quantity: Number(quantity),
+      originalQuantity: Number(quantity), // Add originalQuantity
       farmerID: farmerID || "default",
       image,
       productID: Date.now().toString(),

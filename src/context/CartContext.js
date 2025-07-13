@@ -120,6 +120,16 @@ export const CartProvider = ({ children }) => {
     setCartItems([]);
   };
 
+  const updateCartItem = (productId, updatedProduct) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item._id === productId || item.productID === productId
+          ? { ...item, ...updatedProduct }
+          : item
+      )
+    );
+  };
+
   // Debug display current state
   console.log(`Cart Context State - Auth: ${isAuthenticated}, Loading: ${isLoading}, Items: ${cartItems.length}`);
   
@@ -127,12 +137,21 @@ export const CartProvider = ({ children }) => {
     cartItems,
     addToCart,
     removeFromCart,
-    clearCart,
+    updateCartItem,
     currentUser: user
   };
 
   return (
-    <CartContext.Provider value={value}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        addToCart,
+        removeFromCart,
+        updateCartItem,
+        clearCart,
+        currentUser: user
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

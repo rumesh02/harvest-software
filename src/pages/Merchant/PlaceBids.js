@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Box,
 } from "@mui/material";
 import { useCart } from "../../context/CartContext";
 import axios from "axios";
@@ -42,6 +43,29 @@ const PlaceBids = () => {
   const handleSubmitBid = async () => {
     if (!bidAmount || !orderWeight) {
       alert("Please enter both bid amount and order weight.");
+      return;
+    }
+
+    // Frontend validation for order weight
+    const orderWeightNum = Number(orderWeight);
+    const availableQuantity = Number(selectedProduct.quantity);
+    
+    if (orderWeightNum <= 0) {
+      alert("Order weight must be greater than 0.");
+      return;
+    }
+    
+    if (orderWeightNum > availableQuantity) {
+      alert(`Order weight (${orderWeightNum} kg) cannot exceed available quantity (${availableQuantity} kg). Please reduce your order weight.`);
+      return;
+    }
+
+    // Frontend validation for bid amount
+    const bidAmountNum = Number(bidAmount);
+    const productPrice = Number(selectedProduct.price);
+    
+    if (bidAmountNum < productPrice) {
+      alert(`Bid amount (Rs. ${bidAmountNum}) must be at least the farmer's listed price (Rs. ${productPrice}).`);
       return;
     }
 
@@ -78,8 +102,8 @@ const PlaceBids = () => {
       const bidData = {
         productId: selectedProduct._id || selectedProduct.productID,
         productName: selectedProduct.name,
-        bidAmount: Number(bidAmount),
-        orderWeight: Number(orderWeight),
+        bidAmount: bidAmountNum,
+        orderWeight: orderWeightNum,
         farmerId: farmerId, // Farmer ID from product
         merchantId: authenticatedMerchantId, // Authenticated merchant's ID
         merchantName: merchant.name, // Retrieved from backend
@@ -124,12 +148,15 @@ const PlaceBids = () => {
         });
       }
 
-      // Close dialog and reset form fields but DON'T remove from cart
+      // Remove the product from cart after successful bid
+      removeFromCart(selectedProduct.name);
+
+      // Close dialog and reset form fields
       setOpen(false);
       setBidAmount("");
       setOrderWeight("");
       setSelectedProduct(null);
-      alert("Bid successfully submitted! The product remains in your cart for additional bids until you remove it.");
+      alert("Bid successfully submitted! The product has been removed from your cart.");
     } catch (error) {
       console.error("Error submitting bid:", error);
       alert(`Bid submission failed: ${error.response?.data?.message || error.message}`);
@@ -183,6 +210,14 @@ const PlaceBids = () => {
             <CardContent>
               <Typography variant="body2" color="textSecondary">
                 <b>Name:</b> {product.name}
+                {product.location && (
+                  <>
+                    <br />
+                    <span style={{ color: '#388E3C' }}>
+                      <span role="img" aria-label="map">🗺️</span> Location: {product.location.lat.toFixed(4)}, {product.location.lng.toFixed(4)}
+                    </span>
+                  </>
+                )}
                 {product.price && (
                   <>
                     <br />
@@ -226,34 +261,72 @@ const PlaceBids = () => {
       </Grid>
     
       {/* Dialog for entering bid details */}
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>Enter Bid Details</DialogTitle>
         <DialogContent>
-          <Typography variant="body1" gutterBottom>
-            Product: {selectedProduct?.name}
+          <Typography variant="h6" gutterBottom sx={{ color: '#D97706', fontWeight: 'bold' }}>
+            {selectedProduct?.name}
           </Typography>
+          
+          <Box sx={{ mb: 2, p: 2, backgroundColor: '#FFF8EC', borderRadius: 1 }}>
+            <Typography variant="body2" sx={{ color: '#B45309' }}>
+              <strong>Available Quantity:</strong> {selectedProduct?.quantity} kg
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#B45309' }}>
+              <strong>Listed Price:</strong> Rs. {selectedProduct?.price}
+            </Typography>
+          </Box>
+          
           <TextField
             label="Bid Amount (Rs.)"
             type="number"
             fullWidth
             value={bidAmount}
             onChange={(e) => setBidAmount(e.target.value)}
-            sx={{ marginBottom: "10px" }}
+            sx={{ marginBottom: "15px" }}
+            helperText={`Must be at least Rs. ${selectedProduct?.price}`}
+            inputProps={{ min: selectedProduct?.price || 0 }}
           />
+          
           <TextField
             label="Order Weight (kg)"
             type="number"
             fullWidth
             value={orderWeight}
             onChange={(e) => setOrderWeight(e.target.value)}
+            helperText={`Maximum: ${selectedProduct?.quantity} kg`}
+            inputProps={{ 
+              min: 0.1, 
+              max: selectedProduct?.quantity || 0,
+              step: 0.1
+            }}
           />
+          
+          {orderWeight && selectedProduct && (
+            <Box sx={{ mt: 2, p: 2, backgroundColor: '#FEF3C7', borderRadius: 1 }}>
+              <Typography variant="body2" sx={{ color: '#92400E' }}>
+                <strong>Order Summary:</strong>
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#92400E' }}>
+                Weight: {orderWeight} kg
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#92400E' }}>
+                Total Bid Value: Rs. {(Number(bidAmount) * Number(orderWeight)).toFixed(2)}
+              </Typography>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="secondary">
             Cancel
           </Button>
-          <Button onClick={handleSubmitBid} color="primary">
-            OK
+          <Button 
+            onClick={handleSubmitBid} 
+            color="primary"
+            variant="contained"
+            disabled={!bidAmount || !orderWeight || Number(orderWeight) > Number(selectedProduct?.quantity)}
+          >
+            Submit Bid
           </Button>
         </DialogActions>
       </Dialog>

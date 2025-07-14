@@ -234,6 +234,11 @@ const BrowseListing = () => {
                   <Typography variant="subtitle1" fontWeight={600} mt={1} sx={{ color: "#B45309" }}>
                     {product.name}
                   </Typography>
+                  {product.location && (
+                    <Typography variant="caption" sx={{ color: '#388E3C', display: 'block', mb: 1 }}>
+                      <span role="img" aria-label="map">🗺️</span> Location: {product.location.lat.toFixed(4)}, {product.location.lng.toFixed(4)}
+                    </Typography>
+                  )}
                   {product.price && <Typography variant="body2" sx={{ color: "#D97706" }}>Rs. {product.price}</Typography>}
                   {product.quantity && (
                     <Typography 

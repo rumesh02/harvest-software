@@ -88,6 +88,12 @@ export const CartProvider = ({ children }) => {
   }, [cartItems, isAuthenticated, user, getStorageKey]);
 
   const addToCart = (product) => {
+    // Validate that product has sufficient quantity
+    if (!product.quantity || product.quantity <= 0) {
+      console.warn('Cannot add product to cart: insufficient quantity');
+      return false;
+    }
+
     setCartItems(prevItems => {
       const exists = prevItems.find(item => item.name === product.name);
       if (!exists) {
@@ -107,6 +113,7 @@ export const CartProvider = ({ children }) => {
       }
       return prevItems;
     });
+    return true;
   };
 
   const removeFromCart = (productName) => {

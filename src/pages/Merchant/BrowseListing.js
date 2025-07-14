@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Box, Container, Typography, TextField, Grid, Card, CardMedia, CardActions, Button, 
- InputAdornment, Autocomplete, Skeleton } from "@mui/material"; // <-- Add Skeleton import
+ InputAdornment, Autocomplete, Skeleton, Snackbar } from "@mui/material"; // <-- Add Skeleton import
+import MuiAlert from "@mui/material/Alert";
 import SearchIcon from '@mui/icons-material/Search';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; // Add this import
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
+import { setupProductUpdateListeners, joinUserRoom, disconnectSocket } from "../../socket";
 
 // Sri Lankan districts for dropdown
 const districts = [
@@ -24,12 +27,36 @@ const BrowseListing = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false); // <-- Add loading state
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState("");
   const { addToCart } = useCart();
+
+  // Function to update product in the list
+  const updateProductInList = useCallback((productId, updatedProduct) => {
+    setFetchedProducts(prevProducts => 
+      prevProducts.map(product => 
+        product._id === productId ? { ...product, ...updatedProduct } : product
+      )
+    );
+  }, []);
 
   useEffect(() => {
     fetchProducts();
     // eslint-disable-next-line
   }, [searchQuery, districtFilter, maxPrice, page]);
+
+  // Setup socket listeners for real-time updates
+  useEffect(() => {
+    const userId = localStorage.getItem('user_id');
+    if (userId) {
+      joinUserRoom(userId);
+      setupProductUpdateListeners(null, updateProductInList);
+      
+      return () => {
+        disconnectSocket();
+      };
+    }
+  }, [updateProductInList]);
 
   const fetchProducts = async () => {
     try {
@@ -51,17 +78,31 @@ const BrowseListing = () => {
     }
   };
 
+  const handleAddToCart = (product) => {
+    addToCart({
+      ...product,
+      farmerID: product.farmerID
+    });
+    setSnackbarMsg(
+      <span>
+        <ShoppingCartIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+        <b>{product.name}</b> added to your cart!
+      </span>
+    );
+    setSnackbarOpen(true);
+  };
+
   const allProducts = fetchedProducts;
 
   return (
     <Container sx={{ mt: 4 }}>
       {/* Header */}
-      <Typography variant="h5" fontWeight={600} mb={2} sx={{ color: "#6D4C41" }}>
+      <Typography variant="h5" fontWeight={600} mb={2} sx={{ color: "#D97706" }}>
         🛒 Items
       </Typography>
 
       {/* Search Bar and Filters */}
-      <Box sx={{ background: "#FFF8E1", padding: "20px", borderRadius: "10px", mb: 3 }}>
+      <Box sx={{ background: "#FFF8EC", padding: "20px", borderRadius: "10px", mb: 3 }}>
         <Grid container spacing={2} alignItems="flex-start">
           <Grid item xs={12} md={4}>
             <Typography variant="body2" fontWeight={500} mb={1}>
@@ -80,7 +121,7 @@ const BrowseListing = () => {
                 borderRadius: "5px",
                 "& .MuiOutlinedInput-root": {
                   "&:hover fieldset": {
-                    borderColor: "#FFDBA4",
+                    borderColor: "#D97706",
                   },
                 }
               }}
@@ -115,7 +156,7 @@ const BrowseListing = () => {
                     borderRadius: "5px",
                     "& .MuiOutlinedInput-root": {
                       "&:hover fieldset": {
-                        borderColor: "#FFDBA4",
+                        borderColor: "#D97706",
                       },
                     }
                   }}
@@ -143,7 +184,7 @@ const BrowseListing = () => {
                 borderRadius: "5px",
                 "& .MuiOutlinedInput-root": {
                   "&:hover fieldset": {
-                    borderColor: "#FFDBA4",
+                    borderColor: "#D97706",
                   },
                 }
               }}
@@ -187,21 +228,34 @@ const BrowseListing = () => {
         <Grid container spacing={2}>
           {allProducts.slice().reverse().map((product, index) => (
             <Grid item xs={6} sm={4} md={3} key={index}>
-              <Card sx={{ borderRadius: "10px", overflow: "hidden", textAlign: "center", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#FFFDE7", border: "1px solid #FFE082" }}>
+              <Card sx={{ borderRadius: "10px", overflow: "hidden", textAlign: "center", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#FFEDD5", border: "1px solid #FFD29D" }}>
                 <Box>
                   <CardMedia component="img" height="120" image={product.img || product.image} alt={product.name} />
-                  <Typography variant="subtitle1" fontWeight={600} mt={1}>
+                  <Typography variant="subtitle1" fontWeight={600} mt={1} sx={{ color: "#B45309" }}>
                     {product.name}
                   </Typography>
-                  {product.price && <Typography variant="body2">Rs. {product.price}</Typography>}
-                  {product.quantity && <Typography variant="body2">Qty: {product.quantity}</Typography>}
+                  {product.price && <Typography variant="body2" sx={{ color: "#D97706" }}>Rs. {product.price}</Typography>}
+                  {product.quantity && (
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: product.quantity <= 0 ? 'error.main' : 
+                              product.quantity <= 10 ? '#D97706' : '#374151',
+                        fontWeight: product.quantity <= 10 ? 'bold' : 'normal'
+                      }}
+                    >
+                      Qty: {product.quantity} kg
+                      {product.quantity <= 0 && ' (Out of Stock)'}
+                      {product.quantity > 0 && product.quantity <= 10 && ' (Low Stock)'}
+                    </Typography>
+                  )}
                   {product.harvestDetails?.location && (
-                    <Typography variant="caption" color="text.secondary" display="block">
+                    <Typography variant="caption" sx={{ color: "#B45309" }} display="block">
                       Location: {product.harvestDetails.location}
                     </Typography>
                   )}
                   {product.listedDate && (
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{ color: "#D97706" }}>
                       Listed: {new Date(product.listedDate).toLocaleDateString()}
                     </Typography>
                   )}
@@ -210,22 +264,19 @@ const BrowseListing = () => {
                   <Button
                     variant="contained"
                     size="small"
+                    disabled={product.quantity <= 0}
                     sx={{
                       width: "100%",
-                      backgroundColor: "#FFC107", // Amber
-                      color: "#333",
-                      "&:hover": {
-                        backgroundColor: "#FFA000", // Dark Amber
+                      backgroundColor: product.quantity <= 0 ? "#ccc" : "#D97706",
+                      color: "#fff",
+                      fontWeight: 600,
+                      '&:hover': {
+                        backgroundColor: product.quantity <= 0 ? "#ccc" : "#B45309",
                       },
                     }}
-                    onClick={() => {
-                      addToCart({
-                        ...product,
-                        farmerID: product.farmerID
-                      });
-                    }}
+                    onClick={() => handleAddToCart(product)}
                   >
-                    Add to Cart
+                    {product.quantity <= 0 ? "Out of Stock" : "Add to Cart"}
                   </Button>
                 </CardActions>
               </Card>
@@ -245,28 +296,54 @@ const BrowseListing = () => {
           onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
           disabled={page === 1}
           sx={{
-            borderColor: "#FFC107",
-            color: "#FFA000",
-            "&:hover": {
-              borderColor: "#FFA000",
-              backgroundColor: "#FFF8E1",
+            borderColor: "#D97706",
+            color: "#B45309",
+            '&:hover': {
+              borderColor: "#B45309",
+              backgroundColor: "#FFF8EC",
             },
             mr: 2,
           }}
         >
           Previous
         </Button>
-        <Typography variant="body1" sx={{ mx: 2, alignSelf: 'center' }}>
+        <Typography variant="body1" sx={{ mx: 2, alignSelf: 'center', color: '#B45309', fontWeight: 600 }}>
           Page {page} of {totalPages}
         </Typography>
         <Button
           variant="outlined"
           onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
           disabled={page === totalPages}
+          sx={{
+            borderColor: "#D97706",
+            color: "#B45309",
+            '&:hover': {
+              borderColor: "#B45309",
+              backgroundColor: "#FFF8EC",
+            },
+          }}
         >
           Next
         </Button>
       </Box>
+
+      {/* Snackbar for Add to Cart */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={2000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }} // <-- Change "bottom" to "top"
+      >
+        <MuiAlert
+          onClose={() => setSnackbarOpen(false)}
+          severity="success"
+          elevation={6}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMsg}
+        </MuiAlert>
+      </Snackbar>
     </Container>
   );
 };

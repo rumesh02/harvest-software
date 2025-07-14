@@ -40,6 +40,9 @@ const io = new Server(server, {
   }
 });
 
+// Make io instance available to controllers
+app.set('io', io);
+
 // Import and initialize socket logic
 require('./socket')(io);
 

@@ -1,12 +1,13 @@
 const { MongoClient, ObjectId } = require("mongodb");
+
 const uri = "mongodb+srv://Piyumi:Piyu123@harvest-software.tgbx7.mongodb.net/harvest-sw?retryWrites=true&w=majority";
 
+// Create a bid
 const createBid = async (req, res) => {
-  
-  const { 
-    productId, 
-    productName, 
-    bidAmount, 
+  const {
+    productId,
+    productName,
+    bidAmount,
     orderWeight,
     merchantId,
     merchantName,
@@ -35,7 +36,6 @@ const createBid = async (req, res) => {
       updatedAt: new Date()
     };
 
-    // Validate required fields
     const requiredFields = ['productId', 'productName', 'bidAmount', 'orderWeight', 'merchantId', 'merchantName', 'farmerId'];
     const missingFields = requiredFields.filter(field => !newBid[field]);
 
@@ -47,63 +47,132 @@ const createBid = async (req, res) => {
     }
 
     const result = await collection.insertOne(newBid);
+
+    const productsCollection = db.collection("products");
+    const product = await productsCollection.findOne({ _id: new ObjectId(productId) });
+
+    if (!product) {
+      client.close();
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Validate bid amount against product price
+    if (Number(bidAmount) < Number(product.price)) {
+      client.close();
+      return res.status(400).json({ message: "Bid amount must be at least the farmer's listed price." });
+    }
+
+    // Validate order weight against available quantity
+    const orderWeightNum = Number(orderWeight);
+    const availableQuantity = Number(product.quantity);
+    
+    if (orderWeightNum <= 0) {
+      client.close();
+      return res.status(400).json({ message: "Order weight must be greater than 0." });
+    }
+    
+    if (orderWeightNum > availableQuantity) {
+      client.close();
+      return res.status(400).json({ 
+        message: `Order weight (${orderWeightNum} kg) cannot exceed available quantity (${availableQuantity} kg). Please reduce your order weight.`,
+        availableQuantity: availableQuantity,
+        requestedWeight: orderWeightNum
+      });
+    }
+
     res.status(201).json({
       message: "Bid created successfully!",
-      bid: { ...newBid, _id: result.insertedId }, // Include the inserted ID
+      bid: { ...newBid, _id: result.insertedId },
+      updatedProduct: product
     });
-    client.close();
 
+    client.close();
   } catch (error) {
-    console.error("Error in createBid:", error); // Debugging
+    console.error("Error in createBid:", error);
     res.status(500).json({ message: "Server Error", details: error.message });
   }
 };
-
 
 // Accept a bid
 const acceptBid = async (req, res) => {
   try {
     const { bidId } = req.params;
-    console.log("Accepting bid with ID:", bidId);
-
-    // Validate bidId format
     if (!ObjectId.isValid(bidId)) {
       return res.status(400).json({ message: "Invalid bid ID format" });
     }
 
     const client = await MongoClient.connect(uri);
     const db = client.db("harvest-sw");
-    const collection = db.collection("bids");
+    const bidsCollection = db.collection("bids");
+    const productsCollection = db.collection("products");
+    
+    // Get the global io instance
+    const io = req.app.get('io');
 
-    // Use updateOne instead of findOneAndUpdate
-    const result = await collection.updateOne(
-      { _id: new ObjectId(bidId) },
-      { 
-        $set: { 
-          status: "Accepted",
-          updatedAt: new Date()
-        } 
-      }
-    );
-
-    console.log("Update result:", result);
-
-    if (result.matchedCount === 0) {
+    // Find the bid to get productId and orderWeight
+    const bid = await bidsCollection.findOne({ _id: new ObjectId(bidId) });
+    if (!bid) {
       client.close();
       return res.status(404).json({ message: "Bid not found" });
     }
 
+    // Reduce product quantity by orderWeight, but not below zero
+    const product = await productsCollection.findOne({ _id: new ObjectId(bid.productId) });
+    if (!product) {
+      client.close();
+      return res.status(404).json({ message: "Product not found" });
+    }
+    const orderWeight = Number(bid.orderWeight) || 0;
+    if (product.quantity < orderWeight) {
+      client.close();
+      return res.status(400).json({ message: "Not enough stock available to accept this bid." });
+    }
+    await productsCollection.updateOne(
+      { _id: new ObjectId(bid.productId) },
+      { $inc: { quantity: -orderWeight } }
+    );
+
+    // Update bid status
+    const result = await bidsCollection.updateOne(
+      { _id: new ObjectId(bidId) },
+      {
+        $set: {
+          status: "Accepted",
+          updatedAt: new Date()
+        }
+      }
+    );
+
+    // Get the updated product to return current quantity
+    const updatedProduct = await productsCollection.findOne({ _id: new ObjectId(bid.productId) });
+
     client.close();
-    res.json({ 
+    
+    // Emit socket event for real-time updates
+    if (io) {
+      io.emit('bidAccepted', {
+        merchantId: bid.merchantId,
+        productId: bid.productId,
+        updatedProduct: updatedProduct
+      });
+    }
+    
+    res.json({
       message: "Bid accepted successfully",
-      modifiedCount: result.modifiedCount
+      modifiedCount: result.modifiedCount,
+      updatedProduct: updatedProduct,
+      acceptedBid: {
+        ...bid,
+        status: "Accepted",
+        _id: bidId
+      }
     });
 
   } catch (error) {
     console.error("Error in acceptBid:", error);
-    res.status(500).json({ 
-      message: "Error accepting bid", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error accepting bid",
+      error: error.message
     });
   }
 };
@@ -112,46 +181,44 @@ const acceptBid = async (req, res) => {
 const rejectBid = async (req, res) => {
   try {
     const { bidId } = req.params;
-    console.log("Rejecting bid with ID:", bidId);
 
-    // Validate bidId format
     if (!ObjectId.isValid(bidId)) {
       return res.status(400).json({ message: "Invalid bid ID format" });
     }
 
     const client = await MongoClient.connect(uri);
     const db = client.db("harvest-sw");
-    const collection = db.collection("bids");
+    const bidsCollection = db.collection("bids");
 
-    // Use updateOne instead of findOneAndUpdate
-    const result = await collection.updateOne(
-      { _id: new ObjectId(bidId) },
-      { 
-        $set: { 
-          status: "Rejected",
-          updatedAt: new Date()
-        } 
-      }
-    );
-
-    console.log("Update result:", result);
-
-    if (result.matchedCount === 0) {
+    // Find the bid to get productId and orderWeight
+    const bid = await bidsCollection.findOne({ _id: new ObjectId(bidId) });
+    if (!bid) {
       client.close();
       return res.status(404).json({ message: "Bid not found" });
     }
 
+    // Update bid status ONLY - do NOT change product quantity
+    const result = await bidsCollection.updateOne(
+      { _id: new ObjectId(bidId) },
+      {
+        $set: {
+          status: "Rejected",
+          updatedAt: new Date()
+        }
+      }
+    );
+
     client.close();
-    res.json({ 
+    res.json({
       message: "Bid rejected successfully",
       modifiedCount: result.modifiedCount
     });
 
   } catch (error) {
     console.error("Error in rejectBid:", error);
-    res.status(500).json({ 
-      message: "Error rejecting bid", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error rejecting bid",
+      error: error.message
     });
   }
 };
@@ -159,17 +226,15 @@ const rejectBid = async (req, res) => {
 // Get all bids for a specific farmer
 const getBids = async (req, res) => {
   try {
-    const { farmerId } = req.query; // Get farmerId from query parameters
+    const { farmerId } = req.query;
 
     const client = await MongoClient.connect(uri);
     const db = client.db("harvest-sw");
     const collection = db.collection("bids");
 
-    // Filter bids by farmerId if provided
     const query = farmerId ? { farmerId } : {};
     const bids = await collection.find(query).toArray();
 
-    // Convert _id to string in the response
     const bidsWithStringId = bids.map(bid => ({
       ...bid,
       _id: bid._id.toString()
@@ -183,7 +248,7 @@ const getBids = async (req, res) => {
   }
 };
 
-
+// Update bid status manually
 const updateBidStatus = async (req, res) => {
   try {
     const { bidId } = req.params;
@@ -199,11 +264,11 @@ const updateBidStatus = async (req, res) => {
 
     const result = await collection.updateOne(
       { _id: new ObjectId(bidId) },
-      { 
-        $set: { 
+      {
+        $set: {
           status,
           updatedAt: new Date()
-        } 
+        }
       }
     );
 
@@ -213,23 +278,33 @@ const updateBidStatus = async (req, res) => {
     }
 
     client.close();
-    res.json({ 
+    res.json({
       message: "Bid status updated successfully",
       modifiedCount: result.modifiedCount
     });
 
   } catch (error) {
     console.error("Error updating bid status:", error);
-    res.status(500).json({ 
-      message: "Error updating bid status", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error updating bid status",
+      error: error.message
     });
   }
 };
 
-module.exports = { 
-  createBid, 
-  acceptBid, 
+const handleAcceptBid = async (bidId, productId) => {
+  // ...call backend to accept bid...
+  await refreshCartProduct(productId);
+};
+
+const handleRejectBid = async (bidId, productId) => {
+  // ...call backend to reject bid...
+  await refreshCartProduct(productId);
+};
+
+module.exports = {
+  createBid,
+  acceptBid,
   rejectBid,
   getBids,
   updateBidStatus

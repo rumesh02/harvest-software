@@ -24,6 +24,13 @@ import {
 } from "@mui/material";
 import LocateMe from "../components/LocateMe"; // Import LocateMe component
 import { GOOGLE_API_KEY } from "../config";
+import { GOOGLE_MAPS_LIBRARIES, DEFAULT_MAP_CENTER } from "../config/googleMaps";
+
+// Static configuration to prevent reloading
+const GOOGLE_MAPS_CONFIG = {
+  googleMapsApiKey: GOOGLE_API_KEY,
+  libraries: GOOGLE_MAPS_LIBRARIES,
+};
 
 const allDistricts = [
   "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo", "Galle",
@@ -55,7 +62,7 @@ const FindVehicles = ({ selectedPurchase }) => {
   // Map modal state
   const [houseNo, setHouseNo] = useState("");
   const [streetName, setStreetName] = useState("");
-  const [currentLocation, setCurrentLocation] = useState({ lat: 6.9271, lng: 79.8612 }); // Default location (Colombo)
+  const [currentLocation, setCurrentLocation] = useState(DEFAULT_MAP_CENTER); // Default location (Colombo)
 
   const capacityRanges = [
     { label: "All Capacities", value: "" },
@@ -65,10 +72,7 @@ const FindVehicles = ({ selectedPurchase }) => {
   ];
 
   // Add loader for Google Maps
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_API_KEY,
-    libraries: ["places"],
-  });
+  const { isLoaded } = useJsApiLoader(GOOGLE_MAPS_CONFIG);
 
   useEffect(() => {
     const fetchVehicles = async () => {

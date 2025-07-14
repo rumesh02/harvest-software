@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Typography, Button, Alert, Paper, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import { Box, Typography, Button, Alert, Paper } from "@mui/material";
 import PaymentIcon from "@mui/icons-material/Payment";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { fetchConfirmedBidById } from "../../services/orderService";
+import { fetchConfirmedBidById, updatePaymentStatus } from "../../services/orderService";
 import { useAuth0 } from "@auth0/auth0-react";
 import PendingPayments from "./PendingPayments";
 import axios from "axios"; // Add this import
@@ -36,8 +36,6 @@ const Payments = () => {
   const [orderId, setOrderId] = useState("");
   const [showSwitchNotification, setShowSwitchNotification] = useState(false);
   const [isPayHereLoaded, setIsPayHereLoaded] = useState(false);
-  const [showTransportDialog, setShowTransportDialog] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   // Store initial searchParams in a ref to access it once without dependencies
   const initialSearchParams = useRef(searchParams);
@@ -242,22 +240,35 @@ const Payments = () => {
       hash // Use the hash from backend
     };
 
-    window.payhere.onCompleted = function onCompleted(orderId) {
+    window.payhere.onCompleted = async function onCompleted(orderId) {
       console.log("Payment completed. OrderID:" + orderId);
-      setPaymentStatus('success');
       
       // Update the confirmed bid status
       if (confirmedBidId) {
         try {
           console.log(`Updating payment status for bid: ${confirmedBidId}`);
-          axios.post("/api/confirmedbids/mark-paid", { confirmedBidId });
+          await updatePaymentStatus(confirmedBidId, "paid", {
+            paymentMethod: "PayHere",
+            paymentId: orderId,
+            paymentAttempt: {
+              status: "success",
+              date: new Date()
+            }
+          });
           
           // Clear user-specific localStorage after successful payment
           removeUserStorageItem(user.sub, 'payment_amount');
           removeUserStorageItem(user.sub, 'confirmed_bid_id');
           removeUserStorageItem(user.sub, 'order_id');
+          
+          // Dispatch event to refresh collection
+          window.dispatchEvent(new CustomEvent('paymentCompleted'));
+          window.dispatchEvent(new CustomEvent('refreshCollection'));
+          
+          setPaymentStatus('success');
         } catch (error) {
           console.error("Error updating payment status:", error);
+          setPaymentStatus('error');
         }
       }
       
@@ -280,65 +291,49 @@ const Payments = () => {
     window.payhere.startPayment(payment);
   };
 
-  const handleRegularPayment = () => {
+  const handleRegularPayment = async () => {
     if (!user?.sub) return; // Security check
     
     // Set payment in progress status
     setPaymentStatus('processing');
     
     // Simulate payment processing
-    setTimeout(() => {
-      setPaymentStatus('success');
-      
-      // Update the confirmed bid status (you can implement this in your orderService)
-      if (confirmedBidId) {
-        try {
-          console.log(`Updating payment status for bid: ${confirmedBidId}`);
+    setTimeout(async () => {
+      try {
+        // Update the confirmed bid status
+        if (confirmedBidId) {
+          await updatePaymentStatus(confirmedBidId, "paid", {
+            paymentMethod: "Test Payment",
+            paymentId: `TEST-${Date.now()}`,
+            paymentAttempt: {
+              status: "success",
+              date: new Date()
+            }
+          });
           
           // Clear user-specific localStorage after successful payment
           removeUserStorageItem(user.sub, 'payment_amount');
           removeUserStorageItem(user.sub, 'confirmed_bid_id');
           removeUserStorageItem(user.sub, 'order_id');
-        } catch (error) {
-          console.error("Error updating payment status:", error);
+          
+          // Dispatch event to refresh collection
+          window.dispatchEvent(new CustomEvent('paymentCompleted'));
+          window.dispatchEvent(new CustomEvent('refreshCollection'));
         }
+        
+        setPaymentStatus('success');
+        alert(`Payment of Rs.${amount.toFixed(2)} processed successfully!`);
+        
+        // Wait a moment before redirecting
+        setTimeout(() => {
+          navigate('/merchant/purchase-history');
+        }, 2000);
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        setPaymentStatus('error');
+        alert("Payment failed. Please try again.");
       }
-      
-      // Show success dialog
-      handlePaymentSuccess();
-      
-      // Wait a moment before redirecting
-      setTimeout(() => {
-        navigate('/merchant/purchase-history');
-      }, 2000);
     }, 1500);
-  };
-
-  // Call this after payment is successful
-  const handlePaymentSuccess = () => {
-    setShowSuccess(true);
-  };
-
-  const handleOk = () => {
-    setShowSuccess(false);
-    setShowTransportDialog(true);
-  };
-
-  const handleTransportChoice = async (choice) => {
-    // Send the choice to backend
-    await axios.post("/api/confirmedbids/transport-choice", {
-      orderId,
-      transportSelected: choice,
-    });
-    setShowTransportDialog(false);
-    // Optionally redirect or show a message
-    if (choice) {
-      // Redirect to transport selection page
-      window.location.href = "/merchant/find-vehicles"; // or use navigate()
-    } else {
-      // Show a thank you or summary page
-      window.location.href = "/merchant/collection";
-    }
   };
 
   // Handle toggling between payment form and pending payments
@@ -462,34 +457,6 @@ const Payments = () => {
              `Pay Rs.${amount.toFixed(2)} with PayHere`}
           </Button>
 
-          {/* Payment Success Dialog */}
-          <Dialog open={showSuccess}>
-            <DialogTitle>Payment Successful</DialogTitle>
-            <DialogContent>
-              <p>Your payment was successful.</p>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleOk} color="primary" variant="contained">
-                OK
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Transport Choice Dialog */}
-          <Dialog open={showTransportDialog}>
-            <DialogTitle>Do you want to use our transport method?</DialogTitle>
-            <DialogContent>
-              <p>Would you like to arrange delivery using our app's transport service?</p>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => handleTransportChoice(true)} color="primary" variant="contained">
-                Yes
-              </Button>
-              <Button onClick={() => handleTransportChoice(false)} color="secondary" variant="outlined">
-                No
-              </Button>
-            </DialogActions>
-          </Dialog>
         </>
       )}
     </Box>

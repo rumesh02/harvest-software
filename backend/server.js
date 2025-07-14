@@ -2,6 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const crypto = require('crypto'); // For PayHere hash generation
+const { MongoClient, ObjectId } = require('mongodb');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
@@ -14,10 +17,23 @@ const vehicleRoutes = require('./routes/VehicleRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const geolocationRoutes = require('./routes/geolocationRoutes');
 const Order = require('./models/Order'); // Make sure this exists
+const ConfirmedBid = require('./models/ConfirmedBid'); // Add ConfirmedBid model
 const farmerDashboardRoutes = require('./routes/farmerDashboardRoutes');
 const collectionRoutes = require("./routes/collectionRoutes");
 
+// Socket.io handler
+const socketHandler = require('./socket');
+
 const app = express();
+
+// Create HTTP server and Socket.IO
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "POST"]
+  }
+});
 
 // PayHere Hash Generator Function
 function generatePayHereHash({ merchant_id, order_id, amount, currency }, merchant_secret) {
@@ -53,6 +69,9 @@ app.use(merchantRoutes);
 app.use(farmerDashboardRoutes);
 app.use("/api/collection", collectionRoutes);
 
+// Initialize Socket.IO
+socketHandler(io);
+
 // PayHere Notification Webhook
 app.post('/api/payments/payhere-notify', async (req, res) => {
   try {
@@ -78,6 +97,9 @@ app.post('/api/payments/payhere-notify', async (req, res) => {
 
     // 3. Update database for successful payments (status_code === "2")
     if (paymentData.status_code === "2") {
+      // Try to update both Order and ConfirmedBid collections
+      
+      // Update Order collection (if exists)
       const updatedOrder = await Order.findOneAndUpdate(
         { orderId: paymentData.order_id },
         {
@@ -90,12 +112,55 @@ app.post('/api/payments/payhere-notify', async (req, res) => {
         { new: true }
       );
 
-      if (!updatedOrder) {
-        console.error('Order not found:', paymentData.order_id);
+      // Update ConfirmedBid collection
+      const updatedConfirmedBid = await ConfirmedBid.findOneAndUpdate(
+        { orderId: paymentData.order_id },
+        {
+          status: "paid",
+          paymentMethod: "PayHere",
+          paymentId: paymentData.payment_id,
+          paymentAttempts: [{
+            date: new Date(),
+            status: "success",
+            method: "PayHere"
+          }]
+        },
+        { new: true }
+      );
+
+      // If ConfirmedBid was updated and has a bidId, also update the original bid
+      if (updatedConfirmedBid && updatedConfirmedBid.bidId) {
+        try {
+          const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/harvest-sw";
+          const client = await MongoClient.connect(uri);
+          const db = client.db("harvest-sw");
+          const bidsCollection = db.collection("bids");
+          
+          await bidsCollection.updateOne(
+            { _id: new ObjectId(updatedConfirmedBid.bidId) },
+            { 
+              $set: { 
+                status: "Paid",
+                updatedAt: new Date()
+              } 
+            }
+          );
+          
+          client.close();
+          console.log(`Updated original bid ${updatedConfirmedBid.bidId} status to Paid via PayHere webhook`);
+        } catch (bidUpdateError) {
+          console.error('Error updating original bid status via PayHere webhook:', bidUpdateError);
+        }
+      }
+
+      if (!updatedOrder && !updatedConfirmedBid) {
+        console.error('No order found with ID:', paymentData.order_id);
         return res.status(404).send("Order not found");
       }
 
-      console.log("Payment verified and order updated:", updatedOrder);
+      console.log("Payment verified and records updated:");
+      if (updatedOrder) console.log("Order updated:", updatedOrder);
+      if (updatedConfirmedBid) console.log("ConfirmedBid updated:", updatedConfirmedBid);
     }
 
     res.status(200).send("Notification received");
@@ -156,9 +221,10 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log('Database connection successful');
+      console.log('Socket.IO server initialized');
     });
   } catch (error) {
     console.error('Failed to start server:', error);

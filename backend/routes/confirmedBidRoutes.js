@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const ConfirmedBid = require('../models/ConfirmedBid'); // Updated model
+const { MongoClient, ObjectId } = require('mongodb');
 const axios = require('axios');
+
+const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/harvest-sw";
 
 // POST - Create a new confirmed bid
 router.post('/', async (req, res) => {
@@ -98,6 +101,32 @@ router.put('/:id/status', async (req, res) => {
     }
     
     await confirmedBid.save();
+
+    // If payment is completed (status is 'paid'), also update the original bid status
+    if (status === 'paid' && confirmedBid.bidId) {
+      try {
+        const client = await MongoClient.connect(uri);
+        const db = client.db("harvest-sw");
+        const bidsCollection = db.collection("bids");
+        
+        await bidsCollection.updateOne(
+          { _id: new ObjectId(confirmedBid.bidId) },
+          { 
+            $set: { 
+              status: "Paid",
+              updatedAt: new Date()
+            } 
+          }
+        );
+        
+        client.close();
+        console.log(`Updated original bid ${confirmedBid.bidId} status to Paid`);
+      } catch (bidUpdateError) {
+        console.error('Error updating original bid status:', bidUpdateError);
+        // Don't fail the main request if bid update fails
+      }
+    }
+    
     res.json(confirmedBid);
   } catch (error) {
     console.error('Error updating payment status:', error);

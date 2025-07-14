@@ -63,6 +63,20 @@ export const updateConfirmedBidStatus = async (bidId, status, additionalData = {
   }
 };
 
+// Update payment status - specialized function for payment updates
+export const updatePaymentStatus = async (bidId, status, paymentData = {}) => {
+  try {
+    const response = await api.put(`/confirmedbids/${bidId}/status`, {
+      status,
+      ...paymentData
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating payment status:", error);
+    throw error;
+  }
+};
+
 // Generate PayHere payment hash
 export const generatePayHereHash = async (paymentData) => {
   try {

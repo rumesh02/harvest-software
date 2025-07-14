@@ -10,12 +10,16 @@ import {
 } from "@mui/material";
 import { GoogleMap, DirectionsRenderer, useJsApiLoader } from "@react-google-maps/api";
 import { GOOGLE_API_KEY } from "../config";
+import { GOOGLE_MAPS_LIBRARIES } from "../config/googleMaps";
+
+// Static configuration to prevent reloading
+const GOOGLE_MAPS_CONFIG = {
+  googleMapsApiKey: GOOGLE_API_KEY,
+  libraries: GOOGLE_MAPS_LIBRARIES,
+};
 
 function LocateMeMap(props) {
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_API_KEY,
-    libraries: ["places"],
-  });
+  const { isLoaded } = useJsApiLoader(GOOGLE_MAPS_CONFIG);
 
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState("");
@@ -57,10 +61,13 @@ function LocateMeMap(props) {
           const data = await res.json();
           if (res.ok) {
             setAddress(data.address);
+          } else {
+            console.warn("Reverse geocoding failed:", data);
+            setAddress(`Location: ${newLat.toFixed(6)}, ${newLng.toFixed(6)}`);
           }
         } catch (err) {
-          console.error("Error reverse geocoding:", err);
-          setAddress("Unable to fetch address");
+          console.warn("Reverse geocoding error:", err);
+          setAddress(`Location: ${newLat.toFixed(6)}, ${newLng.toFixed(6)}`);
         }
       });
 
@@ -109,15 +116,18 @@ function LocateMeMap(props) {
             if (response.ok) {
               setAddress(data.address);
             } else {
-              setAddress("Unable to fetch address");
+              console.warn("Geocoding failed:", data);
+              setAddress("Unable to fetch address - using coordinates");
             }
           } catch (err) {
-            setAddress("Unable to fetch address due to network issues");
+            console.warn("Geocoding error:", err);
+            setAddress(`Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
           }
 
           setMapModalOpen(true);
         },
         (err) => {
+          console.error("Geolocation error:", err);
           alert("Error fetching location: " + err.message);
         }
       );
@@ -169,8 +179,9 @@ function LocateMeMap(props) {
     }
   }, [isLoaded, location, props.endLocation]);
 
-  console.log("isLoaded:", isLoaded);
-  console.log("location:", location);
+  // Remove console logs to reduce noise
+  // console.log("isLoaded:", isLoaded);
+  // console.log("location:", location);
 
   if (!isLoaded) return <div>Loading map...</div>;
   return (

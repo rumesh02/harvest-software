@@ -1,5 +1,16 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Box, Container, Typography, Grid, TextField, Button } from '@mui/material';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  TextField, 
+  Button, 
+  Alert,
+  CircularProgress,
+  Snackbar
+} from '@mui/material';
+import { Send, CheckCircle, Error } from '@mui/icons-material';
 
 const ContactUs = () => {
   const contactUsRef = useRef(null);
@@ -9,6 +20,10 @@ const ContactUs = () => {
     email: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null); // 'success', 'error', or null
+  const [statusMessage, setStatusMessage] = useState('');
+  const [showSnackbar, setShowSnackbar] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -31,10 +46,60 @@ const ContactUs = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Add your form submission logic here
+    
+    // Basic validation
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      setSubmitStatus('error');
+      setStatusMessage('Please fill in all required fields.');
+      setShowSnackbar(true);
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setSubmitStatus('error');
+      setStatusMessage('Please enter a valid email address.');
+      setShowSnackbar(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/contact/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSubmitStatus('success');
+        setStatusMessage(result.message || 'Thank you for your message! We will get back to you soon.');
+        setFormData({ name: '', email: '', message: '' }); // Reset form
+      } else {
+        setSubmitStatus('error');
+        setStatusMessage(result.message || 'Sorry, there was an error submitting your message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      setSubmitStatus('error');
+      setStatusMessage('Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+      setShowSnackbar(true);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setShowSnackbar(false);
   };
 
   return (
@@ -150,20 +215,26 @@ const ContactUs = () => {
                 type="submit"
                 variant="contained"
                 size="large"
+                disabled={isSubmitting}
+                startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <Send />}
                 sx={{
                   mt: 2,
                   bgcolor: '#f8b400',
                   color: '#000',
                   '&:hover': {
                     bgcolor: '#f1c40f',
-                    transform: 'translateY(-3px)',
-                    boxShadow: '0 5px 15px rgba(241, 196, 15, 0.4)',
+                    transform: isSubmitting ? 'none' : 'translateY(-3px)',
+                    boxShadow: isSubmitting ? 'none' : '0 5px 15px rgba(241, 196, 15, 0.4)',
+                  },
+                  '&:disabled': {
+                    bgcolor: '#ccc',
+                    color: '#666',
                   },
                   transition: 'all 0.3s',
                   fontWeight: 'bold',
                 }}
               >
-                Send Message
+                {isSubmitting ? 'Sending...' : 'Send Message'}
               </Button>
             </form>
           </Grid>
@@ -195,6 +266,28 @@ const ContactUs = () => {
             />
           </Grid>
         </Grid>
+        
+        {/* Success/Error Snackbar */}
+        <Snackbar
+          open={showSnackbar}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={submitStatus}
+            icon={submitStatus === 'success' ? <CheckCircle /> : <Error />}
+            sx={{
+              width: '100%',
+              '& .MuiAlert-message': {
+                fontWeight: 'bold',
+              },
+            }}
+          >
+            {statusMessage}
+          </Alert>
+        </Snackbar>
       </Container>
     </Box>
   );

@@ -3,12 +3,31 @@ const Bid = require('../models/Bid');
 const merchantController = {
   getDashboardData: async (req, res) => {
     try {
+      console.log('Merchant dashboard controller called');
+      console.log('Request params:', req.params);
+      console.log('Request URL:', req.url);
+      
       const { userSub } = req.params;
 
-      // Total Orders (Confirmed Bids)
+      console.log('Fetching dashboard data for merchant:', userSub);
+      
+      if (!userSub) {
+        return res.status(400).json({ error: 'Merchant ID is required' });
+      }
+
+      // Test database connection
+      try {
+        const testCount = await Bid.countDocuments({});
+        console.log('Database connection test - total bids:', testCount);
+      } catch (dbError) {
+        console.error('Database connection error:', dbError);
+        return res.status(500).json({ error: 'Database connection failed', details: dbError.message });
+      }
+
+      // Total Orders (Accepted Bids)
       const totalOrders = await Bid.countDocuments({
         merchantId: userSub,
-        status: 'Confirmed'
+        status: 'Accepted'
       });
 
       // Pending Bids
@@ -34,12 +53,12 @@ const merchantController = {
       ]);
       const pendingPayments = pendingPaymentsAgg[0]?.total || 0;
 
-      // Monthly Data (Confirmed Bids)
+      // Monthly Data (Accepted Bids)
       const monthlyData = await Bid.aggregate([
         {
           $match: {
             merchantId: userSub,
-            status: 'Confirmed'
+            status: 'Accepted'
           }
         },
         {
@@ -68,12 +87,12 @@ const merchantController = {
         { $sort: { name: 1 } }
       ]);
 
-      // Top Farmers (assuming this is what you want to include)
+      // Top Farmers (Accepted Bids)
       const topFarmers = await Bid.aggregate([
         {
           $match: {
             merchantId: userSub,
-            status: 'Confirmed'
+            status: 'Accepted'
           }
         },
         {
@@ -90,7 +109,7 @@ const merchantController = {
         }
       ]);
 
-      res.json({
+      const dashboardData = {
         totalOrders,
         PendingBids: pendingBids,
         PendingPayments: `Rs. ${pendingPayments}`,
@@ -98,11 +117,17 @@ const merchantController = {
         topFarmers: (topFarmers || []).map((Farmer, index) => (
           { ...Farmer, rank: index + 1 }
         )) || []
-      });
+      };
+
+      console.log('Dashboard data prepared:', dashboardData);
+      res.json(dashboardData);
 
     } catch (error) {
       console.error('Dashboard error:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ 
+        error: 'Failed to load dashboard data',
+        details: error.message 
+      });
     }
   }
 };

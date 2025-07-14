@@ -1,8 +1,7 @@
-import React from "react";
-import "./Bookings.css";
+import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState } from "react";
-import { getBookingsForTransporter } from "../../services/api"; // Implement this API
+import { getBookingsForTransporter } from "../../services/api";
+import "./Bookings.css";
 
 const Bookings = () => {
   const { user } = useAuth0();
@@ -21,10 +20,15 @@ const Bookings = () => {
       <h2>Bookings</h2>
       {bookings.map((booking) => (
         <div key={booking._id} className="booking-card">
-          <h3>Phone: {booking.merchantPhone}</h3>
+          <h3>Merchant: {booking.merchantName}</h3>
+          <h4>Phone: {booking.merchantPhone}</h4>
           <div className="booking-info">
-            <p>{booking.startLocation} → {booking.endLocation}</p>
-            <p>Items: {booking.items} | Weight: {booking.weight}Kg</p>
+            <p>
+              {booking.startLocation} → {booking.endLocation}
+            </p>
+            <p>
+              Items: {booking.items} | Weight: {booking.weight}Kg
+            </p>
           </div>
         </div>
       ))}

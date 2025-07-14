@@ -9,6 +9,7 @@ router.post('/', async (req, res) => {
       vehicleId,
       transporterId,
       merchantPhone,
+      merchantName, // <-- add this
       startLocation,
       endLocation,
       items,
@@ -19,6 +20,7 @@ router.post('/', async (req, res) => {
       !vehicleId ||
       !transporterId ||
       !merchantPhone ||
+      !merchantName || // <-- add this
       !startLocation ||
       !endLocation ||
       !items ||
@@ -33,6 +35,7 @@ router.post('/', async (req, res) => {
       vehicleId,
       transporterId,
       merchantPhone,
+      merchantName, // <-- add this
       startLocation,
       endLocation,
       items,
@@ -47,13 +50,13 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get bookings for a specific transporter
+// Get all bookings for a transporter
 router.get('/transporter/:transporterId', async (req, res) => {
   try {
     const bookings = await Booking.find({ transporterId: req.params.transporterId });
     res.json(bookings);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to fetch bookings" });
   }
 });
 

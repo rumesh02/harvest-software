@@ -1,6 +1,5 @@
-const Booking = require('../models/Booking');
-const axios = require('axios');
-const { useEffect, useState } = require('react');
+const Booking = require('../models/bookingModel');
+const User = require('../models/User'); // or Driver model
 
 const getTransporterDashboard = async (req, res) => {
   try {
@@ -30,41 +29,31 @@ const getTransporterDashboard = async (req, res) => {
       { $sort: { count: -1 } },
       { $limit: 4 }
     ]);
-    // Optionally, fetch driver names/avatars if you have a Driver model
+
+    // Fetch driver details (if you have a User/Driver model)
+    const topDrivers = await Promise.all(
+      topDriversAgg.map(async d => {
+        let driver = null;
+        try {
+          driver = await User.findById(d._id);
+        } catch {}
+        return {
+          driverId: d._id,
+          count: d.count,
+          name: driver ? driver.name : "Unknown",
+          image: driver ? driver.image : "/placeholder.svg"
+        };
+      })
+    );
 
     res.json({
       totalBookings,
       monthlyData,
-      topDrivers: topDriversAgg.map(d => ({
-        driverId: d._id,
-        count: d.count
-      }))
+      topDrivers
     });
   } catch (error) {
     res.status(500).json({ message: "Failed to load transporter dashboard", error: error.message });
   }
 };
 
-const TransporterDashboard = () => {
-  const [dashboardData, setDashboardData] = useState(null);
-  const { user } = useAuth(); // Assuming you have a useAuth hook to get the logged-in user
-
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      if (!user || !user.sub) return; // Guard clause to prevent error
-      const res = await axios.get(`/api/dashboard/transporter/${user.sub}`);
-      setDashboardData(res.data);
-    };
-    fetchDashboard();
-  }, [user]);
-
-  // Render your dashboard using dashboardData
-
-  return (
-    <div>
-      {/* Your dashboard JSX */}
-    </div>
-  );
-};
-
-module.exports = { getTransporterDashboard, TransporterDashboard };
+module.exports = { getTransporterDashboard };

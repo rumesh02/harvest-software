@@ -7,6 +7,7 @@ import { fetchConfirmedBidById } from "../../services/orderService";
 import { useAuth0 } from "@auth0/auth0-react";
 import PendingPayments from "./PendingPayments";
 import axios from "axios"; // Add this import
+import { updatePaymentStatus } from "../../services/orderService";
 
 // Helper functions for user-specific localStorage 
 const getUserKey = (userId, key) => `user_${userId}_${key}`;
@@ -222,7 +223,7 @@ const Payments = () => {
 
     const payment = {
       sandbox: true,
-      merchant_id: process.env.REACT_APP_PAYHERE_MERCHANT_ID || "1215000",
+      merchant_id: process.env.REACT_APP_PAYHERE_MERCHANT_ID || "1230340",
       return_url: "http://localhost:3000/merchant/purchase-history",
       cancel_url: "http://localhost:3000/merchant/payments",
       notify_url: "http://localhost:5000/api/payments/payhere-notify",
@@ -240,21 +241,31 @@ const Payments = () => {
       hash // Use the hash from backend
     };
 
-    window.payhere.onCompleted = function onCompleted(orderId) {
+    window.payhere.onCompleted = async function onCompleted(orderId) {
       console.log("Payment completed. OrderID:" + orderId);
-      setPaymentStatus('success');
       
       // Update the confirmed bid status
       if (confirmedBidId) {
         try {
           console.log(`Updating payment status for bid: ${confirmedBidId}`);
+          await updatePaymentStatus(confirmedBidId, "paid", {
+            paymentMethod: "PayHere",
+            paymentId: orderId,
+            paymentAttempt: {
+              status: "success",
+              date: new Date()
+            }
+          });
           
           // Clear user-specific localStorage after successful payment
           removeUserStorageItem(user.sub, 'payment_amount');
           removeUserStorageItem(user.sub, 'confirmed_bid_id');
           removeUserStorageItem(user.sub, 'order_id');
+          
+          setPaymentStatus('success');
         } catch (error) {
           console.error("Error updating payment status:", error);
+          setPaymentStatus('error');
         }
       }
       
@@ -277,36 +288,44 @@ const Payments = () => {
     window.payhere.startPayment(payment);
   };
 
-  const handleRegularPayment = () => {
+  const handleRegularPayment = async () => {
     if (!user?.sub) return; // Security check
     
     // Set payment in progress status
     setPaymentStatus('processing');
     
     // Simulate payment processing
-    setTimeout(() => {
-      setPaymentStatus('success');
-      
-      // Update the confirmed bid status (you can implement this in your orderService)
-      if (confirmedBidId) {
-        try {
-          console.log(`Updating payment status for bid: ${confirmedBidId}`);
+    setTimeout(async () => {
+      try {
+        // Update the confirmed bid status
+        if (confirmedBidId) {
+          await updatePaymentStatus(confirmedBidId, "paid", {
+            paymentMethod: "Test Payment",
+            paymentId: `TEST-${Date.now()}`,
+            paymentAttempt: {
+              status: "success",
+              date: new Date()
+            }
+          });
           
           // Clear user-specific localStorage after successful payment
           removeUserStorageItem(user.sub, 'payment_amount');
           removeUserStorageItem(user.sub, 'confirmed_bid_id');
           removeUserStorageItem(user.sub, 'order_id');
-        } catch (error) {
-          console.error("Error updating payment status:", error);
         }
+        
+        setPaymentStatus('success');
+        alert(`Payment of Rs.${amount.toFixed(2)} processed successfully!`);
+        
+        // Wait a moment before redirecting
+        setTimeout(() => {
+          navigate('/merchant/purchase-history');
+        }, 2000);
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        setPaymentStatus('error');
+        alert("Payment failed. Please try again.");
       }
-      
-      alert(`Payment of Rs.${amount.toFixed(2)} processed successfully!`);
-      
-      // Wait a moment before redirecting
-      setTimeout(() => {
-        navigate('/merchant/purchase-history');
-      }, 2000);
     }, 1500);
   };
 

@@ -12,21 +12,53 @@ import {
   BoxArrowRight,
   Cart3, // Import Cart3 icon for Orders
 } from "react-bootstrap-icons";
+import { 
+  Box, 
+  Snackbar, 
+  Alert 
+} from '@mui/material';
+import axios from "axios";
 
 const Sidebar = ({ userRole = "Farmer" }) => {
   const location = useLocation();
   const navigate = useNavigate(); // Hook for navigation
   const { logout, user, isAuthenticated } = useAuth0(); // Get Auth0 user details
   const [activePage, setActivePage] = useState(location.pathname);
+  const [profile, setProfile] = useState({ picture: "" });
+
 
   useEffect(() => {
     setActivePage(location.pathname);
   }, [location]);
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (isAuthenticated && user?.sub) {
+        try {
+          const res = await axios.get(`/api/users/${user.sub}`);
+          setProfile(res.data);
+        } catch (error) {
+          setProfile({ picture: "" });
+        }
+      }
+    };
+    fetchProfile();
+  }, [isAuthenticated, user]);
+
+
+
   const handleLogout = () => {
     logout({ returnTo: window.location.origin }); // Logs out user
     navigate("/login"); // Redirect to login page
   };
+
+
+
+  // Get the profile picture from MongoDB if available, else fallback
+  const profilePicture =
+    isAuthenticated && profile.picture
+      ? profile.picture
+      : "/placeholder.svg";
 
   return (
     <div className="bg-white rounded-3 shadow-sm p-3 d-flex flex-column h-100">
@@ -41,6 +73,8 @@ const Sidebar = ({ userRole = "Farmer" }) => {
         <h5 className="mb-0 fw-bold">Farm-to-Market</h5>
       </div>
 
+
+
       {/* Navigation Menu */}
       <nav className="flex-grow-1">
         <ul className="list-unstyled">
@@ -50,7 +84,6 @@ const Sidebar = ({ userRole = "Farmer" }) => {
             { id: "view-listed-items", label: "View Listed Items", icon: <ListUl size={18} />, path: "/view-listed-items" },
             { id: "accept-reject-bids", label: "Accept / Reject Bids", icon: <CheckCircle size={18} />, path: "/accept-reject-bids" },
             { id: "messages", label: "Messages", icon: <ChatLeftText size={18} />, path: "/messages" },
-            { id: "payment-approve", label: "Payment Approve", icon: <CreditCard size={18} />, path: "/payment-approve" },
             { id: "orders", label: "Orders", icon: <Cart3 size={18} />, path: "/order" }, // Corrected path to "/orders"
           ].map((item) => (
             <li key={item.id} className="mb-2">
@@ -75,18 +108,24 @@ const Sidebar = ({ userRole = "Farmer" }) => {
       <hr className="my-3" />
 
       {/* User Profile Section */}
-      <div className="d-flex align-items-center mb-3 ps-2">
+      <button
+        className="d-flex align-items-center mb-3 ps-2 w-100 border-0 bg-transparent"
+        style={{ textAlign: "left" }}
+        onClick={() => navigate("/profile")}
+      >
         <img
-          src={isAuthenticated ? user.picture : "/placeholder.svg"} // Use user's profile picture
+          src={profilePicture}
           alt={isAuthenticated ? user.name : "User"}
           className="rounded-circle me-2"
           style={{ width: "40px", height: "40px", objectFit: "cover" }}
         />
         <div>
-          <h6 className="mb-0">{isAuthenticated ? user.name : "Guest"}</h6>
+          <h6 className="mb-0" style={{ color: "#000" }}>
+            {isAuthenticated ? user.name : "Guest"}
+          </h6>
           <span className="badge bg-success rounded-pill">{userRole}</span>
         </div>
-      </div>
+      </button>
 
       {/* Settings and Logout */}
       <ul className="list-unstyled">
@@ -103,6 +142,8 @@ const Sidebar = ({ userRole = "Farmer" }) => {
           </button>
         </li>
       </ul>
+
+
     </div>
   );
 };

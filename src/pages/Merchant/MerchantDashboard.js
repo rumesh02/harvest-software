@@ -89,31 +89,28 @@ const MerchantDashboard = () => {
   // Check if we have any data to display
   const hasData = totalOrders > 0 || PendingBids > 0 || (monthlyData && monthlyData.length > 0);
 
-  // Enhanced stat card data with consistent darker orange theme
+  // Enhanced stat card data with merchant colors
   const statCards = [
     {
       title: "Total Orders",
       value: totalOrders,
-      icon: <OrdersIcon />,
-      gradient: "linear-gradient(135deg, #B45309 0%, #D97706 100%)",
-      bgColor: "#FFF8EC",
-      color: "#B45309"
+      icon: <OrdersIcon fontSize="small" />,
+      bgColor: "#fef3e2",
+      color: "#92400e"
     },
     {
       title: "Pending Bids",
       value: PendingBids,
-      icon: <BidsIcon />,
-      gradient: "linear-gradient(135deg, #D97706 0%, #F59E0B 100%)",
-      bgColor: "#FFF8EC",
-      color: "#B45309"
+      icon: <BidsIcon fontSize="small" />,
+      bgColor: "#fef3e2",
+      color: "#92400e"
     },
     {
       title: "Pending Payments",
       value: PendingPayments,
-      icon: <PaymentsIcon />,
-      gradient: "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
-      bgColor: "#FFF8EC",
-      color: "#B45309"
+      icon: <PaymentsIcon fontSize="small" />,
+      bgColor: "#fef3e2",
+      color: "#92400e"
     }
   ];
 
@@ -131,10 +128,10 @@ const MerchantDashboard = () => {
             backdropFilter: 'blur(10px)'
           }}
         >
-          <Typography variant="body2" sx={{ fontWeight: 600, color: '#B45309', mb: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, color: '#92400e', mb: 1 }}>
             {label}
           </Typography>
-          <Typography variant="body2" sx={{ color: '#D97706', fontWeight: 500 }}>
+          <Typography variant="body2" sx={{ color: '#d97706', fontWeight: 500 }}>
             Purchase Cost: Rs. {payload[0].value?.toLocaleString() || 0}
           </Typography>
         </Box>
@@ -153,7 +150,7 @@ const MerchantDashboard = () => {
         background: '#f9f9f9'
       }}>
         <Box sx={{ textAlign: 'center' }}>
-          <CircularProgress size={60} sx={{ color: '#D97706', mb: 2 }} />
+          <CircularProgress size={60} sx={{ color: '#d97706', mb: 2 }} />
           <Typography variant="h6" color="text.secondary">
             Loading Dashboard...
           </Typography>
@@ -206,24 +203,25 @@ const MerchantDashboard = () => {
         px: { xs: 2, md: 3 }
       }}>
         {/* Header Section */}
-        <Box sx={{ mb: 4, textAlign: 'center' }}>
+        <Box sx={{ mb: { xs: 2, md: 3 }, textAlign: 'center' }}>
           <Typography
-            variant="h3"
+            variant="h5"
             sx={{
               fontWeight: 700,
-              color: '#B45309',
-              mb: 1
+              color: '#92400e',
+              mb: 0.5,
+              fontSize: { xs: 22, md: 24 }
             }}
           >
             Merchant Dashboard
           </Typography>
-          <Typography variant="h6" color="#000" sx={{ fontWeight: 400 }}>
-            Welcome back! Here's your business overview
+          <Typography variant="body2" color="#92400e" sx={{ fontWeight: 400, fontSize: { xs: 15, md: 16 } }}>
+            Track your purchases and business analytics
           </Typography>
         </Box>
 
         {/* Enhanced Stats Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mb: { xs: 2, md: 4 } }}>
           {statCards.map((card, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
               <Card 
@@ -231,45 +229,36 @@ const MerchantDashboard = () => {
                 sx={{ 
                   height: '100%',
                   background: card.bgColor,
-                  border: `2px solid transparent`,
                   borderRadius: 3,
-                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  color: card.color,
+                  boxShadow: '0 1.5px 6px rgba(146, 64, 14, 0.07)',
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   position: 'relative',
                   overflow: 'hidden',
                   "&:hover": {
-                    transform: "translateY(-8px)",
-                    boxShadow: "0 20px 40px rgba(180, 83, 9, 0.15)",
-                    border: `2px solid ${card.color}20`
-                  },
-                  "&::before": {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '4px',
-                    background: card.gradient,
-                    zIndex: 1
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 4px 16px rgba(146, 64, 14, 0.13)"
                   }
                 }}
               >
-                <CardContent sx={{ p: 4, pt: 5 }}>
+                <CardContent sx={{ p: { xs: 2, md: 3 }, pt: { xs: 2.5, md: 3.5 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Box sx={{ flex: 1 }}>
                       <Typography 
-                        variant="subtitle1" 
-                        color="#000" 
+                        variant="subtitle2" 
+                        color="#92400e" 
                         gutterBottom
-                        sx={{ fontWeight: 500, mb: 2 }}
+                        sx={{ fontWeight: 500, mb: 1, fontSize: { xs: 15, md: 16 } }}
                       >
                         {card.title}
                       </Typography>
                       <Typography 
-                        variant="h3" 
+                        variant="h6" 
                         component="div" 
                         sx={{ 
                           fontWeight: 700,
-                          color: card.color
+                          color: card.color,
+                          fontSize: { xs: 22, md: 26 }
                         }}
                       >
                         {card.value}
@@ -277,14 +266,12 @@ const MerchantDashboard = () => {
                     </Box>
                     <Avatar 
                       sx={{ 
-                        background: card.gradient,
-                        width: 60,
-                        height: 60,
-                        boxShadow: '0 8px 20px rgba(180, 83, 9, 0.15)',
-                        transition: 'transform 0.3s ease',
-                        '&:hover': {
-                          transform: 'scale(1.1) rotate(5deg)'
-                        }
+                        background: '#fef3e2',
+                        color: '#92400e',
+                        width: 44,
+                        height: 44,
+                        boxShadow: '0 1.5px 6px rgba(146, 64, 14, 0.10)',
+                        fontSize: 24
                       }}
                     >
                       {card.icon}
@@ -311,7 +298,7 @@ const MerchantDashboard = () => {
               height: 80, 
               mx: 'auto', 
               mb: 3,
-              background: 'linear-gradient(135deg, #B45309 0%, #D97706 100%)',
+              background: 'linear-gradient(135deg, #d97706 0%, #92400e 100%)',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -328,8 +315,8 @@ const MerchantDashboard = () => {
           </Box>
         )}
         
-        <Grid container spacing={4}>
-          <Grid item xs={12} lg={8}>
+        <Grid container spacing={{ xs: 2.5, md: 4 }}>
+          <Grid item xs={12} lg={7}>
             <Paper 
               elevation={0}
               sx={{ 
@@ -342,97 +329,94 @@ const MerchantDashboard = () => {
                 boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
               }}
             >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#B45309', mb: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#92400e', mb: 0.5, fontSize: { xs: 15, md: 17 } }}>
                     Monthly Purchase Analytics
                   </Typography>
-                  <Typography variant="body2" color="#000">
+                  <Typography variant="body2" color="#92400e" sx={{ fontSize: { xs: 12, md: 13 } }}>
                     Track your harvest purchase costs over time
                   </Typography>
                 </Box>
                 <Avatar 
                   sx={{ 
-                    background: 'linear-gradient(135deg, #B45309 0%, #D97706 100%)',
-                    width: 56,
-                    height: 56,
-                    boxShadow: '0 8px 20px rgba(180, 83, 9, 0.15)'
+                    background: '#d97706',
+                    width: 40,
+                    height: 40,
+                    boxShadow: '0 2px 8px rgba(217, 119, 6, 0.12)'
                   }}
                 >
-                  <TrendingIcon />
+                  <TrendingIcon fontSize="small" />
                 </Avatar>
               </Box>
-              
-              <Box sx={{ height: 350, mt: 3 }}>
+              <Box sx={{ height: 240, mt: 1.5 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={formattedMonthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <BarChart data={formattedMonthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#fef3e2" />
                     <XAxis 
                       dataKey="name" 
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#000', fontSize: 13, fontWeight: 500 }}
+                      tick={{ fill: '#92400e', fontSize: 11, fontWeight: 500 }}
+                      label={{ value: 'Month', position: 'insideBottom', offset: -10, fill: '#d97706', fontSize: 11 }}
                     />
                     <YAxis 
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#000', fontSize: 13, fontWeight: 500 }}
+                      tick={{ fill: '#92400e', fontSize: 11, fontWeight: 500 }}
                       tickFormatter={(value) => `Rs. ${value.toLocaleString()}`}
+                      label={{ value: 'Purchase Cost (Rs.)', angle: -90, position: 'insideLeft', fill: '#d97706', fontSize: 11 }}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar 
                       dataKey="revenue" 
-                      fill="url(#colorGradient)"
-                      radius={[6, 6, 0, 0]}
-                      barSize={40}
+                      fill="#d97706"
+                      radius={[5, 5, 0, 0]}
+                      barSize={18}
                     />
-                    <defs>
-                      <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#B45309" />
-                        <stop offset="100%" stopColor="#D97706" />
-                      </linearGradient>
-                    </defs>
                   </BarChart>
                 </ResponsiveContainer>
+                {/* Chart legend */}
+                <Box sx={{ mt: 0.5, textAlign: 'right' }}>
+                  <Typography variant="caption" color="#d97706" sx={{ fontSize: 11 }}>● Purchase Cost</Typography>
+                </Box>
               </Box>
             </Paper>
           </Grid>
 
-          <Grid item xs={12} lg={4}>
+          <Grid item xs={12} lg={5}>
             <Paper 
               elevation={0}
               sx={{ 
-                p: 4, 
+                p: { xs: 2, md: 3 }, 
                 height: '100%',
-                background: 'rgba(255,255,255,0.9)',
-                border: "1px solid #E5E7EB",
+                background: '#fef8ec',
                 borderRadius: 3,
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+                boxShadow: '0 1.5px 6px rgba(146, 64, 14, 0.07)'
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Avatar 
                   sx={{ 
-                    background: 'linear-gradient(135deg, #B45309 0%, #D97706 100%)',
-                    width: 48,
-                    height: 48,
+                    background: '#fef3e2',
+                    color: '#92400e',
+                    width: 38,
+                    height: 38,
                     mr: 2,
-                    boxShadow: '0 4px 12px rgba(180, 83, 9, 0.15)'
+                    boxShadow: '0 1.5px 6px rgba(146, 64, 14, 0.10)'
                   }}
                 >
-                  <PersonIcon />
+                  <PersonIcon fontSize="small" />
                 </Avatar>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#B45309' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#92400e', fontSize: { xs: 15, md: 16 } }}>
                     Top Farmers
                   </Typography>
-                  <Typography variant="body2" color="#000">
+                  <Typography variant="body2" color="#92400e" sx={{ fontSize: { xs: 12, md: 13 } }}>
                     Your most reliable suppliers
                   </Typography>
                 </Box>
               </Box>
-              
               {topFarmers && topFarmers.length > 0 ? (
                 <List sx={{ width: '100%' }}>
                   {topFarmers.map((farmer, index) => (
@@ -445,42 +429,54 @@ const MerchantDashboard = () => {
                           borderRadius: 2, 
                           transition: 'all 0.3s ease',
                           '&:hover': { 
-                            bgcolor: '#FFF8EC',
+                            bgcolor: '#fef3e2',
                             transform: 'translateX(4px)'
                           } 
                         }}
                       >
                         <ListItemAvatar>
                           <Avatar 
-                            src={farmer.avatar || "/placeholder.svg"}
+                            src={farmer.avatar || undefined}
                             alt={farmer.name}
                             sx={{ 
-                              width: 50, 
-                              height: 50, 
-                              border: '3px solid #E5E7EB',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                              width: 38, 
+                              height: 38, 
+                              bgcolor: !farmer.avatar ? '#fed7aa' : undefined,
+                              color: '#92400e',
+                              fontWeight: 700,
+                              fontSize: 18,
+                              border: '2px solid #fef3e2',
+                              boxShadow: '0 1.5px 6px rgba(146, 64, 14, 0.07)'
                             }}
-                          />
+                          >
+                            {!farmer.avatar && farmer.name ? farmer.name[0].toUpperCase() : null}
+                          </Avatar>
                         </ListItemAvatar>
                         <ListItemText
                           primary={
-                            <Typography variant="body1" sx={{ fontWeight: 600, color: '#B45309' }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#92400e', fontSize: { xs: 15, md: 16 } }}>
                               {farmer.name}
                             </Typography>
                           }
                           secondary={
-                            <Typography variant="body2" color="#000" sx={{ mt: 0.5 }}>
-                              {farmer.location || "Location not available"}
-                            </Typography>
+                            <>
+                              <Typography variant="caption" color="#d97706" sx={{ mt: 0.5, display: 'block' }}>
+                                {farmer.location || "Location not available"}
+                              </Typography>
+                              <Typography variant="caption" color="#92400e" sx={{ display: 'block', fontWeight: 500 }}>
+                                Orders: {farmer.orders || 0}
+                              </Typography>
+                            </>
                           }
                         />
                         <Chip
                           label={`${farmer.orders || "0"} orders`}
                           sx={{
-                            background: 'linear-gradient(135deg, #B45309 0%, #D97706 100%)',
-                            color: 'white',
+                            background: '#fef3e2',
+                            color: '#92400e',
                             fontWeight: 600,
-                            boxShadow: '0 4px 12px rgba(180, 83, 9, 0.15)'
+                            fontSize: 13,
+                            boxShadow: '0 1.5px 6px rgba(146, 64, 14, 0.07)'
                           }}
                         />
                       </ListItem>
@@ -489,16 +485,16 @@ const MerchantDashboard = () => {
                 </List>
               ) : (
                 <Box sx={{ 
-                  p: 4, 
+                  p: 3, 
                   textAlign: 'center',
-                  background: '#FFF8EC',
+                  background: '#fef8ec',
                   borderRadius: 2
                 }}>
-                  <PersonIcon sx={{ fontSize: 48, color: '#000', mb: 2 }} />
-                  <Typography color="#000" sx={{ fontWeight: 500 }}>
+                  <PersonIcon sx={{ fontSize: 38, color: '#92400e', mb: 1 }} />
+                  <Typography color="#92400e" sx={{ fontWeight: 500, fontSize: 15 }}>
                     No top farmers found yet
                   </Typography>
-                  <Typography variant="body2" color="#000" sx={{ mt: 1 }}>
+                  <Typography variant="caption" color="#d97706" sx={{ mt: 1 }}>
                     Start placing bids to build relationships with farmers
                   </Typography>
                 </Box>

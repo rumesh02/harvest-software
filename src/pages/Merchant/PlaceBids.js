@@ -229,7 +229,7 @@ const PlaceBids = () => {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Enter Bid Details</DialogTitle>
         <DialogContent>
-          <Typography variant="body1" gutterBottom>
+          <Typography variant="body1" gutterBottom sx={{ marginBottom: "20px" }}>
             Product: {selectedProduct?.name}
           </Typography>
           <TextField
@@ -238,7 +238,12 @@ const PlaceBids = () => {
             fullWidth
             value={bidAmount}
             onChange={(e) => setBidAmount(e.target.value)}
-            sx={{ marginBottom: "10px" }}
+            sx={{ marginBottom: "15px" }}
+            variant="outlined"
+            InputLabelProps={{
+              shrink: true,
+              style: { marginTop: 0, fontSize: '18px' }
+            }}
           />
           <TextField
             label="Order Weight (kg)"
@@ -246,6 +251,11 @@ const PlaceBids = () => {
             fullWidth
             value={orderWeight}
             onChange={(e) => setOrderWeight(e.target.value)}
+            variant="outlined"
+            InputLabelProps={{
+              shrink: true,
+              style: { marginTop: 0, fontSize: '18px' }
+            }}
           />
         </DialogContent>
         <DialogActions>

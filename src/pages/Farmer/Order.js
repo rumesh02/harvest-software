@@ -1,24 +1,53 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import {
+  Box,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Select,
+  MenuItem,
+  Chip,
+  FormControl,
+  Snackbar,
+  Alert,
+  Container,
+} from "@mui/material";
+import Pagination from '@mui/material/Pagination';
+
+const statusStyles = {
+  Done: { bgcolor: '#43a047', color: '#fff' }, // Green
+  Pending: { bgcolor: '#e0e0e0', color: '#2e7d32' }, // Gray bg, green text
+  Reject: { bgcolor: '#f5f5f5', color: '#b71c1c' }, // Light gray bg, dark red text
+};
+
+const paymentStyles = {
+  Completed: { bgcolor: '#43a047', color: '#fff' }, // Green
+  Pending: { bgcolor: '#e0e0e0', color: '#2e7d32' }, // Gray bg, green text
+  Cancelled: { bgcolor: '#f5f5f5', color: '#b71c1c' }, // Light gray bg, dark red text
+};
 
 const OrderPage = () => {
   const [orders, setOrders] = useState([]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
-  // Fetch bids and convert them to orders
   useEffect(() => {
     const fetchBids = async () => {
       try {
-        const farmerId = localStorage.getItem("user_id"); // Get logged-in farmer's ID
+        const farmerId = localStorage.getItem("user_id");
         const response = await axios.get(`http://localhost:5000/api/bids?farmerId=${farmerId}`);
         const bids = response.data;
-
-        // Fetch merchant details for each bid
         const transformedOrders = await Promise.all(
           bids.map(async (bid) => {
             let merchantName = "Anonymous";
             let merchantPhone = "N/A";
-
-            // Fetch merchant details from the backend
             if (bid.merchantId) {
               try {
                 const merchantResponse = await axios.get(`http://localhost:5000/api/users/${bid.merchantId}`);
@@ -29,34 +58,31 @@ const OrderPage = () => {
                 console.error(`Error fetching merchant details for ID ${bid.merchantId}:`, error);
               }
             }
-
-            // Transform bid to order format
+            // Ensure paymentStatus is always set
+            let paymentStatus = getPaymentStatus(bid.status, bid.paymentStatus);
+            if (!paymentStatus) paymentStatus = 'Pending';
             return {
               id: bid._id,
               harvest: bid.productName,
               price: `Rs. ${bid.bidAmount}`,
               weight: `${bid.orderWeight}kg`,
-              buyer: merchantName, // Use fetched merchant name
-              phone: merchantPhone, // Use fetched merchant phone
+              buyer: merchantName,
+              phone: merchantPhone,
               status: getOrderStatus(bid.status),
-              paymentStatus: getPaymentStatus(bid.status, bid.paymentStatus),
+              paymentStatus,
             };
           })
         );
-
         setOrders(transformedOrders);
       } catch (error) {
-        console.error("Error fetching orders:", error);
+        setSnackbar({ open: true, message: 'Error fetching orders', severity: 'error' });
       }
     };
-
     fetchBids();
-    // Refresh orders every 30 seconds
     const interval = setInterval(fetchBids, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Convert bid status to order status
   const getOrderStatus = (bidStatus) => {
     switch (bidStatus) {
       case "Accepted":
@@ -70,7 +96,6 @@ const OrderPage = () => {
     }
   };
 
-  // Add new function to determine payment status
   const getPaymentStatus = (bidStatus, currentPaymentStatus) => {
     switch (bidStatus) {
       case "Rejected":
@@ -84,10 +109,8 @@ const OrderPage = () => {
     }
   };
 
-  // Handle order status changes
   const handleStatusChange = async (id, newStatus) => {
     try {
-      // Convert order status back to bid status
       let bidStatus;
       switch (newStatus) {
         case "Done":
@@ -102,92 +125,118 @@ const OrderPage = () => {
         default:
           bidStatus = newStatus;
       }
-
-      // Update bid status in backend
-      await axios.put(`http://localhost:5000/api/bids/status/${id}`, {
-        status: bidStatus,
-      });
-
-      // Update local state
+      await axios.put(`http://localhost:5000/api/bids/status/${id}`, { status: bidStatus });
       setOrders(
         orders.map((order) =>
           order.id === id ? { ...order, status: newStatus } : order
         )
       );
+      setSnackbar({ open: true, message: 'Order status updated', severity: 'success' });
     } catch (error) {
-      console.error("Error updating order status:", error);
-      alert("Failed to update order status");
+      setSnackbar({ open: true, message: 'Failed to update order status', severity: 'error' });
     }
   };
 
+  // Pagination logic
+  const totalPages = Math.ceil(orders.length / ITEMS_PER_PAGE);
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = orders.slice(indexOfFirstItem, indexOfLastItem);
+
   return (
-    <div className="p-6 w-full overflow-x-auto">
-      <h2 className="text-2xl font-semibold mb-3 mt-3">Orders</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">No.</th>
-              <th className="border p-2">Harvest</th>
-              <th className="border p-2">Bid Price</th>
-              <th className="border p-2">Weight</th>
-              <th className="border p-2">Buyer</th>
-              <th className="border p-2">Mobile No.</th>
-              <th className="border p-2">Order fulfillment status</th>
-              <th className="border p-2">Payment Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order, index) => (
-              <tr key={order.id} className="bg-white border text-sm md:text-base">
-                <td className="border p-2 text-center">{index + 1}</td>
-                <td className="border p-2 text-center">{order.harvest}</td>
-                <td className="border p-2 text-center">{order.price}</td>
-                <td className="border p-2 text-center">{order.weight}</td>
-                <td className="border p-2 text-center">{order.buyer}</td>
-                <td className="border p-2 text-center">{order.phone}</td>
-                <td className="border p-2 text-center">
-                  <select
-                    value={order.status}
-                    onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                    className={`border p-1 rounded ${
-                      order.status === "Done"
-                        ? "bg-green-100"
-                        : order.status === "Pending"
-                        ? "bg-yellow-100"
-                        : order.status === "Reject"
-                        ? "bg-red-100"
-                        : ""
-                    }`}
-                  >
-                    <option value="Done">Done</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Reject">Reject</option>
-                  </select>
-                </td>
-                <td className="border p-2 text-center">
-                  <span
-                    className={`px-2 py-1 rounded ${
-                      order.status === "Reject"
-                        ? "bg-red-100"
-                        : order.paymentStatus === "Completed"
-                        ? "bg-green-100"
-                        : order.paymentStatus === "Pending"
-                        ? "bg-yellow-100"
-                        : "bg-gray-100"
-                    }`}
-                  >
-                    {order.status === "Reject"
-                      ? "Cancelled"
-                      : order.paymentStatus}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <Box sx={{ bgcolor: '#f5fff5', minHeight: '100vh', py: 4 }}>
+      <Container maxWidth="lg">
+        <Paper elevation={3} sx={{ p: { xs: 2, md: 4 }, mb: 4, bgcolor: '#fff' }}>
+          <Typography variant="h4" fontWeight={700} color="success.dark" gutterBottom>
+            Orders
+          </Typography>
+          <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, boxShadow: 1, bgcolor: '#fafafa' }}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#e8f5e9' }}>
+                  <TableCell>No.</TableCell>
+                  <TableCell>Harvest</TableCell>
+                  <TableCell>Bid Price</TableCell>
+                  <TableCell>Weight</TableCell>
+                  <TableCell>Buyer</TableCell>
+                  <TableCell>Mobile No.</TableCell>
+                  <TableCell>Order Status</TableCell>
+                  <TableCell>Payment Status</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {currentItems.map((order, index) => (
+                  <TableRow key={order.id} hover sx={{ bgcolor: (indexOfFirstItem + index) % 2 === 0 ? '#fff' : '#f5f5f5' }}>
+                    <TableCell>{indexOfFirstItem + index + 1}</TableCell>
+                    <TableCell>{order.harvest}</TableCell>
+                    <TableCell>{order.price}</TableCell>
+                    <TableCell>{order.weight}</TableCell>
+                    <TableCell>{order.buyer}</TableCell>
+                    <TableCell>{order.phone}</TableCell>
+                    <TableCell>
+                      <FormControl size="small" fullWidth>
+                        <Select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                          sx={{
+                            ...statusStyles[order.status],
+                            fontWeight: 600,
+                            borderRadius: 1,
+                            '& .MuiSelect-select': {
+                              py: 1.2,
+                            },
+                          }}
+                        >
+                          <MenuItem value="Done" sx={statusStyles.Done}>Done</MenuItem>
+                          <MenuItem value="Pending" sx={statusStyles.Pending}>Pending</MenuItem>
+                          <MenuItem value="Reject" sx={statusStyles.Reject}>Reject</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={order.status === "Reject" ? "Cancelled" : order.paymentStatus}
+                        sx={{
+                          ...paymentStyles[order.status === "Reject" ? "Cancelled" : order.paymentStatus],
+                          fontWeight: 600,
+                          px: 1.5,
+                          fontSize: 15,
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          {totalPages > 1 && (
+            <Box display="flex" justifyContent="center" alignItems="center" mt={3}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={(_, value) => setCurrentPage(value)}
+                color="primary"
+                shape="rounded"
+              />
+            </Box>
+          )}
+        </Paper>
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </Box>
   );
 };
 

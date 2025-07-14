@@ -24,7 +24,6 @@ import ListNewItem from "./pages/Farmer/ListNewItem";
 import ViewListedItems from "./pages/Farmer/ViewListedItems";
 import AcceptRejectBids from "./pages/Farmer/AcceptRejectBids";
 import Messages from "./pages/Farmer/Messages";
-import PaymentApprove from "./pages/Farmer/PaymentApprove";
 import OrderPage from "./pages/Farmer/Order";
 
 // Merchant Pages
@@ -125,7 +124,6 @@ const AppRoutes = () => {
         <Route path="view-listed-items" element={<ViewListedItems />} />
         <Route path="accept-reject-bids" element={<AcceptRejectBids />} />
         <Route path="messages" element={<Messages />} />
-        <Route path="payment-approve" element={<PaymentApprove />} />
         <Route path="order" element={<OrderPage />} />
         <Route path="about" element={<About />} />
         <Route path="contact" element={<ContactUs />} />

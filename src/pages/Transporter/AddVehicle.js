@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "./AddVehicle.css";
 import { UploadCloud } from "lucide-react";
 import { addVehicle } from "../../services/api";
@@ -13,8 +12,7 @@ const AddVehicle = () => {
   const [file, setFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
+  const [success] = useState(false);
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);

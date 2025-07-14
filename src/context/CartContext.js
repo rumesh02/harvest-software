@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth0 } from "@auth0/auth0-react";
 import { v4 as uuidv4 } from 'uuid';
+import { setupProductUpdateListeners, joinUserRoom, disconnectSocket } from '../socket';
 
 // Create context
 const CartContext = createContext(null);
@@ -120,19 +121,46 @@ export const CartProvider = ({ children }) => {
     setCartItems([]);
   };
 
+  const updateCartItem = useCallback((productId, updatedProduct) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item._id === productId || item.productID === productId
+          ? { ...item, ...updatedProduct }
+          : item
+      )
+    );
+  }, []);
+
+  // Setup socket listeners for real-time updates
+  useEffect(() => {
+    if (isAuthenticated && user?.sub) {
+      // Join user to socket room
+      joinUserRoom(user.sub);
+      
+      // Setup product update listeners
+      setupProductUpdateListeners(updateCartItem, null);
+      
+      // Cleanup on unmount
+      return () => {
+        disconnectSocket();
+      };
+    }
+  }, [isAuthenticated, user?.sub, updateCartItem]);
+
   // Debug display current state
   console.log(`Cart Context State - Auth: ${isAuthenticated}, Loading: ${isLoading}, Items: ${cartItems.length}`);
-  
-  const value = {
-    cartItems,
-    addToCart,
-    removeFromCart,
-    clearCart,
-    currentUser: user
-  };
 
   return (
-    <CartContext.Provider value={value}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        addToCart,
+        removeFromCart,
+        updateCartItem,
+        clearCart,
+        currentUser: user
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

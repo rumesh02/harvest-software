@@ -6,6 +6,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const connectDB = require("./config/db");
+
+// Route imports
 const userRoutes = require("./routes/userRoutes");
 const bidRoutes = require("./routes/bidRoutes");
 const productsRoutes = require("./routes/productsRoutes");
@@ -14,9 +16,14 @@ const confirmedBidRoutes = require('./routes/confirmedBidRoutes');
 const merchantRoutes = require('./routes/merchantRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const Order = require('./models/Order'); // Make sure this exists
 const farmerDashboardRoutes = require('./routes/farmerDashboardRoutes');
+const transporterdashboardRoutes = require('./routes/transporterdashboardRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const contactRoutes = require('./routes/contactRoutes');
+
+const Order = require('./models/Order');
 
 // Initialize Express app and HTTP server
 const app = express();
@@ -32,6 +39,9 @@ const io = new Server(server, {
     methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
+
+// Make io instance available to controllers
+app.set('io', io);
 
 // Import and initialize socket logic
 require('./socket')(io);
@@ -65,10 +75,12 @@ app.use('/api/confirmedbids', confirmedBidRoutes);
 app.use('/api/merchant', merchantRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use(merchantRoutes); 
-app.use(farmerDashboardRoutes);
 app.use('/api/messages', messageRoutes);
-
+app.use('/api/contact', contactRoutes);
+app.use(farmerDashboardRoutes);
+app.use('/api/dashboard', transporterdashboardRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/admin', adminRoutes);
 
 // PayHere Notification Webhook
 app.post('/api/payments/payhere-notify', async (req, res) => {
@@ -173,7 +185,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
-    server.listen(PORT, () => {  // Changed from app.listen to server.listen
+    server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log('Database connection successful');
     });

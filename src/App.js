@@ -10,6 +10,7 @@ import {
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 
 import AuthWrapper from "./components/AuthWrapper";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Layouts
 import FarmerLayout from "./layouts/FarmerLayout";
@@ -42,7 +43,13 @@ import Bookings from "./pages/Transporter/Bookings";
 import AddVehicle from "./pages/Transporter/AddVehicle";
 import Inbox from "./pages/Transporter/Inbox";
 import EditListed from "./pages/Transporter/EditListed";
-import Paymentapproves from "./pages/Transporter/PaymentApproves";
+
+// Admin Pages
+import AdminLayout from "./pages/Admin/AdminLayout";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import FarmerList from "./pages/Admin/FarmerList";
+import MerchantList from "./pages/Admin/MerchantList";
+import TransporterList from "./pages/Admin/TransporterList";
 
 // General Pages
 import About from "./pages/About";
@@ -52,26 +59,16 @@ import HomePage from "./pages/HOME/HomePage";
 import AboutUs from "./pages/HOME/AboutUs";
 import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
+
+import FarmerSidebar from "./components/Sidebar";
+import TransporterSidebar from "./components/TransporterSidebar";
+import MerchantSidebar from "./components/Merchantsidebar";
 
 const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";
 const clientId = "TteW47136eGLVWWVHIFxAiViqCnittRm";
 
-// ✅ Protected Route
-const ProtectedRoute = ({ children, allowedRole }) => {
-  const { isAuthenticated, isLoading } = useAuth0();
-  const userRole = localStorage.getItem("userRole");
 
-  if (isLoading) return <div>Loading...</div>;
-  if (!isAuthenticated) return <Navigate to="/login" />;
-
-  if (!allowedRole || userRole === allowedRole) return children;
-
-  if (userRole === "farmer") return <Navigate to="/" />;
-  if (userRole === "merchant") return <Navigate to="/merchant/dashboard" />;
-  if (userRole === "transporter") return <Navigate to="/transporter/dashboard" />;
-
-  return <Navigate to="/login" />;
-};
 
 // ✅ Auth0 Provider Wrapper
 const Auth0ProviderWithRedirect = ({ children }) => {
@@ -168,8 +165,55 @@ const AppRoutes = () => {
         <Route path="bookings" element={<Bookings />} />
         <Route path="editListed" element={<EditListed />} />
         <Route path="inbox" element={<Inbox />} />
-        <Route path="payments" element={<Paymentapproves />} />
       </Route>
+
+      {/* Admin */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminLayout>
+              <AdminDashboard />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/farmers"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminLayout>
+              <FarmerList />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/merchants"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminLayout>
+              <MerchantList />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/transporters"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminLayout>
+              <TransporterList />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Profile */}
+      <Route path="/profile" element={<ProfilePage SidebarComponent={FarmerSidebar} />} />
+      <Route path="/transporter/profile" element={<ProfilePage SidebarComponent={TransporterSidebar} />} />
+      <Route path="/merchant/profile" element={<ProfilePage SidebarComponent={MerchantSidebar} />} />
+
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/home" />} />
     </Routes>

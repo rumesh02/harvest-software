@@ -48,3 +48,33 @@ export const fetchPendingPayments = async (merchantId) => {
     return []; // Return empty array on error
   }
 };
+
+// Add function to update confirmed bid status
+export const updateConfirmedBidStatus = async (bidId, status, additionalData = {}) => {
+  try {
+    const response = await api.put(`/confirmedbids/${bidId}/status`, {
+      status,
+      ...additionalData
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating confirmed bid status:", error);
+    throw error;
+  }
+};
+
+// Generate PayHere payment hash
+export const generatePayHereHash = async (paymentData) => {
+  try {
+    const params = new URLSearchParams({
+      orderId: paymentData.order_id,
+      amount: paymentData.amount,
+      currency: paymentData.currency || 'LKR'
+    });
+    const response = await api.get(`/payments/generate-hash?${params.toString()}`);
+    return response.data.hash;
+  } catch (error) {
+    console.error("Error generating PayHere hash:", error);
+    throw error;
+  }
+};

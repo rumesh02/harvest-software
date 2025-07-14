@@ -151,4 +151,19 @@ router.post('/mark-paid', async (req, res) => {
   }
 });
 
+router.post('/mark-paid', async (req, res) => {
+  const { confirmedBidId } = req.body;
+  try {
+    const bid = await ConfirmedBid.findByIdAndUpdate(
+      confirmedBidId,
+      { status: "Paid" },
+      { new: true }
+    );
+    if (!bid) return res.status(404).json({ message: "Bid not found" });
+    res.json({ success: true, bid });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

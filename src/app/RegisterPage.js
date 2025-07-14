@@ -67,6 +67,11 @@ function RegisterPage() {
     }
   };
 
+  if (!user || !user.sub) {
+    // handle error or show loading
+    return;
+  }
+
   return (
     <div className="container-fluid vh-100 p-0">
       <div className="row h-100 m-0">

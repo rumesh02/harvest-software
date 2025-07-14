@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { getVehicles, createBooking } from "../../services/api";
-import placeholderImage from "../../assets/lorry.jpg";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { getVehicles, createBooking } from "../services/api";
+import placeholderImage from "../assets/lorry.jpg";
 import {
   Box,
   Typography,
@@ -19,7 +20,10 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  InputAdornment,
 } from "@mui/material";
+import LocateMe from "../components/LocateMe"; // Import LocateMe component
+import { GOOGLE_API_KEY } from "../config";
 
 const allDistricts = [
   "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo", "Galle",
@@ -28,23 +32,30 @@ const allDistricts = [
   "Mullaitivu", "Nuwara Eliya", "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee"
 ];
 
-const FindVehicles = () => {
+const FindVehicles = ({ selectedPurchase }) => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [capacityFilter, setCapacityFilter] = useState("");
   const [districtFilter, setDistrictFilter] = useState("");
   const [openModal, setOpenModal] = useState(false);
+  const [mapModalOpen, setMapModalOpen] = useState(false); // State for map modal
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null); // State for selected location
 
   // Booking form state
   const [bookingForm, setBookingForm] = useState({
     phone: "",
     startLocation: "",
     endLocation: "",
-    items: "",
-    weight: "",
+    items: selectedPurchase?.product || "",
+    weight: selectedPurchase?.quantity || "",
   });
+
+  // Map modal state
+  const [houseNo, setHouseNo] = useState("");
+  const [streetName, setStreetName] = useState("");
+  const [currentLocation, setCurrentLocation] = useState({ lat: 6.9271, lng: 79.8612 }); // Default location (Colombo)
 
   const capacityRanges = [
     { label: "All Capacities", value: "" },
@@ -52,6 +63,12 @@ const FindVehicles = () => {
     { label: "5000 - 10000", value: "5000to10000" },
     { label: "Above 10000", value: "above10000" },
   ];
+
+  // Add loader for Google Maps
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: GOOGLE_API_KEY,
+    libraries: ["places"],
+  });
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -84,7 +101,13 @@ const FindVehicles = () => {
 
   // Handle opening the booking modal
   const handleBook = (vehicle) => {
+    console.log("Selected Vehicle:", vehicle); // Debugging log
     setSelectedVehicle(vehicle);
+    setBookingForm((prev) => ({
+      ...prev,
+      items: selectedPurchase?.product || prev.items, // Autofill items
+      weight: selectedPurchase?.quantity || prev.weight, // Autofill weight
+    }));
     setOpenModal(true);
   };
 
@@ -96,8 +119,8 @@ const FindVehicles = () => {
       phone: "",
       startLocation: "",
       endLocation: "",
-      items: "",
-      weight: "",
+      items: selectedPurchase?.product || "",
+      weight: selectedPurchase?.quantity || "",
     });
   };
 
@@ -129,17 +152,6 @@ const FindVehicles = () => {
       return;
     }
 
-    console.log({
-      vehicleId: selectedVehicle._id,
-      transporterId: selectedVehicle.transporterId,
-      phone: bookingForm.phone,
-      startLocation: bookingForm.startLocation,
-      endLocation: bookingForm.endLocation,
-      items: bookingForm.items,
-      weight: bookingForm.weight,
-      weightIsNumber: !isNaN(Number(bookingForm.weight)),
-    });
-
     const bookingData = {
       vehicleId: selectedVehicle._id,
       transporterId: selectedVehicle.transporterId,
@@ -148,6 +160,10 @@ const FindVehicles = () => {
       endLocation: bookingForm.endLocation,
       items: bookingForm.items,
       weight: Number(bookingForm.weight),
+      startLat: currentLocation.lat, // get from LocateMe or geocoding
+      startLng: currentLocation.lng,
+      endLat: currentLocation.lat,     // get from address autocomplete/geocoding
+      endLng: currentLocation.lng,
     };
 
     try {
@@ -156,6 +172,39 @@ const FindVehicles = () => {
     } catch (err) {
       alert("Booking failed: " + (err.response?.data?.error || err.message));
     }
+  };
+
+  const handleLocateMe = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCurrentLocation({ lat: latitude, lng: longitude }); // Update current location
+          setMapModalOpen(true); // Open the map modal
+        },
+        (error) => {
+          console.error("Error fetching location:", error);
+          alert("Unable to fetch location. Please enable location services.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
+  };
+
+  const handleConfirmLocation = () => {
+    if (!houseNo || !streetName) {
+      alert("Please fill both House No and Street Name.");
+      return;
+    }
+    const formattedLocation = `${houseNo}, ${streetName}, ${currentLocation.lat}, ${currentLocation.lng}`;
+    alert(`Location saved: ${formattedLocation}`);
+    setMapModalOpen(false); // Close the map modal
+  };
+
+  const handleLocationConfirm = (locationData) => {
+    // Do something with locationData (lat, lng, address, etc.)
+    setSelectedLocation(locationData);
   };
 
   if (loading)
@@ -338,7 +387,7 @@ const FindVehicles = () => {
       </Box>
 
       {/* Booking Modal */}
-      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="xs" fullWidth>
+      <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ textAlign: "center", fontWeight: 700, color: "#1976d2" }}>
           Book Vehicle
         </DialogTitle>
@@ -366,7 +415,7 @@ const FindVehicles = () => {
               fullWidth
               variant="outlined"
               InputProps={{
-                style: { borderRadius: 10 }
+                style: { borderRadius: 10 },
               }}
             />
             <TextField
@@ -378,21 +427,28 @@ const FindVehicles = () => {
               fullWidth
               variant="outlined"
               InputProps={{
-                style: { borderRadius: 10 }
+                style: { borderRadius: 10 },
               }}
             />
-            <TextField
-              label="End Delivery Location"
-              name="endLocation"
-              value={bookingForm.endLocation}
-              onChange={handleBookingInputChange}
-              required
-              fullWidth
-              variant="outlined"
-              InputProps={{
-                style: { borderRadius: 10 }
-              }}
-            />
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <TextField
+                label="End Delivery Location"
+                name="endLocation"
+                value={bookingForm.endLocation}
+                onChange={handleBookingInputChange}
+                required
+                fullWidth
+                variant="outlined"
+                InputProps={{
+                  style: { borderRadius: 10 },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <LocateMe onLocationConfirm={handleLocationConfirm} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
             <TextField
               label="Items to Transport"
               name="items"
@@ -402,7 +458,7 @@ const FindVehicles = () => {
               fullWidth
               variant="outlined"
               InputProps={{
-                style: { borderRadius: 10 }
+                style: { borderRadius: 10 },
               }}
             />
             <TextField
@@ -414,13 +470,13 @@ const FindVehicles = () => {
               fullWidth
               variant="outlined"
               InputProps={{
-                style: { borderRadius: 10 }
+                style: { borderRadius: 10 },
               }}
               type="number"
               inputProps={{ min: 1 }}
             />
             <DialogActions sx={{ px: 0, mt: 1 }}>
-              <Button onClick={handleCloseModal} color="secondary" variant="outlined" sx={{ borderRadius: 2 }}>
+              <Button onClick={() => setOpenModal(false)} color="secondary" variant="outlined" sx={{ borderRadius: 2 }}>
                 Cancel
               </Button>
               <Button type="submit" variant="contained" color="primary" sx={{ borderRadius: 2 }}>
@@ -429,6 +485,54 @@ const FindVehicles = () => {
             </DialogActions>
           </Box>
         </DialogContent>
+      </Dialog>
+
+      {/* Map Modal */}
+      <Dialog open={mapModalOpen} onClose={() => setMapModalOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ textAlign: "center", fontWeight: 700, color: "#1976d2" }}>
+          Select Location
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ height: "400px", width: "100%" }}>
+            {isLoaded ? (
+              <GoogleMap
+                center={currentLocation}
+                zoom={15}
+                mapContainerStyle={{ width: "100%", height: "100%" }}
+              >
+                <Marker position={currentLocation} />
+              </GoogleMap>
+            ) : (
+              <div>Loading map...</div>
+            )}
+          </Box>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+            <TextField
+              label="House No"
+              value={houseNo}
+              onChange={(e) => setHouseNo(e.target.value)}
+              required
+              fullWidth
+              variant="outlined"
+            />
+            <TextField
+              label="Street Name"
+              value={streetName}
+              onChange={(e) => setStreetName(e.target.value)}
+              required
+              fullWidth
+              variant="outlined"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMapModalOpen(false)} color="secondary" variant="outlined">
+            Go Back
+          </Button>
+          <Button onClick={handleConfirmLocation} color="primary" variant="contained">
+            Confirm & Continue
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

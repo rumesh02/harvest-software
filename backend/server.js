@@ -10,10 +10,12 @@ const productsRoutes = require("./routes/productsRoutes");
 const revenueRoutes = require('./routes/farmerDashboardRoutes');
 const confirmedBidRoutes = require('./routes/confirmedBidRoutes');
 const merchantRoutes = require('./routes/merchantRoutes');
-const vehicleRoutes = require('./routes/vehicleRoutes');
+const vehicleRoutes = require('./routes/VehicleRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const geolocationRoutes = require('./routes/geolocationRoutes');
 const Order = require('./models/Order'); // Make sure this exists
 const farmerDashboardRoutes = require('./routes/farmerDashboardRoutes');
+const collectionRoutes = require("./routes/collectionRoutes");
 
 const app = express();
 
@@ -46,8 +48,10 @@ app.use('/api/confirmedbids', confirmedBidRoutes);
 app.use('/api/merchant', merchantRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/geolocation', geolocationRoutes);
 app.use(merchantRoutes); 
 app.use(farmerDashboardRoutes);
+app.use("/api/collection", collectionRoutes);
 
 // PayHere Notification Webhook
 app.post('/api/payments/payhere-notify', async (req, res) => {
@@ -163,3 +167,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+

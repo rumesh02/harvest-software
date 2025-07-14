@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ConfirmedBid = require('../models/ConfirmedBid'); // Updated model
+const axios = require('axios');
 
 // POST - Create a new confirmed bid
 router.post('/', async (req, res) => {
@@ -100,6 +101,52 @@ router.put('/:id/status', async (req, res) => {
     res.json(confirmedBid);
   } catch (error) {
     console.error('Error updating payment status:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// POST - Save transport choice
+router.post('/transport-choice', async (req, res) => {
+  try {
+    const { orderId, transportSelected } = req.body;
+    const bid = await ConfirmedBid.findOne({ orderId });
+    if (!bid) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    bid.transportSelected = transportSelected;
+    await bid.save();
+    res.json({ success: true, transportSelected });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST - Mark bids as paid
+router.post('/mark-paid', async (req, res) => {
+  try {
+    const { orderIds, paymentDetails } = req.body;
+    
+    // Find and update the bids
+    const updatedBids = await ConfirmedBid.updateMany(
+      { orderId: { $in: orderIds } },
+      {
+        $set: {
+          status: 'paid',
+          paymentMethod: paymentDetails.method,
+          paymentId: paymentDetails.id,
+          paidAt: new Date()
+        }
+      }
+    );
+    
+    // Notify each confirmedBidId
+    for (const confirmedBidId of orderIds) {
+      await axios.post("/api/confirmedbids/mark-paid", { confirmedBidId });
+    }
+    
+    res.json({ success: true, updatedBids });
+  } catch (error) {
+    console.error('Error marking bids as paid:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

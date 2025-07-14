@@ -30,6 +30,22 @@ const bookingSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  startLat: {
+    type: Number,
+    required: true,
+  },
+  startLng: {
+    type: Number,
+    required: true,
+  },
+  endLat: {
+    type: Number,
+    required: true,
+  },
+  endLng: {
+    type: Number,
+    required: true,
+  },
   // Add other fields as needed
 }, {
   timestamps: true,

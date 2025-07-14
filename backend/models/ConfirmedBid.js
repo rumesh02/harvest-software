@@ -46,6 +46,10 @@ const OrderSchema = new mongoose.Schema({
     city: String,
     state: String,
     zip: String
+  },
+  transportSelected: {
+    type: Boolean,
+    default: null // null = not answered, true = yes, false = no
   }
 }, {
   timestamps: true // Automatically add createdAt and updatedAt

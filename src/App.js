@@ -34,7 +34,8 @@ import MerchantBids from "./pages/Merchant/MyBids";
 import MerchantPurchaseHistory from "./pages/Merchant/PurchaseHistory";
 import MerchantMessages from "./pages/Merchant/Messages";
 import MerchantPayments from "./pages/Merchant/Payments";
-import FindVehicles from "./pages/Merchant/FindVehicles";
+import FindVehicles from "./components/FindVehicles";
+import Collection from "./pages/Merchant/Collection";
 
 // Transporter Pages
 import TransporterDashboard from "./pages/Transporter/TransporterDashboard";
@@ -152,6 +153,7 @@ const AppRoutes = () => {
         <Route path="messages" element={<MerchantMessages />} />
         <Route path="payments" element={<MerchantPayments />} />
         <Route path="find-vehicles" element={<FindVehicles />} />
+        <Route path="collection" element={<Collection />} />
       </Route>
 
       {/* Transporter */}

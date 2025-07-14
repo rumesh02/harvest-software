@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Box, Container, Typography, TextField, Grid, Card, CardMedia, CardActions, Button, 
- InputAdornment, Autocomplete, Skeleton } from "@mui/material"; // <-- Add Skeleton import
+ InputAdornment, Autocomplete, Skeleton, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from "@mui/material"; // <-- Add Skeleton import
 import SearchIcon from '@mui/icons-material/Search';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CloseIcon from '@mui/icons-material/Close'; // Import CloseIcon
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
+import Rating from '@mui/material/Rating';
 
 // Sri Lankan districts for dropdown
 const districts = [
@@ -23,17 +25,20 @@ const BrowseListing = () => {
   const [maxPrice, setMaxPrice] = useState(1000);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false); // <-- Add loading state
+  const [loading, setLoading] = useState(false);
   const { addToCart } = useCart();
+  const [seeMoreOpen, setSeeMoreOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [farmerInfo, setFarmerInfo] = useState(null);
+  const [loadingFarmer, setLoadingFarmer] = useState(false);
 
   useEffect(() => {
     fetchProducts();
-    // eslint-disable-next-line
   }, [searchQuery, districtFilter, maxPrice, page]);
 
   const fetchProducts = async () => {
     try {
-      setLoading(true); // <-- Start loading
+      setLoading(true);
       const params = {};
       if (searchQuery.trim() !== "") params.search = searchQuery;
       if (districtFilter && districtFilter !== "All Districts") params.district = districtFilter;
@@ -47,7 +52,21 @@ const BrowseListing = () => {
     } catch (err) {
       console.error("Error fetching products:", err);
     } finally {
-      setLoading(false); // <-- End loading
+      setLoading(false);
+    }
+  };
+
+  const fetchFarmerInfo = async (farmerID) => {
+    try {
+      setLoadingFarmer(true);
+      const res = await axios.get(`http://localhost:5000/api/users/${farmerID}`);
+      console.log("Farmer Info:", res.data); // Debugging log
+      setFarmerInfo(res.data);
+    } catch (err) {
+      console.error("Error fetching farmer info:", err);
+      setFarmerInfo(null);
+    } finally {
+      setLoadingFarmer(false);
     }
   };
 
@@ -206,7 +225,26 @@ const BrowseListing = () => {
                     </Typography>
                   )}
                 </Box>
-                <CardActions>
+                <CardActions sx={{ flexDirection: "column", gap: 1 }}>
+                  <Button
+                    variant="text"
+                    size="small"
+                    sx={{
+                      width: "100%",
+                      color: "#FFA000",
+                      textTransform: "none",
+                      "&:hover": {
+                        textDecoration: "underline",
+                      },
+                    }}
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setSeeMoreOpen(true);
+                      fetchFarmerInfo(product.farmerID);
+                    }}
+                  >
+                    SEE MORE
+                  </Button>
                   <Button
                     variant="contained"
                     size="small"
@@ -221,11 +259,11 @@ const BrowseListing = () => {
                     onClick={() => {
                       addToCart({
                         ...product,
-                        farmerID: product.farmerID
+                        farmerID: product.farmerID,
                       });
                     }}
                   >
-                    Add to Cart
+                    ADD TO CART
                   </Button>
                 </CardActions>
               </Card>
@@ -267,6 +305,62 @@ const BrowseListing = () => {
           Next
         </Button>
       </Box>
+
+      {/* Popup Dialog */}
+      <Dialog open={seeMoreOpen} onClose={() => setSeeMoreOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          Product Details
+          <IconButton
+            aria-label="close"
+            onClick={() => setSeeMoreOpen(false)}
+            sx={{
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {selectedProduct && (
+            <>
+              <Typography variant="h6" fontWeight={600}>
+                {selectedProduct.name}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                <strong>Price:</strong> Rs. {selectedProduct.price}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Quantity:</strong> {selectedProduct.quantity}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Location:</strong> {selectedProduct.harvestDetails?.location || "Unknown"}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Listed Date:</strong> {new Date(selectedProduct.listedDate).toLocaleDateString()}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                <strong>Farmer:</strong> {loadingFarmer ? "Loading..." : farmerInfo?.name || "Unknown"}
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                <Rating
+                  value={farmerInfo?.farmerRatings || 0}
+                  precision={0.1}
+                  readOnly
+                  size="large"
+                />
+                <Typography variant="caption" sx={{ ml: 1 }}>
+                  {farmerInfo?.farmerRatings
+                    ? `${farmerInfo.farmerRatings.toFixed(1)} / 5`
+                    : "No ratings"}
+                </Typography>
+              </Box>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

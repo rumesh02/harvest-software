@@ -15,8 +15,8 @@ const menuItems = [
   { text: "Purchases", icon: <History />, path: "/merchant/purchase-history" },
   { text: "Messages/Chat", icon: <Chat />, path: "/merchant/messages" },
   { text: "Payments", icon: <AccountBalanceWallet />, path: "/merchant/payments" },
-  // Add this line for Find Vehicles
-  { text: "Find Vehicles", icon: <DirectionsCarIcon />, path: "/merchant/find-vehicles" }
+  { text: "Collection", icon: <DirectionsCarIcon />, path: "/merchant/collection" },
+  
 ];
 
 const MerchantSidebar = () => {

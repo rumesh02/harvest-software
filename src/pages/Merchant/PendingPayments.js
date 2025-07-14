@@ -5,6 +5,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { fetchPendingPayments } from '../../services/orderService';
 import PaymentIcon from "@mui/icons-material/Payment";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import axios from 'axios';
 
 const PendingPayments = () => {
   const [pendingPayments, setPendingPayments] = useState([]);
@@ -77,6 +78,15 @@ const PendingPayments = () => {
     const timestamp = Date.now();
     navigate(`/merchant/payments?amount=${payment.amount}&confirmedBidId=${payment._id}&t=${timestamp}`);
   };
+
+  // Example fetch in PendingPayments.js
+  useEffect(() => {
+    axios.get("/api/confirmedbids/merchant/" + user.sub)
+      .then(res => {
+        // Only show bids that are not paid
+        setPendingPayments(res.data.filter(bid => bid.status === "Confirmed" || bid.status === "Pending"));
+      });
+  }, [user]);
 
   if (loading) {
     return (

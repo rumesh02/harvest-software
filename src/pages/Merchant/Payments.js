@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Typography, Button, Alert, Paper } from "@mui/material";
+import { Box, Typography, Button, Alert, Paper, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import PaymentIcon from "@mui/icons-material/Payment";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -36,7 +36,9 @@ const Payments = () => {
   const [orderId, setOrderId] = useState("");
   const [showSwitchNotification, setShowSwitchNotification] = useState(false);
   const [isPayHereLoaded, setIsPayHereLoaded] = useState(false);
-  
+  const [showTransportDialog, setShowTransportDialog] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
   // Store initial searchParams in a ref to access it once without dependencies
   const initialSearchParams = useRef(searchParams);
   
@@ -222,7 +224,7 @@ const Payments = () => {
 
     const payment = {
       sandbox: true,
-      merchant_id: process.env.REACT_APP_PAYHERE_MERCHANT_ID || "1215000",
+      merchant_id: process.env.REACT_APP_PAYHERE_MERCHANT_ID || "1230340",
       return_url: "http://localhost:3000/merchant/purchase-history",
       cancel_url: "http://localhost:3000/merchant/payments",
       notify_url: "http://localhost:5000/api/payments/payhere-notify",
@@ -248,6 +250,7 @@ const Payments = () => {
       if (confirmedBidId) {
         try {
           console.log(`Updating payment status for bid: ${confirmedBidId}`);
+          axios.post("/api/confirmedbids/mark-paid", { confirmedBidId });
           
           // Clear user-specific localStorage after successful payment
           removeUserStorageItem(user.sub, 'payment_amount');
@@ -301,13 +304,41 @@ const Payments = () => {
         }
       }
       
-      alert(`Payment of Rs.${amount.toFixed(2)} processed successfully!`);
+      // Show success dialog
+      handlePaymentSuccess();
       
       // Wait a moment before redirecting
       setTimeout(() => {
         navigate('/merchant/purchase-history');
       }, 2000);
     }, 1500);
+  };
+
+  // Call this after payment is successful
+  const handlePaymentSuccess = () => {
+    setShowSuccess(true);
+  };
+
+  const handleOk = () => {
+    setShowSuccess(false);
+    setShowTransportDialog(true);
+  };
+
+  const handleTransportChoice = async (choice) => {
+    // Send the choice to backend
+    await axios.post("/api/confirmedbids/transport-choice", {
+      orderId,
+      transportSelected: choice,
+    });
+    setShowTransportDialog(false);
+    // Optionally redirect or show a message
+    if (choice) {
+      // Redirect to transport selection page
+      window.location.href = "/merchant/find-vehicles"; // or use navigate()
+    } else {
+      // Show a thank you or summary page
+      window.location.href = "/merchant/collection";
+    }
   };
 
   // Handle toggling between payment form and pending payments
@@ -430,6 +461,35 @@ const Payments = () => {
              paymentStatus === 'success' ? 'Payment Successful' : 
              `Pay Rs.${amount.toFixed(2)} with PayHere`}
           </Button>
+
+          {/* Payment Success Dialog */}
+          <Dialog open={showSuccess}>
+            <DialogTitle>Payment Successful</DialogTitle>
+            <DialogContent>
+              <p>Your payment was successful.</p>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleOk} color="primary" variant="contained">
+                OK
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Transport Choice Dialog */}
+          <Dialog open={showTransportDialog}>
+            <DialogTitle>Do you want to use our transport method?</DialogTitle>
+            <DialogContent>
+              <p>Would you like to arrange delivery using our app's transport service?</p>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => handleTransportChoice(true)} color="primary" variant="contained">
+                Yes
+              </Button>
+              <Button onClick={() => handleTransportChoice(false)} color="secondary" variant="outlined">
+                No
+              </Button>
+            </DialogActions>
+          </Dialog>
         </>
       )}
     </Box>

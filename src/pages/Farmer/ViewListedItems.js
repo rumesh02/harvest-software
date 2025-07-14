@@ -157,6 +157,11 @@ const ListedItems = () => {
             margin="normal"
             value={editForm.name}
             onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+            variant="outlined"
+            InputLabelProps={{
+              shrink: true,
+              style: { marginTop: 0, fontSize: '18px' }
+            }}
           />
           <TextField
             label="Price"
@@ -165,6 +170,11 @@ const ListedItems = () => {
             margin="normal"
             value={editForm.price}
             onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+            variant="outlined"
+            InputLabelProps={{
+              shrink: true,
+              style: { marginTop: 0, fontSize: '18px' }
+            }}
           />
           <TextField
             label="Quantity"
@@ -173,6 +183,11 @@ const ListedItems = () => {
             margin="normal"
             value={editForm.quantity}
             onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
+            variant="outlined"
+            InputLabelProps={{
+              shrink: true,
+              style: { marginTop: 0, fontSize: '18px' }
+            }}
           />
         </DialogContent>
         <DialogActions>

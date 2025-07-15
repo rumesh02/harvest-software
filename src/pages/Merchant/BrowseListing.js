@@ -23,10 +23,10 @@ const BrowseListing = () => {
   const [fetchedProducts, setFetchedProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [districtFilter, setDistrictFilter] = useState("All Districts");
-  const [maxPrice, setMaxPrice] = useState(1000);
+  const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false); // <-- Add loading state
+  const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
   const { addToCart } = useCart();
@@ -40,10 +40,30 @@ const BrowseListing = () => {
     );
   }, []);
 
+  // Initial load
   useEffect(() => {
     fetchProducts();
     // eslint-disable-next-line
-  }, [searchQuery, districtFilter, maxPrice, page]);
+  }, []);
+
+  // Debounced filter effect to prevent too many API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setPage(1); // Reset to first page when filters change
+      fetchProducts();
+    }, 500); // Increased delay for better performance
+
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line
+  }, [searchQuery, districtFilter, maxPrice]);
+
+  // Separate effect for page changes only
+  useEffect(() => {
+    if (page > 1) {
+      fetchProducts();
+    }
+    // eslint-disable-next-line
+  }, [page]);
 
   // Setup socket listeners for real-time updates
   useEffect(() => {
@@ -60,21 +80,45 @@ const BrowseListing = () => {
 
   const fetchProducts = async () => {
     try {
-      setLoading(true); // <-- Start loading
-      const params = {};
-      if (searchQuery.trim() !== "") params.search = searchQuery;
-      if (districtFilter && districtFilter !== "All Districts") params.district = districtFilter;
-      if (maxPrice) params.maxPrice = maxPrice;
-      params.page = page;
-      params.limit = 8;
+      setLoading(true);
+      
+      // Build query parameters carefully
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', '8');
 
-      const res = await axios.get("http://localhost:5000/api/products", { params });
-      setFetchedProducts(res.data.products);
-      setTotalPages(res.data.totalPages);
+      // Only add filters if they have meaningful values
+      if (searchQuery && searchQuery.trim().length > 0) {
+        params.append('search', searchQuery.trim());
+      }
+
+      if (districtFilter && districtFilter !== "All Districts") {
+        params.append('district', districtFilter);
+      }
+
+      if (maxPrice && !isNaN(maxPrice) && maxPrice > 0) {
+        params.append('maxPrice', maxPrice.toString());
+      }
+
+      console.log('Filter params being sent:', Object.fromEntries(params));
+
+      const res = await axios.get(`http://localhost:5000/api/products?${params.toString()}`);
+      
+      console.log('API Response:', res.data);
+      
+      if (res.data && res.data.products) {
+        setFetchedProducts(res.data.products);
+        setTotalPages(res.data.totalPages || 1);
+      } else {
+        setFetchedProducts([]);
+        setTotalPages(1);
+      }
     } catch (err) {
       console.error("Error fetching products:", err);
+      setFetchedProducts([]);
+      setTotalPages(1);
     } finally {
-      setLoading(false); // <-- End loading
+      setLoading(false);
     }
   };
 
@@ -94,6 +138,27 @@ const BrowseListing = () => {
 
   const allProducts = fetchedProducts;
 
+  // Handler functions for filter changes
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleDistrictChange = (event, newValue) => {
+    setDistrictFilter(newValue || "All Districts");
+  };
+
+  const handlePriceChange = (e) => {
+    const value = e.target.value;
+    setMaxPrice(value === "" ? "" : Number(value));
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setDistrictFilter("All Districts");
+    setMaxPrice("");
+    setPage(1);
+  };
+
   return (
     <Container sx={{ mt: 4 }}>
       {/* Header */}
@@ -102,27 +167,34 @@ const BrowseListing = () => {
       </Typography>
 
       {/* Search Bar and Filters */}
-      <Box sx={{ background: "#FFF8EC", padding: "20px", borderRadius: "10px", mb: 3 }}>
-        <Grid container spacing={2} alignItems="flex-start">
-          <Grid item xs={12} md={4}>
-            <Typography variant="body2" fontWeight={500} mb={1}>
-              <SearchIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
-              Search Products
-            </Typography>
+      <Box sx={{ background: "#FFF8EC", padding: "20px", borderRadius: "10px", mb: 3, border: "1px solid #FFD29D" }}>
+        <Typography variant="subtitle1" fontWeight={600} mb={2} sx={{ color: "#B45309" }}>
+          Search & Filter Products
+        </Typography>
+        <Grid container spacing={2} alignItems="flex-end">
+          <Grid item xs={12} md={3}>
             <TextField
-              placeholder="Enter product name"
+              label="Search Products"
+              placeholder="Enter product name..."
               variant="outlined"
               size="small"
               fullWidth
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
+              InputLabelProps={{
+                shrink: true,
+                sx: { marginTop: 0, fontSize: '18px' }
+              }}
               sx={{ 
                 background: "white", 
-                borderRadius: "5px",
+                borderRadius: "8px",
                 "& .MuiOutlinedInput-root": {
                   "&:hover fieldset": {
                     borderColor: "#D97706",
                   },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#D97706",
+                  }
                 }
               }}
               InputProps={{
@@ -135,29 +207,31 @@ const BrowseListing = () => {
             />
           </Grid>
           
-          <Grid item xs={12} md={4}>
-            <Typography variant="body2" fontWeight={500} mb={1}>
-              <LocationOnIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
-              Filter by District
-            </Typography>
+          <Grid item xs={12} md={3}>
             <Autocomplete
               value={districtFilter}
-              onChange={(event, newValue) => {
-                setDistrictFilter(newValue || "All Districts");
-              }}
+              onChange={handleDistrictChange}
               options={districts}
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder="Select a district"
+                  label="District"
+                  placeholder="Select district..."
                   size="small"
+                  InputLabelProps={{
+                    shrink: true,
+                    sx: { marginTop: 0, fontSize: '18px' }
+                  }}
                   sx={{ 
                     background: "white", 
-                    borderRadius: "5px",
+                    borderRadius: "8px",
                     "& .MuiOutlinedInput-root": {
                       "&:hover fieldset": {
                         borderColor: "#D97706",
                       },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#D97706",
+                      }
                     }
                   }}
                 />
@@ -167,44 +241,76 @@ const BrowseListing = () => {
             />
           </Grid>
           
-          <Grid item xs={12} md={4}>
-            <Typography variant="body2" fontWeight={500} mb={1}>
-              <AttachMoneyIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
-              Max Price (Rs)
-            </Typography>
+          <Grid item xs={12} md={3}>
             <TextField
+              label="Max Price (Rs)"
               type="number"
               size="small"
               fullWidth
-              placeholder="Enter maximum price"
+              placeholder="Enter max price..."
               value={maxPrice}
-              onChange={(e) => setMaxPrice(Number(e.target.value) || 0)}
+              onChange={handlePriceChange}
+              InputLabelProps={{
+                shrink: true,
+                sx: { marginTop: 0, fontSize: '18px' }
+              }}
               sx={{ 
                 background: "white", 
-                borderRadius: "5px",
+                borderRadius: "8px",
                 "& .MuiOutlinedInput-root": {
                   "&:hover fieldset": {
                     borderColor: "#D97706",
                   },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#D97706",
+                  }
                 }
               }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    Rs
+                    <AttachMoneyIcon color="action" />
                   </InputAdornment>
                 ),
               }}
               inputProps={{ min: 0 }}
             />
           </Grid>
+
+          <Grid item xs={12} md={3}>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handleClearFilters}
+              sx={{
+                backgroundColor: "#D97706",
+                color: "white",
+                fontWeight: 600,
+                height: "40px",
+                borderRadius: "8px",
+                '&:hover': {
+                  backgroundColor: "#B45309",
+                },
+                textTransform: "none"
+              }}
+            >
+              Clear All Filters
+            </Button>
+          </Grid>
         </Grid>
       </Box>
 
       {/* Product Grid */}
-      <Typography variant="h6" fontWeight={600} mt={3} mb={2} sx={{ color: "#FFA000" }}>
-        Buy Fresh Harvest!
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, mb: 2 }}>
+        <Typography variant="h6" fontWeight={600} sx={{ color: "#FFA000" }}>
+          🌾 Fresh Harvest Products
+        </Typography>
+        {(searchQuery || districtFilter !== "All Districts" || maxPrice) && (
+          <Typography variant="body2" sx={{ color: "#B45309", fontStyle: 'italic' }}>
+            {fetchedProducts.length} product(s) found
+          </Typography>
+        )}
+      </Box>
       
       {loading ? (
         <Grid container spacing={2}>
@@ -234,6 +340,11 @@ const BrowseListing = () => {
                   <Typography variant="subtitle1" fontWeight={600} mt={1} sx={{ color: "#B45309" }}>
                     {product.name}
                   </Typography>
+                  {product.location && (
+                    <Typography variant="caption" sx={{ color: '#388E3C', display: 'block', mb: 1 }}>
+                      <span role="img" aria-label="map">🗺️</span> Location: {product.location.lat.toFixed(4)}, {product.location.lng.toFixed(4)}
+                    </Typography>
+                  )}
                   {product.price && <Typography variant="body2" sx={{ color: "#D97706" }}>Rs. {product.price}</Typography>}
                   {product.quantity && (
                     <Typography 

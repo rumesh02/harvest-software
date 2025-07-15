@@ -84,7 +84,6 @@ const Sidebar = ({ userRole = "Farmer" }) => {
             { id: "view-listed-items", label: "View Listed Items", icon: <ListUl size={18} />, path: "/view-listed-items" },
             { id: "accept-reject-bids", label: "Accept / Reject Bids", icon: <CheckCircle size={18} />, path: "/accept-reject-bids" },
             { id: "messages", label: "Messages", icon: <ChatLeftText size={18} />, path: "/messages" },
-            { id: "payment-approve", label: "Payment Approve", icon: <CreditCard size={18} />, path: "/payment-approve" },
             { id: "orders", label: "Orders", icon: <Cart3 size={18} />, path: "/order" }, // Corrected path to "/orders"
           ].map((item) => (
             <li key={item.id} className="mb-2">

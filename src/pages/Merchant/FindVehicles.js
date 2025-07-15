@@ -371,6 +371,10 @@ const FindVehicles = () => {
               InputProps={{
                 style: { borderRadius: 10 }
               }}
+              InputLabelProps={{
+                shrink: true,
+                style: { marginTop: 0, fontSize: '16px' }
+              }}
             />
             <TextField
               label="Start Delivery Location"
@@ -382,6 +386,10 @@ const FindVehicles = () => {
               variant="outlined"
               InputProps={{
                 style: { borderRadius: 10 }
+              }}
+              InputLabelProps={{
+                shrink: true,
+                style: { marginTop: 0, fontSize: '16px' }
               }}
             />
             <TextField
@@ -395,6 +403,10 @@ const FindVehicles = () => {
               InputProps={{
                 style: { borderRadius: 10 }
               }}
+              InputLabelProps={{
+                shrink: true,
+                style: { marginTop: 0, fontSize: '16px' }
+              }}
             />
             <TextField
               label="Items to Transport"
@@ -407,6 +419,10 @@ const FindVehicles = () => {
               InputProps={{
                 style: { borderRadius: 10 }
               }}
+              InputLabelProps={{
+                shrink: true,
+                style: { marginTop: 0, fontSize: '18px' }
+              }}
             />
             <TextField
               label="Weight to Transport (Kg)"
@@ -418,6 +434,10 @@ const FindVehicles = () => {
               variant="outlined"
               InputProps={{
                 style: { borderRadius: 10 }
+              }}
+              InputLabelProps={{
+                shrink: true,
+                style: { marginTop: 0, fontSize: '18px' }
               }}
               type="number"
               inputProps={{ min: 1 }}

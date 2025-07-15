@@ -6,7 +6,7 @@ const notificationSchema = new mongoose.Schema({
   message: { type: String, required: true },
   type: { 
     type: String, 
-    enum: ['bid_accepted', 'bid_rejected', 'order_confirmed', 'payment_received', 'general'],
+    enum: ['bid_accepted', 'bid_rejected', 'order_confirmed', 'payment_received', 'vehicle_booked', 'general'],
     default: 'general'
   },
   isRead: { type: Boolean, default: false },
@@ -18,7 +18,16 @@ const notificationSchema = new mongoose.Schema({
     farmerId: String,
     farmerName: String,
     merchantId: String,
-    merchantName: String
+    merchantName: String,
+    transporterId: String,
+    transporterName: String,
+    vehicleId: String,
+    vehicleType: String,
+    bookingId: String,
+    startLocation: String,
+    endLocation: String,
+    weight: String,
+    items: String
   }
 }, { timestamps: true });
 

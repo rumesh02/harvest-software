@@ -7,9 +7,20 @@ router.get('/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
+    console.log('🔍 Fetching notifications for userId:', userId);
+    console.log('🔍 UserId type:', typeof userId);
+    
     const notifications = await Notification.find({ userId })
       .sort({ createdAt: -1 })
       .limit(50);
+
+    console.log('📋 Found notifications count:', notifications.length);
+    console.log('📋 First few notifications:', notifications.slice(0, 3).map(n => ({
+      id: n._id,
+      userId: n.userId,
+      type: n.type,
+      title: n.title
+    })));
 
     res.json(notifications);
   } catch (err) {

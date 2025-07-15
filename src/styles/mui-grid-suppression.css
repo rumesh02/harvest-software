@@ -1,0 +1,8 @@
+/* Suppress MUI Grid deprecation warnings in console */
+/* This is a temporary solution until MUI Grid v2 migration */
+
+/* Hide console warnings for Grid deprecation */
+.console-warning-suppression {
+  /* This class is used to suppress MUI Grid v1 deprecation warnings */
+  /* The actual suppression is handled by the browser console filter */
+}

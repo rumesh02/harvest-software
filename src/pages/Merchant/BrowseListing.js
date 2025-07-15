@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Box, Container, Typography, TextField, Grid, Card, CardMedia, CardActions, Button, 
- InputAdornment, Autocomplete, Skeleton, Snackbar } from "@mui/material"; // <-- Add Skeleton import
+ InputAdornment, Autocomplete, Skeleton, Snackbar } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
 import SearchIcon from '@mui/icons-material/Search';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; // Add this import
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
 import { setupProductUpdateListeners, joinUserRoom, disconnectSocket } from "../../socket";
@@ -160,35 +159,36 @@ const BrowseListing = () => {
   };
 
   return (
-    <Container sx={{ mt: 4 }}>
+    <Container sx={{ mt: 4, px: 3 }}>
       {/* Header */}
-      <Typography variant="h5" fontWeight={600} mb={2} sx={{ color: "#D97706" }}>
+      <Typography variant="h4" fontWeight={600} mb={3} sx={{ color: "#D97706", fontSize: "2.2rem" }}>
         🛒 Items
       </Typography>
 
       {/* Search Bar and Filters */}
-      <Box sx={{ background: "#FFF8EC", padding: "20px", borderRadius: "10px", mb: 3, border: "1px solid #FFD29D" }}>
-        <Typography variant="subtitle1" fontWeight={600} mb={2} sx={{ color: "#B45309" }}>
+      <Box sx={{ background: "#FFF8EC", padding: "30px", borderRadius: "15px", mb: 4, border: "2px solid #FFD29D", boxShadow: "0 4px 15px rgba(0,0,0,0.08)" }}>
+        <Typography variant="h6" fontWeight={600} mb={3} sx={{ color: "#B45309", fontSize: "1.4rem" }}>
           Search & Filter Products
         </Typography>
-        <Grid container spacing={2} alignItems="flex-end">
-          <Grid item xs={12} md={3}>
+        <Grid container spacing={3} alignItems="flex-end">
+          <Grid size={{ xs: 12, md: 3 }}>
             <TextField
               label="Search Products"
               placeholder="Enter product name..."
               variant="outlined"
-              size="small"
+              size="medium"
               fullWidth
               value={searchQuery}
               onChange={handleSearchChange}
               InputLabelProps={{
                 shrink: true,
-                sx: { marginTop: 0, fontSize: '18px' }
+                sx: { marginTop: 0, fontSize: '20px' }
               }}
               sx={{ 
                 background: "white", 
-                borderRadius: "8px",
+                borderRadius: "10px",
                 "& .MuiOutlinedInput-root": {
+                  fontSize: "1.1rem",
                   "&:hover fieldset": {
                     borderColor: "#D97706",
                   },
@@ -207,7 +207,7 @@ const BrowseListing = () => {
             />
           </Grid>
           
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Autocomplete
               value={districtFilter}
               onChange={handleDistrictChange}
@@ -217,15 +217,16 @@ const BrowseListing = () => {
                   {...params}
                   label="District"
                   placeholder="Select district..."
-                  size="small"
+                  size="medium"
                   InputLabelProps={{
                     shrink: true,
-                    sx: { marginTop: 0, fontSize: '18px' }
+                    sx: { marginTop: 0, fontSize: '20px' }
                   }}
                   sx={{ 
                     background: "white", 
-                    borderRadius: "8px",
+                    borderRadius: "10px",
                     "& .MuiOutlinedInput-root": {
+                      fontSize: "1.1rem",
                       "&:hover fieldset": {
                         borderColor: "#D97706",
                       },
@@ -241,23 +242,24 @@ const BrowseListing = () => {
             />
           </Grid>
           
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <TextField
               label="Max Price (Rs)"
               type="number"
-              size="small"
+              size="medium"
               fullWidth
               placeholder="Enter max price..."
               value={maxPrice}
               onChange={handlePriceChange}
               InputLabelProps={{
                 shrink: true,
-                sx: { marginTop: 0, fontSize: '18px' }
+                sx: { marginTop: 0, fontSize: '20px' }
               }}
               sx={{ 
                 background: "white", 
-                borderRadius: "8px",
+                borderRadius: "10px",
                 "& .MuiOutlinedInput-root": {
+                  fontSize: "1.1rem",
                   "&:hover fieldset": {
                     borderColor: "#D97706",
                   },
@@ -277,7 +279,7 @@ const BrowseListing = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Button
               variant="contained"
               fullWidth
@@ -286,8 +288,9 @@ const BrowseListing = () => {
                 backgroundColor: "#D97706",
                 color: "white",
                 fontWeight: 600,
-                height: "40px",
-                borderRadius: "8px",
+                height: "56px",
+                borderRadius: "10px",
+                fontSize: "1.1rem",
                 '&:hover': {
                   backgroundColor: "#B45309",
                 },
@@ -301,92 +304,131 @@ const BrowseListing = () => {
       </Box>
 
       {/* Product Grid */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, mb: 2 }}>
-        <Typography variant="h6" fontWeight={600} sx={{ color: "#FFA000" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4, mb: 3, p: 3, background: "#F8F9FA", borderRadius: "12px", border: "2px solid #E9ECEF" }}>
+        <Typography variant="h5" fontWeight={600} sx={{ color: "#FFA000", fontSize: "1.6rem" }}>
           🌾 Fresh Harvest Products
         </Typography>
         {(searchQuery || districtFilter !== "All Districts" || maxPrice) && (
-          <Typography variant="body2" sx={{ color: "#B45309", fontStyle: 'italic' }}>
+          <Typography variant="h6" sx={{ color: "#B45309", fontStyle: 'italic', background: "#E3F2FD", px: 2, py: 1, borderRadius: "8px", fontSize: "1.1rem" }}>
             {fetchedProducts.length} product(s) found
           </Typography>
         )}
       </Box>
       
       {loading ? (
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {[...Array(8)].map((_, idx) => (
-            <Grid item xs={6} sm={4} md={3} key={idx}>
-              <Card sx={{ borderRadius: "10px", overflow: "hidden", textAlign: "center", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <Skeleton variant="rectangular" height={120} />
-                <Box sx={{ p: 2 }}>
-                  <Skeleton variant="text" width="60%" />
-                  <Skeleton variant="text" width="40%" />
-                  <Skeleton variant="text" width="50%" />
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={idx}>
+              <Card sx={{ borderRadius: "12px", overflow: "hidden", textAlign: "center", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "320px" }}>
+                <Skeleton variant="rectangular" height={150} />
+                <Box sx={{ p: 3 }}>
+                  <Skeleton variant="text" width="60%" sx={{ fontSize: "1.2rem" }} />
+                  <Skeleton variant="text" width="40%" sx={{ fontSize: "1rem" }} />
+                  <Skeleton variant="text" width="50%" sx={{ fontSize: "1rem" }} />
                 </Box>
-                <CardActions>
-                  <Skeleton variant="rectangular" width="100%" height={36} />
+                <CardActions sx={{ p: 2 }}>
+                  <Skeleton variant="rectangular" width="100%" height={45} />
                 </CardActions>
               </Card>
             </Grid>
           ))}
         </Grid>
       ) : allProducts.length > 0 ? (
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {allProducts.slice().reverse().map((product, index) => (
-            <Grid item xs={6} sm={4} md={3} key={index}>
-              <Card sx={{ borderRadius: "10px", overflow: "hidden", textAlign: "center", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#FFEDD5", border: "1px solid #FFD29D" }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={index}>
+              <Card sx={{ 
+                borderRadius: "12px", 
+                overflow: "hidden", 
+                textAlign: "center", 
+                height: "100%", 
+                display: "flex", 
+                flexDirection: "column", 
+                justifyContent: "space-between", 
+                background: "#FFEDD5", 
+                border: "2px solid #FFD29D",
+                minHeight: "380px",
+                transition: "all 0.3s ease",
+                '&:hover': {
+                  transform: "translateY(-4px)",
+                  boxShadow: "0 8px 25px rgba(0,0,0,0.12)"
+                }
+              }}>
                 <Box>
-                  <CardMedia component="img" height="120" image={product.img || product.image} alt={product.name} />
-                  <Typography variant="subtitle1" fontWeight={600} mt={1} sx={{ color: "#B45309" }}>
-                    {product.name}
-                  </Typography>
-                  {product.location && (
-                    <Typography variant="caption" sx={{ color: '#388E3C', display: 'block', mb: 1 }}>
-                      <span role="img" aria-label="map">🗺️</span> Location: {product.location.lat.toFixed(4)}, {product.location.lng.toFixed(4)}
+                  <CardMedia 
+                    component="img" 
+                    height="150" 
+                    image={product.img || product.image} 
+                    alt={product.name}
+                    sx={{ 
+                      transition: "transform 0.3s ease",
+                      '&:hover': {
+                        transform: "scale(1.05)"
+                      }
+                    }}
+                  />
+                  <Box sx={{ p: 2.5 }}>
+                    <Typography variant="h6" fontWeight={600} mt={1} sx={{ color: "#B45309", fontSize: "1.2rem" }}>
+                      {product.name}
                     </Typography>
-                  )}
-                  {product.price && <Typography variant="body2" sx={{ color: "#D97706" }}>Rs. {product.price}</Typography>}
-                  {product.quantity && (
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: product.quantity <= 0 ? 'error.main' : 
-                              product.quantity <= 10 ? '#D97706' : '#374151',
-                        fontWeight: product.quantity <= 10 ? 'bold' : 'normal'
-                      }}
-                    >
-                      Qty: {product.quantity} kg
-                      {product.quantity <= 0 && ' (Out of Stock)'}
-                      {product.quantity > 0 && product.quantity <= 10 && ' (Low Stock)'}
-                    </Typography>
-                  )}
-                  {product.harvestDetails?.location && (
-                    <Typography variant="caption" sx={{ color: "#B45309" }} display="block">
-                      Location: {product.harvestDetails.location}
-                    </Typography>
-                  )}
-                  {product.listedDate && (
-                    <Typography variant="caption" sx={{ color: "#D97706" }}>
-                      Listed: {new Date(product.listedDate).toLocaleDateString()}
-                    </Typography>
-                  )}
+                    {product.location && (
+                      <Typography variant="caption" sx={{ color: '#388E3C', display: 'block', mb: 1, fontSize: '0.9rem' }}>
+                        <span role="img" aria-label="map">🗺️</span> Location: {product.location.lat.toFixed(4)}, {product.location.lng.toFixed(4)}
+                      </Typography>
+                    )}
+                    {product.price && (
+                      <Typography variant="h6" sx={{ color: "#D97706", fontWeight: 600, fontSize: "1.3rem", mb: 1 }}>
+                        Rs. {product.price}
+                      </Typography>
+                    )}
+                    {product.quantity && (
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: product.quantity <= 0 ? 'error.main' : 
+                                product.quantity <= 10 ? '#D97706' : '#374151',
+                          fontWeight: product.quantity <= 10 ? 'bold' : 'normal',
+                          fontSize: '1rem',
+                          mb: 1
+                        }}
+                      >
+                        Qty: {product.quantity} kg
+                        {product.quantity <= 0 && ' (Out of Stock)'}
+                        {product.quantity > 0 && product.quantity <= 10 && ' (Low Stock)'}
+                      </Typography>
+                    )}
+                    {product.harvestDetails?.location && (
+                      <Typography variant="caption" sx={{ color: "#B45309", fontSize: '0.9rem' }} display="block">
+                        Location: {product.harvestDetails.location}
+                      </Typography>
+                    )}
+                    {product.listedDate && (
+                      <Typography variant="caption" sx={{ color: "#D97706", fontSize: '0.9rem' }}>
+                        Listed: {new Date(product.listedDate).toLocaleDateString()}
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
-                <CardActions>
+                <CardActions sx={{ p: 2 }}>
                   <Button
                     variant="contained"
-                    size="small"
+                    size="large"
                     disabled={product.quantity <= 0}
                     sx={{
                       width: "100%",
                       backgroundColor: product.quantity <= 0 ? "#ccc" : "#D97706",
                       color: "#fff",
                       fontWeight: 600,
+                      fontSize: "1.1rem",
+                      py: 1.5,
+                      borderRadius: "10px",
                       '&:hover': {
                         backgroundColor: product.quantity <= 0 ? "#ccc" : "#B45309",
                       },
                     }}
                     onClick={() => handleAddToCart(product)}
                   >
+                    <ShoppingCartIcon sx={{ mr: 1 }} />
                     {product.quantity <= 0 ? "Out of Stock" : "Add to Cart"}
                   </Button>
                 </CardActions>
@@ -395,39 +437,55 @@ const BrowseListing = () => {
           ))}
         </Grid>
       ) : (
-        <Typography variant="h6" align="center" sx={{ mt: 4 }}>
-          No products found matching your criteria
-        </Typography>
+        <Box sx={{ textAlign: 'center', mt: 6, py: 6 }}>
+          <Typography variant="h4" sx={{ fontSize: "4rem", opacity: 0.3, mb: 2 }}>📦</Typography>
+          <Typography variant="h5" sx={{ color: "#6B7280", mb: 2, fontSize: "1.4rem" }}>
+            No products found matching your criteria
+          </Typography>
+          <Typography variant="body1" sx={{ color: "#9CA3AF", fontSize: "1.1rem" }}>
+            Try adjusting your search filters or check back later for new products
+          </Typography>
+        </Box>
       )}
 
       {/* Pagination Controls */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5, mb: 3 }}>
         <Button
           variant="outlined"
+          size="large"
           onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
           disabled={page === 1}
           sx={{
             borderColor: "#D97706",
             color: "#B45309",
+            fontSize: "1.1rem",
+            px: 3,
+            py: 1.5,
+            borderRadius: "10px",
             '&:hover': {
               borderColor: "#B45309",
               backgroundColor: "#FFF8EC",
             },
-            mr: 2,
+            mr: 3,
           }}
         >
           Previous
         </Button>
-        <Typography variant="body1" sx={{ mx: 2, alignSelf: 'center', color: '#B45309', fontWeight: 600 }}>
+        <Typography variant="h6" sx={{ mx: 3, alignSelf: 'center', color: '#B45309', fontWeight: 600, fontSize: "1.2rem" }}>
           Page {page} of {totalPages}
         </Typography>
         <Button
           variant="outlined"
+          size="large"
           onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
           disabled={page === totalPages}
           sx={{
             borderColor: "#D97706",
             color: "#B45309",
+            fontSize: "1.1rem",
+            px: 3,
+            py: 1.5,
+            borderRadius: "10px",
             '&:hover': {
               borderColor: "#B45309",
               backgroundColor: "#FFF8EC",

@@ -452,7 +452,7 @@ useEffect(() => {
             }}
           >
             <Grid container spacing={4} alignItems="center" justifyContent="center">
-              <Grid item xs={12} md={7} component={motion.div} variants={itemVariants}>
+              <Grid size={{ xs: 12, md: 8 }} component={motion.div} variants={itemVariants}>
                 <Box sx={{ textAlign: { xs: 'center', md: 'left' }, mb: 5 }}>
                   <Typography 
                     variant="h1"
@@ -537,7 +537,7 @@ useEffect(() => {
               </Grid>
               
               {/* Hero Image Slider */}
-              <Grid item xs={12} md={5} component={motion.div} variants={itemVariants}>
+              <Grid size={{ xs: 12, md: 4 }} component={motion.div} variants={itemVariants}>
                 <Box sx={{ 
                   position: 'relative', 
                   width: '100%',
@@ -770,7 +770,7 @@ useEffect(() => {
             {/* Role Cards */}
             <Grid container spacing={3} justifyContent="center" sx={{ mt: 4 }}>
               {/* Farmer Card */}
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                 <Card 
                   elevation={4}
                   sx={{ 
@@ -879,7 +879,7 @@ useEffect(() => {
               </Grid>
               
               {/* Merchant Card */}
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                 <Card 
                   elevation={4}
                   sx={{ 
@@ -989,7 +989,7 @@ useEffect(() => {
               </Grid>
               
               {/* Transporter Card */}
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                 <Card 
                   elevation={4}
                   sx={{ 
@@ -1116,7 +1116,7 @@ useEffect(() => {
             <Grow in={isVisible['stats-section']} timeout={1000}>
               <Grid container spacing={3} alignItems="center">
                 {statsData.map((stat, index) => (
-                  <Grid item xs={6} md={3} key={index}>
+                  <Grid size={{ xs: 6, md: 3 }} key={index}>
                     <Box 
                       sx={{ 
                         textAlign: 'center',
@@ -1201,7 +1201,7 @@ useEffect(() => {
             <Slide in={isVisible['testimonials']} direction="up" timeout={800}>
               <Box>
                 <Grid container spacing={4} justifyContent="center">
-                  <Grid item xs={12} md={10} lg={8}>
+                  <Grid size={{ xs: 12, md: 12, lg: 10 }}>
                     <Card
                       elevation={4}
                       sx={{
@@ -1218,7 +1218,7 @@ useEffect(() => {
                     >
                       <Box sx={{ position: 'relative', zIndex: 2 }}>
                         <Grid container spacing={4} alignItems="center">
-                          <Grid item xs={12} md={4}>
+                          <Grid size={{ xs: 12, md: 5 }}>
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { xs: 'center', md: 'flex-start' } }}>
                               <Avatar
                                 src={testimonials[testimonialIndex].image}
@@ -1244,7 +1244,7 @@ useEffect(() => {
                             </Box>
                           </Grid>
 
-                          <Grid item xs={12} md={8}>
+                          <Grid size={{ xs: 12, md: 7 }}>
                             <Box sx={{ position: 'relative' }}>
 
                             
@@ -1344,7 +1344,7 @@ useEffect(() => {
             </Box>
             
             <Grid container spacing={3} justifyContent="center">
-              <Grid item xs={12} md={10} lg={8}>
+              <Grid size={{ xs: 12, md: 12, lg: 10 }}>
                 <Fade in={isVisible['faq']} timeout={1000}>
                   <Box>
                     {faqData.map((faq, index) => (
@@ -1488,7 +1488,7 @@ useEffect(() => {
                   description: "Access all features on the go with our responsive mobile interface designed for field use."
                 }
               ].map((benefit, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
+                <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }} key={index}>
                   <Paper
                     elevation={2}
                     sx={{
@@ -1547,7 +1547,7 @@ useEffect(() => {
         >
           <Container>
             <Grid container spacing={4} alignItems="center" justifyContent="center">
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 7 }}>
                 <Box sx={{ maxWidth: '400px', mx: 'auto' }}>
                   <Typography variant="h3" gutterBottom fontWeight={700}>
                     Take Farm-to-Market with You
@@ -1599,7 +1599,7 @@ useEffect(() => {
                   </Box>
                 </Box>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 5 }}>
                 <Box
                   component="img"
                   src="/Images/home/app-mockup.jpg" // You'll need to add this mockup image

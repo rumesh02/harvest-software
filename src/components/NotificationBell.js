@@ -20,7 +20,8 @@ import {
   Cancel as CancelIcon,
   Payment as PaymentIcon,
   Info as InfoIcon,
-  MarkEmailRead as MarkEmailReadIcon
+  MarkEmailRead as MarkEmailReadIcon,
+  LocalShipping as LocalShippingIcon
 } from '@mui/icons-material';
 import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
@@ -45,19 +46,33 @@ const NotificationBell = () => {
 
     const fetchNotifications = async () => {
       try {
-        console.log('Fetching notifications for user:', userId);
+        console.log('🔔 Fetching notifications for user:', userId);
+        console.log('🔔 User role/type check:', {
+          hasAuth0User: !!user,
+          auth0Sub: user?.sub,
+          localStorageUserId: localStorage.getItem('user_id'),
+          finalUserId: userId
+        });
+        
         const [notificationsRes, unreadRes] = await Promise.all([
           axios.get(`http://localhost:5000/api/notifications/${userId}`),
           axios.get(`http://localhost:5000/api/notifications/unread/${userId}`)
         ]);
 
-        console.log('Notifications fetched:', notificationsRes.data);
-        console.log('Unread count:', unreadRes.data.unreadCount);
+        console.log('📋 Notifications fetched:', notificationsRes.data);
+        console.log('🔢 Unread count:', unreadRes.data.unreadCount);
+        
+        // Filter for vehicle booking notifications to debug
+        const vehicleNotifications = notificationsRes.data.filter(n => n.type === 'vehicle_booked');
+        if (vehicleNotifications.length > 0) {
+          console.log('🚚 Vehicle booking notifications found:', vehicleNotifications);
+        }
+        
         setNotifications(notificationsRes.data);
         setUnreadCount(unreadRes.data.unreadCount);
       } catch (error) {
-        console.error('Error fetching notifications:', error);
-        console.error('Error details:', error.response?.data);
+        console.error('❌ Error fetching notifications:', error);
+        console.error('❌ Error details:', error.response?.data);
       }
     };
 
@@ -66,7 +81,7 @@ const NotificationBell = () => {
     // Refresh every 10 seconds to catch new notifications faster
     const interval = setInterval(fetchNotifications, 10000);
     return () => clearInterval(interval);
-  }, [user?.sub]);
+  }, [user]);
 
   // Listen for real-time notifications
   useEffect(() => {
@@ -101,26 +116,28 @@ const NotificationBell = () => {
     };
 
     const handleNewNotification = (data) => {
-      console.log('New notification event received:', data);
-      console.log('Current user ID:', userId);
-      console.log('Notification user ID:', data.userId);
+      console.log('🔔 New notification event received:', data);
+      console.log('🔔 Current user ID:', userId);
+      console.log('🔔 Notification user ID:', data.userId);
+      console.log('🔔 Notification type:', data.notification?.type);
       
       if (data.userId === userId) {
-        console.log('Adding notification to UI:', data.notification);
+        console.log('✅ Adding notification to UI:', data.notification);
         // Add the new notification to the current list
         setNotifications(prev => {
           const updated = [data.notification, ...prev];
-          console.log('Updated notifications list:', updated);
+          console.log('📋 Updated notifications list:', updated);
           return updated;
         });
         setUnreadCount(prev => {
           const newCount = prev + 1;
-          console.log('Updated unread count:', newCount);
+          console.log('🔢 Updated unread count:', newCount);
           return newCount;
         });
-        console.log('Notification added to UI for user:', userId);
+        console.log('✅ Notification added to UI for user:', userId);
       } else {
-        console.log('Notification not for this user, ignoring');
+        console.log('❌ Notification not for this user, ignoring');
+        console.log('❌ Expected userId:', userId, 'Received userId:', data.userId);
       }
     };
 
@@ -155,7 +172,7 @@ const NotificationBell = () => {
       socket.off('newNotification', handleNewNotification);
       socket.off('newBidReceived', handleNewBidReceived);
     };
-  }, [user?.sub]);
+  }, [user]);
 
   const handleClick = async (event) => {
     setAnchorEl(event.currentTarget);
@@ -247,6 +264,8 @@ const NotificationBell = () => {
         return <CancelIcon sx={{ color: '#F44336' }} />;
       case 'payment_received':
         return <PaymentIcon sx={{ color: '#2196F3' }} />;
+      case 'vehicle_booked':
+        return <LocalShippingIcon sx={{ color: '#9C27B0' }} />;
       default:
         return <InfoIcon sx={{ color: '#FF9800' }} />;
     }

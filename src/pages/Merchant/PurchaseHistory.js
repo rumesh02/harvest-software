@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -15,7 +15,6 @@ import {
 } from "@mui/material";
 import ReviewDialog from "../../components/ReviewDialog";
 import LocateMe from "../../components/LocateMe";
-const FindVehicles = lazy(() => import("../../components/FindVehicles"));
 
 const purchases = [
   {
@@ -45,11 +44,9 @@ const PurchaseHistory = () => {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [selectedFarmer, setSelectedFarmer] = useState("");
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
-  const [findVehiclesOpen, setFindVehiclesOpen] = useState(false);
   const [streetName, setStreetName] = useState("");
   const [city, setCity] = useState("");
   const [currentLocation, setCurrentLocation] = useState("");
-  const [selectedPurchase, setSelectedPurchase] = useState(null);
 
   const handleRateClick = (farmer) => {
     setSelectedFarmer(farmer);
@@ -60,11 +57,6 @@ const PurchaseHistory = () => {
     alert(
       `Review submitted for ${selectedFarmer}!\nRating: ${review.rating}\nComment: ${review.comment}`
     );
-  };
-
-  const handleFindVehicle = (purchase) => {
-    setSelectedPurchase(purchase); // Pass the selected purchase data
-    setFindVehiclesOpen(true);
   };
 
   const handleSeeLocationClick = () => {
@@ -136,22 +128,14 @@ const PurchaseHistory = () => {
                   </Button>
                 </Box>
 
-                {/* Second row: Find Vehicle and See Location */}
+                {/* Second row: See Location only */}
                 <Box
                   sx={{
                     display: "flex",
-                    justifyContent: "space-between",
+                    justifyContent: "center",
                     gap: 1,
                   }}
                 >
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ flex: 1 }}
-                    onClick={() => handleFindVehicle(purchase)} // Pass purchase data
-                  >
-                    Find Vehicle
-                  </Button>
                   <Button
                     variant="contained"
                     color="info"
@@ -214,26 +198,6 @@ const PurchaseHistory = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Find Vehicles Dialog (popup) */}
-      <Suspense fallback={<div>Loading vehicle options...</div>}>
-        <Dialog
-          open={findVehiclesOpen}
-          onClose={() => setFindVehiclesOpen(false)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>Find Vehicles</DialogTitle>
-          <DialogContent dividers>
-            <FindVehicles selectedPurchase={selectedPurchase} /> {/* Pass selected purchase */}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setFindVehiclesOpen(false)} color="primary">
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Suspense>
 
       {/* Review Dialog */}
       <ReviewDialog

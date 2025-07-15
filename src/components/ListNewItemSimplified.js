@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
-import LocateMe from "../../components/LocateMe";
+import LocationSelector from "../../components/LocationSelector";
+import useLocationData from "../../hooks/useLocationData";
 
 const ListNewItem = () => {
   const [formData, setFormData] = useState({
@@ -10,10 +11,7 @@ const ListNewItem = () => {
     minBidPrice: "",
     availableWeight: "",
     images: [],
-    location: {
-      coordinates: null,
-      address: ""
-    }
+    description: ""
   });
 
   const [dragActive, setDragActive] = useState(false);
@@ -21,32 +19,33 @@ const ListNewItem = () => {
   const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
   const { user } = useAuth0();
 
-  // Handle location selection from LocateMe component
-  const handleLocationSelect = (locationData) => {
-    console.log("Location selected:", locationData);
-    setFormData(prev => ({
-      ...prev,
-      location: {
-        coordinates: locationData.coordinates,
-        address: locationData.address
-      }
-    }));
+  // Use the custom location hook
+  const {
+    updateLocation,
+    isValidLocation,
+    getApiFormat
+  } = useLocationData();
+
+  // Handle location selection from LocationSelector component
+  const handleLocationSelect = (locationInfo) => {
+    updateLocation({
+      coordinates: locationInfo.coordinates,
+      address: locationInfo.address
+    });
   };
 
-  // Save user location for future use
-  const saveUserLocation = async (locationData) => {
-    try {
-      await axios.put(`http://localhost:5000/api/users/${user.sub}/location`, {
-        location: {
-          coordinates: locationData.coordinates,
-          address: locationData.address,
-          lastUpdated: new Date()
-        }
-      });
-      console.log("User location saved successfully");
-    } catch (error) {
-      console.error("Error saving user location:", error);
-    }
+  // Convert image to base64
+  const convertImageToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error("No file provided"));
+        return;
+      }
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(new Error("Error converting image: " + error));
+    });
   };
 
   // Handle Form Submission
@@ -56,24 +55,25 @@ const ListNewItem = () => {
     setSubmitStatus({ type: "", message: "" });
 
     try {
-      if (!formData.images || formData.images.length === 0) {
-        throw new Error("Please select at least one image");
-      }
-
-      // Convert first image to base64
-      const imageFile = formData.images[0];
-      const base64Image = await convertImageToBase64(imageFile);
-
       // Validate form data
       if (!formData.harvestType || !formData.harvestName || 
           !formData.minBidPrice || !formData.availableWeight) {
         throw new Error("Please fill in all required fields");
       }
 
-      if (!formData.location.coordinates) {
-        throw new Error("Please select a location for your harvest");
+      if (!formData.images || formData.images.length === 0) {
+        throw new Error("Please select at least one image");
       }
 
+      if (!isValidLocation()) {
+        throw new Error("Please select a location on the map");
+      }
+
+      // Convert first image to base64
+      const imageFile = formData.images[0];
+      const base64Image = await convertImageToBase64(imageFile);
+
+      const locationInfo = getApiFormat();
       const productData = {
         type: formData.harvestType,
         name: formData.harvestName,
@@ -81,18 +81,12 @@ const ListNewItem = () => {
         quantity: Number(formData.availableWeight),
         image: base64Image,
         farmerID: user.sub,
-        location: {
-          coordinates: formData.location.coordinates,
-          address: formData.location.address
-        }
+        description: formData.description,
+        location: locationInfo
       };
 
-      console.log("Attempting to submit product:", productData);
+      console.log("Submitting product:", productData);
 
-      // Save location to user profile for future use
-      await saveUserLocation(formData.location);
-
-      // Submit product
       const response = await axios.post(
         "http://localhost:5000/api/products",
         productData,
@@ -100,11 +94,9 @@ const ListNewItem = () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          timeout: 60000,
+          timeout: 60000
         }
       );
-
-      console.log("Server response:", response.data);
 
       if (response.status === 201) {
         setSubmitStatus({
@@ -113,12 +105,19 @@ const ListNewItem = () => {
         });
 
         // Reset form
-        handleReset();
+        setFormData({
+          harvestType: "",
+          harvestName: "",
+          minBidPrice: "",
+          availableWeight: "",
+          images: [],
+          description: ""
+        });
       }
     } catch (error) {
       console.error("Submission error:", error);
-      
       let errorMessage = "Failed to list product. ";
+      
       if (error.code === "ECONNREFUSED") {
         errorMessage += "Cannot connect to server. Please check if the server is running.";
       } else if (error.code === "ETIMEDOUT") {
@@ -136,20 +135,6 @@ const ListNewItem = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Convert image to base64
-  const convertImageToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      if (!file) {
-        reject(new Error("No file provided"));
-        return;
-      }
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(new Error("Error converting image: " + error));
-    });
   };
 
   // Handle File Selection
@@ -184,10 +169,7 @@ const ListNewItem = () => {
       minBidPrice: "",
       availableWeight: "",
       images: [],
-      location: {
-        coordinates: null,
-        address: ""
-      }
+      description: ""
     });
     setSubmitStatus({ type: "", message: "" });
   };
@@ -220,6 +202,7 @@ const ListNewItem = () => {
               onChange={(e) =>
                 setFormData({ ...formData, harvestType: e.target.value })
               }
+              required
             >
               <option value="">Select Harvest Type</option>
               <option value="vegetables">Vegetables</option>
@@ -236,6 +219,7 @@ const ListNewItem = () => {
               onChange={(e) =>
                 setFormData({ ...formData, harvestName: e.target.value })
               }
+              required
             />
           </div>
         </div>
@@ -245,9 +229,7 @@ const ListNewItem = () => {
           <div className="col-md-6">
             <label className="form-label">Minimum Bid Price</label>
             <div className="input-group">
-              <span className="input-group-text" style={{ fontSize: "14px", height: "38px" }}>
-                Rs.
-              </span>
+              <span className="input-group-text">Rs.</span>
               <input
                 type="number"
                 className="form-control"
@@ -255,6 +237,7 @@ const ListNewItem = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, minBidPrice: e.target.value })
                 }
+                required
               />
             </div>
           </div>
@@ -268,12 +251,25 @@ const ListNewItem = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, availableWeight: e.target.value })
                 }
+                required
               />
-              <span className="input-group-text" style={{ fontSize: "14px", height: "38px" }}>
-                Kg
-              </span>
+              <span className="input-group-text">Kg</span>
             </div>
           </div>
+        </div>
+
+        {/* Description */}
+        <div className="mb-4">
+          <label className="form-label">Description (Optional)</label>
+          <textarea
+            className="form-control"
+            rows="3"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            placeholder="Tell buyers about your harvest..."
+          />
         </div>
 
         {/* File Upload Section */}
@@ -314,48 +310,68 @@ const ListNewItem = () => {
           {formData.images.length > 0 && (
             <ul className="list-group mt-3">
               {formData.images.map((file, index) => (
-                <li key={index} className="list-group-item">
+                <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
                   {file.name}
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => {
+                      const newImages = formData.images.filter((_, i) => i !== index);
+                      setFormData({ ...formData, images: newImages });
+                    }}
+                  >
+                    Remove
+                  </button>
                 </li>
               ))}
             </ul>
           )}
         </div>
 
-        {/* Location Selection */}
+        {/* Location Selector */}
         <div className="mb-4">
-          <h5 className="mb-3">Select Harvest Location</h5>
-          <LocateMe 
+          <LocationSelector
             onLocationSelect={handleLocationSelect}
-            buttonText="Select Location"
-            className="w-100"
+            title="Select Harvest Location"
+            showCurrentLocationButton={true}
+            showAddressInput={true}
+            showCoordinates={true}
+            mapHeight="350px"
+            autoDetectLocation={true}
           />
-          {formData.location.coordinates && (
-            <div className="mt-2 p-2 bg-light rounded">
-              <small className="text-muted">
-                <strong>Selected Location:</strong> {formData.location.address || 
-                  `${formData.location.coordinates.lat.toFixed(6)}, ${formData.location.coordinates.lng.toFixed(6)}`}
-              </small>
+          
+          {!isValidLocation() && (
+            <div className="mt-2 text-warning">
+              <small>⚠ Please select a location on the map or use your current location</small>
             </div>
           )}
         </div>
 
-<div className="d-flex gap-2">
-  <button 
-    type="submit" 
-    className="btn btn-success flex-grow-1" 
-    disabled={isSubmitting}
-  >
-    {isSubmitting ? "Adding..." : "Add Listing"}
-  </button>
-  <button 
-    type="button" 
-    className="btn btn-secondary" 
-    onClick={handleReset}
-  >
-    Reset Form
-  </button>
-</div>
+        {/* Submit Buttons */}
+        <div className="d-flex gap-2">
+          <button 
+            type="submit" 
+            className="btn btn-success flex-grow-1" 
+            disabled={isSubmitting || !isValidLocation()}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Adding...
+              </>
+            ) : (
+              "Add Listing"
+            )}
+          </button>
+          <button 
+            type="button" 
+            className="btn btn-secondary" 
+            onClick={handleReset}
+            disabled={isSubmitting}
+          >
+            Reset Form
+          </button>
+        </div>
       </form>
     </div>
   );

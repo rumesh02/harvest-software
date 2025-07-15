@@ -10,6 +10,7 @@ import {
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 
 import AuthWrapper from "./components/AuthWrapper";
+import { GoogleMapsProvider } from "./config/GoogleMapsProvider";
 
 // Layouts
 import FarmerLayout from "./layouts/FarmerLayout";
@@ -182,13 +183,15 @@ const AppRoutes = () => {
 const App = () => {
   return (
     <Auth0ProviderWithRedirect>
-      <CartProvider>
-        <Router>
-          <AuthWrapper>
-            <AppRoutes />
-          </AuthWrapper>
-        </Router>
-      </CartProvider>
+      <GoogleMapsProvider>
+        <CartProvider>
+          <Router>
+            <AuthWrapper>
+              <AppRoutes />
+            </AuthWrapper>
+          </Router>
+        </CartProvider>
+      </GoogleMapsProvider>
     </Auth0ProviderWithRedirect>
   );
 };

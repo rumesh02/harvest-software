@@ -57,12 +57,17 @@ const AddVehicle = () => {
       setLicensePlate("");
       setLoadCapacity("");
       setFile(null);
+      setError(null);
+      setSuccess(true);
 
-      alert("Vehicle added successfully!");
-      window.location.reload();
+      // Navigate to dashboard after a delay
+      setTimeout(() => {
+        navigate("/transporter/dashboard");
+      }, 2000);
 
     } catch (err) {
       console.error("Failed to add vehicle:", err);
+      setSuccess(false);
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {

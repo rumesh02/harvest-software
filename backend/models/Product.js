@@ -10,6 +10,13 @@ const productSchema = new mongoose.Schema({
   listedDate: { type: Date, default: Date.now },
   productID: { type: String, required: true },
   description: { type: String },
+  location: {
+    coordinates: {
+      lat: { type: Number, required: true },
+      lng: { type: Number, required: true }
+    },
+    address: { type: String, required: true }
+  },
   harvestDetails: {
     harvestDate: Date,
     method: String,

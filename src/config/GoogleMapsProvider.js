@@ -1,15 +1,6 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
-import { GOOGLE_API_KEY } from '../config';
-import { GOOGLE_MAPS_LIBRARIES } from './googleMaps';
-
-// Static configuration to prevent reloading
-const GOOGLE_MAPS_CONFIG = {
-  googleMapsApiKey: GOOGLE_API_KEY,
-  libraries: GOOGLE_MAPS_LIBRARIES,
-  // Add loading options for better performance
-  preventGoogleFontsLoading: true,
-};
+import { GOOGLE_MAPS_CONFIG } from './googleMaps';
 
 const GoogleMapsContext = createContext({
   isLoaded: false,
@@ -25,7 +16,10 @@ export const useGoogleMaps = () => {
 };
 
 export const GoogleMapsProvider = ({ children }) => {
-  const { isLoaded, loadError } = useJsApiLoader(GOOGLE_MAPS_CONFIG);
+  // Memoize the config to prevent re-initialization
+  const config = useMemo(() => GOOGLE_MAPS_CONFIG, []);
+  
+  const { isLoaded, loadError } = useJsApiLoader(config);
 
   return (
     <GoogleMapsContext.Provider value={{ isLoaded, loadError }}>

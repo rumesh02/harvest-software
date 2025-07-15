@@ -1,14 +1,21 @@
+import { GOOGLE_API_KEY } from '../config';
+
 // Google Maps configuration
 // Keep libraries as a static array to prevent unnecessary reloads
-export const GOOGLE_MAPS_LIBRARIES = ['places'];
+// This array should be defined outside of any component to prevent re-initialization
+const GOOGLE_MAPS_LIBRARIES = ['places'];
 
+// Centralized Google Maps configuration to prevent loader conflicts
 export const GOOGLE_MAPS_CONFIG = {
-  // Add loading optimization
-  loadingStrategy: 'async',
-  // Add other common options
-  region: 'LK', // Sri Lanka
-  language: 'en',
+  googleMapsApiKey: GOOGLE_API_KEY,
+  libraries: GOOGLE_MAPS_LIBRARIES,
+  // Remove conflicting options that might cause loader issues
+  // region: 'LK', // Remove region to avoid conflicts
+  // language: 'en',
+  // preventGoogleFontsLoading: true,
 };
+
+export { GOOGLE_MAPS_LIBRARIES };
 
 // Default map center (Colombo, Sri Lanka)
 export const DEFAULT_MAP_CENTER = {

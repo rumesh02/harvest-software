@@ -2,19 +2,11 @@ import React, { useEffect, useState } from "react";
 import {
   GoogleMap,
   DirectionsRenderer,
-  useJsApiLoader,
 } from "@react-google-maps/api";
-import { GOOGLE_API_KEY } from "../../config";
-import { GOOGLE_MAPS_LIBRARIES } from "../../config/googleMaps";
-
-// Static configuration to prevent reloading
-const GOOGLE_MAPS_CONFIG = {
-  googleMapsApiKey: GOOGLE_API_KEY,
-  libraries: GOOGLE_MAPS_LIBRARIES,
-};
+import { useGoogleMaps } from "../../config/GoogleMapsProvider";
 
 const MapWithRoute = ({ start, end }) => {
-  const { isLoaded } = useJsApiLoader(GOOGLE_MAPS_CONFIG);
+  const { isLoaded } = useGoogleMaps();
 
   const [directions, setDirections] = useState(null);
 

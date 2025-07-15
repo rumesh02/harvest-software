@@ -10,7 +10,15 @@ const userSchema = new mongoose.Schema({
   address: { type: String },
   province: { type: String },
   district: { type: String },
-  role: { type: String, required: true } // farmer / merchant / transporter
+  role: { type: String, required: true }, // farmer / merchant / transporter
+  location: {
+    coordinates: {
+      lat: { type: Number },
+      lng: { type: Number }
+    },
+    address: { type: String },
+    lastUpdated: { type: Date, default: Date.now }
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

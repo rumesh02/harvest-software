@@ -39,14 +39,16 @@ const NotificationBell = () => {
 
   // Fetch notifications and unread count
   useEffect(() => {
-    if (!user?.sub) return;
+    // Get user ID from Auth0 or localStorage (for farmers/merchants)
+    const userId = user?.sub || localStorage.getItem('user_id');
+    if (!userId) return;
 
     const fetchNotifications = async () => {
       try {
-        console.log('Fetching notifications for user:', user.sub);
+        console.log('Fetching notifications for user:', userId);
         const [notificationsRes, unreadRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/notifications/${user.sub}`),
-          axios.get(`http://localhost:5000/api/notifications/unread/${user.sub}`)
+          axios.get(`http://localhost:5000/api/notifications/${userId}`),
+          axios.get(`http://localhost:5000/api/notifications/unread/${userId}`)
         ]);
 
         console.log('Notifications fetched:', notificationsRes.data);
@@ -68,22 +70,24 @@ const NotificationBell = () => {
 
   // Listen for real-time notifications
   useEffect(() => {
-    if (!user?.sub) return;
+    // Get user ID from Auth0 or localStorage (for farmers/merchants)
+    const userId = user?.sub || localStorage.getItem('user_id');
+    if (!userId) return;
 
-    console.log('Setting up socket listeners for user:', user.sub);
+    console.log('Setting up socket listeners for user:', userId);
     
     // Join user to their specific room
-    socket.emit('join', user.sub);
+    socket.emit('join', userId);
 
     const handleBidAccepted = (data) => {
       console.log('Bid accepted event received:', data);
-      if (data.merchantId === user.sub) {
+      if (data.merchantId === userId) {
         // Refresh notifications when a bid is accepted for this merchant
         setTimeout(async () => {
           try {
             const [notificationsRes, unreadRes] = await Promise.all([
-              axios.get(`http://localhost:5000/api/notifications/${user.sub}`),
-              axios.get(`http://localhost:5000/api/notifications/unread/${user.sub}`)
+              axios.get(`http://localhost:5000/api/notifications/${userId}`),
+              axios.get(`http://localhost:5000/api/notifications/unread/${userId}`)
             ]);
 
             setNotifications(notificationsRes.data);
@@ -98,10 +102,10 @@ const NotificationBell = () => {
 
     const handleNewNotification = (data) => {
       console.log('New notification event received:', data);
-      console.log('Current user ID:', user.sub);
+      console.log('Current user ID:', userId);
       console.log('Notification user ID:', data.userId);
       
-      if (data.userId === user.sub) {
+      if (data.userId === userId) {
         console.log('Adding notification to UI:', data.notification);
         // Add the new notification to the current list
         setNotifications(prev => {
@@ -114,29 +118,56 @@ const NotificationBell = () => {
           console.log('Updated unread count:', newCount);
           return newCount;
         });
-        console.log('Notification added to UI for user:', user.sub);
+        console.log('Notification added to UI for user:', userId);
       } else {
         console.log('Notification not for this user, ignoring');
       }
     };
 
+    const handleNewBidReceived = (data) => {
+      console.log('New bid received event:', data);
+      if (data.farmerId === userId) {
+        console.log('New bid for this farmer, refreshing notifications');
+        // Refresh notifications when a new bid is received for this farmer
+        setTimeout(async () => {
+          try {
+            const [notificationsRes, unreadRes] = await Promise.all([
+              axios.get(`http://localhost:5000/api/notifications/${userId}`),
+              axios.get(`http://localhost:5000/api/notifications/unread/${userId}`)
+            ]);
+
+            setNotifications(notificationsRes.data);
+            setUnreadCount(unreadRes.data.unreadCount);
+            console.log('Notifications refreshed after new bid received');
+          } catch (error) {
+            console.error('Error refreshing notifications after new bid:', error);
+          }
+        }, 1000);
+      }
+    };
+
     socket.on('bidAccepted', handleBidAccepted);
     socket.on('newNotification', handleNewNotification);
+    socket.on('newBidReceived', handleNewBidReceived);
 
     return () => {
       socket.off('bidAccepted', handleBidAccepted);
       socket.off('newNotification', handleNewNotification);
+      socket.off('newBidReceived', handleNewBidReceived);
     };
   }, [user?.sub]);
 
   const handleClick = async (event) => {
     setAnchorEl(event.currentTarget);
     
+    // Get user ID from Auth0 or localStorage (for farmers/merchants)
+    const userId = user?.sub || localStorage.getItem('user_id');
+    
     // Fetch latest notifications when opening
-    if (!loading && user?.sub) {
+    if (!loading && userId) {
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5000/api/notifications/${user.sub}`);
+        const response = await axios.get(`http://localhost:5000/api/notifications/${userId}`);
         setNotifications(response.data);
       } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -167,8 +198,12 @@ const NotificationBell = () => {
   };
 
   const markAllAsRead = async () => {
+    // Get user ID from Auth0 or localStorage (for farmers/merchants)
+    const userId = user?.sub || localStorage.getItem('user_id');
+    if (!userId) return;
+    
     try {
-      await axios.put(`http://localhost:5000/api/notifications/read-all/${user.sub}`);
+      await axios.put(`http://localhost:5000/api/notifications/read-all/${userId}`);
       
       // Update local state
       setNotifications(prev => 
@@ -181,14 +216,16 @@ const NotificationBell = () => {
   };
 
   const forceRefreshNotifications = async () => {
-    if (!user?.sub) return;
+    // Get user ID from Auth0 or localStorage (for farmers/merchants)
+    const userId = user?.sub || localStorage.getItem('user_id');
+    if (!userId) return;
     
     setLoading(true);
     try {
-      console.log('Force refreshing notifications for user:', user.sub);
+      console.log('Force refreshing notifications for user:', userId);
       const [notificationsRes, unreadRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/notifications/${user.sub}`),
-        axios.get(`http://localhost:5000/api/notifications/unread/${user.sub}`)
+        axios.get(`http://localhost:5000/api/notifications/${userId}`),
+        axios.get(`http://localhost:5000/api/notifications/unread/${userId}`)
       ]);
 
       console.log('Force refresh - Notifications fetched:', notificationsRes.data);

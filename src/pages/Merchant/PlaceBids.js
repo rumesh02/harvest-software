@@ -136,7 +136,7 @@ const PlaceBids = () => {
       setBidAmount("");
       setOrderWeight("");
       setSelectedProduct(null);
-      alert("Bid successfully submitted! The product has been removed from your cart.");
+      alert("✅ Bid successfully submitted! The farmer has been notified and will review your bid. The product has been removed from your cart.");
     } catch (error) {
       console.error("Error submitting bid:", error);
       alert(`Bid submission failed: ${error.response?.data?.message || error.message}`);

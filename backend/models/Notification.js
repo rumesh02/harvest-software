@@ -16,7 +16,9 @@ const notificationSchema = new mongoose.Schema({
     productName: String,
     amount: Number,
     farmerId: String,
-    farmerName: String
+    farmerName: String,
+    merchantId: String,
+    merchantName: String
   }
 }, { timestamps: true });
 

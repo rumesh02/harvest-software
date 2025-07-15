@@ -5,7 +5,6 @@ import {
   Button,
   CircularProgress,
   Container,
-  IconButton,
   Paper,
   Snackbar,
   Table,
@@ -34,7 +33,7 @@ const AcceptRejectBids = () => {
 
   useEffect(() => {
     fetchPendingBids();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (toast.visible) {
@@ -75,10 +74,19 @@ const AcceptRejectBids = () => {
       if (!bidId) {
         throw new Error("Bid ID is missing");
       }
+      
+      console.log(`Farmer is ${action.toLowerCase()}ing bid:`, bidId);
+      const farmerId = localStorage.getItem('user_id');
+      console.log('Current farmer ID:', farmerId);
+      
       const endpoint = `http://localhost:5000/api/bids/${action.toLowerCase()}/${bidId}`;
       const response = await axios.put(endpoint);
+      
       if (response.data) {
+        console.log(`Bid ${action.toLowerCase()}ed successfully!`, response.data);
         showToast(`Bid ${action.toLowerCase()}ed successfully!`);
+        
+        // Refresh the bids list
         await fetchPendingBids();
       }
     } catch (error) {
@@ -91,6 +99,7 @@ const AcceptRejectBids = () => {
         errorMessage += 'Please try again.';
       }
       showToast(errorMessage, "error");
+      console.error(`Error ${action.toLowerCase()}ing bid:`, error);
     } finally {
       setActionInProgress(null);
     }
@@ -103,6 +112,33 @@ const AcceptRejectBids = () => {
   const currentItems = pendingBids.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (event, value) => setCurrentPage(value);
+
+  // Debug function to check notifications
+  const checkNotifications = async () => {
+    try {
+      const farmerId = localStorage.getItem('user_id');
+      console.log('🔍 Checking notifications for farmer:', farmerId);
+      
+      const response = await axios.get(`http://localhost:5000/api/notifications/${farmerId}`);
+      console.log('📋 All notifications:', response.data);
+      
+      const unreadResponse = await axios.get(`http://localhost:5000/api/notifications/unread/${farmerId}`);
+      console.log('🔔 Unread count:', unreadResponse.data.unreadCount);
+      
+      // Show the latest 3 notifications
+      const latest = response.data.slice(0, 3);
+      console.log('📄 Latest 3 notifications:', latest);
+      
+      if (response.data.length === 0) {
+        showToast('No notifications found. Try placing a bid from merchant account first.', 'info');
+      } else {
+        showToast(`Found ${response.data.length} notifications (${unreadResponse.data.unreadCount} unread). Check console for details.`, 'success');
+      }
+    } catch (error) {
+      console.error('❌ Error checking notifications:', error);
+      showToast('Failed to check notifications', 'error');
+    }
+  };
 
   return (
     <Box sx={{ bgcolor: 'green.50', minHeight: '100vh', py: 4 }}>
@@ -117,16 +153,26 @@ const AcceptRejectBids = () => {
                 Review and respond to pending bids from buyers
               </Typography>
             </Box>
-            <Button
-              variant="outlined"
-              color="success"
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <RefreshIcon />}
-              onClick={fetchPendingBids}
-              disabled={loading}
-              sx={{ minWidth: 150 }}
-            >
-              {loading ? "Refreshing..." : "Refresh Bids"}
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Button
+                variant="outlined"
+                color="info"
+                onClick={checkNotifications}
+                sx={{ minWidth: 140 }}
+              >
+                Check Notifications
+              </Button>
+              <Button
+                variant="outlined"
+                color="success"
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <RefreshIcon />}
+                onClick={fetchPendingBids}
+                disabled={loading}
+                sx={{ minWidth: 150 }}
+              >
+                {loading ? "Refreshing..." : "Refresh Bids"}
+              </Button>
+            </Box>
           </Stack>
 
           {loading && pendingBids.length === 0 ? (

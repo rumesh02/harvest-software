@@ -32,12 +32,18 @@ const MyBids = () => {
           return;
         }
         
+        console.log('Fetching bids for merchant:', merchantId);
+        
         // Fetch bids from the backend
         const response = await axios.get("http://localhost:5000/api/bids");
         const allBids = response.data;
         
+        console.log('All bids received:', allBids.length);
+        
         // Filter bids to show only those belonging to the current merchant
         const merchantBids = allBids.filter(bid => bid.merchantId === merchantId);
+        
+        console.log('Merchant bids:', merchantBids.length);
         
         // Sort filtered bids by status
         const sortedBids = {
@@ -47,7 +53,19 @@ const MyBids = () => {
           rejected: merchantBids.filter(bid => bid.status === "Rejected")
         };
 
+        console.log('Sorted bids:', {
+          accepted: sortedBids.accepted.length,
+          confirmed: sortedBids.confirmed.length,
+          pending: sortedBids.pending.length,
+          rejected: sortedBids.rejected.length
+        });
+
         setBids(sortedBids);
+        
+        // Create congratulatory notification if there are accepted bids
+        if (sortedBids.accepted.length > 0) {
+          await createAcceptedBidsNotification(sortedBids.accepted, merchantId);
+        }
       } catch (error) {
         console.error("Error fetching bids:", error);
       } finally {
@@ -133,6 +151,65 @@ const MyBids = () => {
     }
   };
 
+  // Create congratulatory notification for accepted bids
+  const createAcceptedBidsNotification = async (acceptedBids, merchantId) => {
+    try {
+      // Check if notification already exists to avoid duplicates
+      const existingNotifications = await axios.get(`http://localhost:5000/api/notifications/${merchantId}`);
+      const hasRecentAcceptedNotification = existingNotifications.data.some(notification => 
+        notification.type === 'bid_accepted' && 
+        new Date(notification.createdAt) > new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+      );
+
+      if (hasRecentAcceptedNotification) {
+        console.log('Recent accepted bids notification already exists, skipping creation');
+        return;
+      }
+
+      const congratulatoryNotification = {
+        userId: merchantId,
+        title: '🎉 Congratulations! Your bids have been accepted!',
+        message: `You have ${acceptedBids.length} accepted bid${acceptedBids.length > 1 ? 's' : ''}. Check your notification bell (🔔) in the top navigation for detailed alerts.`,
+        type: 'bid_accepted',
+        metadata: {
+          acceptedBidsCount: acceptedBids.length,
+          bidIds: acceptedBids.map(bid => bid._id),
+          totalValue: acceptedBids.reduce((sum, bid) => sum + (bid.bidAmount * bid.orderWeight), 0)
+        }
+      };
+
+      console.log('Creating congratulatory notification:', congratulatoryNotification);
+      const response = await axios.post('http://localhost:5000/api/notifications', congratulatoryNotification);
+      console.log('Congratulatory notification created successfully:', response.data);
+    } catch (error) {
+      console.error('Error creating congratulatory notification:', error);
+    }
+  };
+
+  // Test function to create a notification manually
+  const testNotification = async () => {
+    try {
+      const merchantId = user?.sub || localStorage.getItem('user_id');
+      console.log('Creating test notification for merchant:', merchantId);
+      
+      const testNotificationData = {
+        userId: merchantId,
+        title: '🎉 Test Notification!',
+        message: 'This is a test notification to check if the system is working.',
+        type: 'general',
+        metadata: {
+          productName: 'Test Product',
+          amount: 1000
+        }
+      };
+
+      const response = await axios.post('http://localhost:5000/api/notifications', testNotificationData);
+      console.log('Test notification created:', response.data);
+    } catch (error) {
+      console.error('Error creating test notification:', error);
+    }
+  };
+
   if (loading) {
     return <Typography variant="body1">Loading your bids...</Typography>;
   }
@@ -157,11 +234,41 @@ const MyBids = () => {
 
   return (
     <Box sx={{ padding: "20px" }}>
-      <Typography variant="h5" gutterBottom>My Bids</Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+        <Typography variant="h5" gutterBottom>My Bids</Typography>
+        
+        <Box>
+          {/* Test Notification Button - Remove this after testing */}
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            onClick={testNotification}
+            sx={{ mr: 1 }}
+          >
+            Test Notification
+          </Button>
+          
+          {/* Create Congratulatory Notification Button */}
+          {bids.accepted.length > 0 && (
+            <Button 
+              variant="contained" 
+              color="success" 
+              onClick={() => createAcceptedBidsNotification(bids.accepted, user?.sub || localStorage.getItem('user_id'))}
+            >
+              Create Success Notification
+            </Button>
+          )}
+        </Box>
+      </Box>
 
       {/* Accepted Bids */}
       <Typography variant="h6" sx={{ display: "flex", alignItems: "center", color: "green", mb: 1 }}>
-        <CheckCircleIcon sx={{ mr: 1 }} /> Accepted Bids (Won)
+        <CheckCircleIcon sx={{ mr: 1 }} /> Accepted Bids (Won) 
+        {bids.accepted.length > 0 && (
+          <Typography variant="body2" sx={{ ml: 1, color: "#4CAF50", fontWeight: 500 }}>
+            - Check your notifications for acceptance alerts! 🔔
+          </Typography>
+        )}
       </Typography>
       <TableContainer component={Paper} sx={{ mb: 3 }}>
         <Table>

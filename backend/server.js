@@ -22,6 +22,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const Order = require('./models/Order');
 
@@ -77,6 +78,7 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use(farmerDashboardRoutes);
 app.use('/api/dashboard', transporterdashboardRoutes);
 app.use('/api/dashboard', dashboardRoutes);

@@ -16,6 +16,7 @@ const merchantRoutes = require('./routes/merchantRoutes');
 const vehicleRoutes = require('./routes/VehicleRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const geolocationRoutes = require('./routes/geolocationRoutes');
+const locationRoutes = require('./routes/locationRoutes');
 const Order = require('./models/Order'); // Make sure this exists
 const ConfirmedBid = require('./models/ConfirmedBid'); // Add ConfirmedBid model
 const farmerDashboardRoutes = require('./routes/farmerDashboardRoutes');
@@ -65,6 +66,7 @@ app.use('/api/merchant', merchantRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/geolocation', geolocationRoutes);
+app.use('/api', locationRoutes);
 app.use(merchantRoutes); 
 app.use(farmerDashboardRoutes);
 app.use("/api/collection", collectionRoutes);

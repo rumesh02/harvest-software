@@ -34,6 +34,22 @@ const ListNewItem = () => {
     });
   };
 
+  // Save user location for future use
+  const saveUserLocation = async (locationData) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/users/${user.sub}/location`,
+        {
+          coordinates: locationData.coordinates,
+          address: locationData.address
+        }
+      );
+      console.log("User location saved successfully:", response.data);
+    } catch (error) {
+      console.error("Error saving user location:", error);
+    }
+  };
+
   // Convert image to base64
   const convertImageToBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -99,6 +115,9 @@ const ListNewItem = () => {
       );
 
       if (response.status === 201) {
+        // Save user location for future use
+        await saveUserLocation(locationInfo);
+        
         setSubmitStatus({
           type: "success",
           message: "Product listed successfully!"

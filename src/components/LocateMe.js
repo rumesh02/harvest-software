@@ -609,11 +609,8 @@ const LocateMe = ({
         {console.log('RENDER: Red marker should render =', !!(selectedLocation && selectedLocation.lat && selectedLocation.lng))}
         {console.log('RENDER: hasSelectedLocation =', hasSelectedLocation)}
         
-        {/* Blue marker for current location (GPS location) - only show when it's different from selected location */}
-        {currentLocation && currentLocation.lat && currentLocation.lng && 
-         !(selectedLocation && 
-           Math.abs(currentLocation.lat - selectedLocation.lat) < 0.0001 && 
-           Math.abs(currentLocation.lng - selectedLocation.lng) < 0.0001) && (
+        {/* Blue marker for current location (GPS location) */}
+        {currentLocation && currentLocation.lat && currentLocation.lng && (
           <Marker
             position={currentLocation}
             title="Current Location (GPS)"
@@ -634,8 +631,8 @@ const LocateMe = ({
           />
         )}
         
-        {/* Red marker for selected location (draggable) */}
-        {selectedLocation && selectedLocation.lat && selectedLocation.lng && (
+        {/* Red marker for selected location (draggable) - only show when user has actually selected a location */}
+        {hasSelectedLocation && selectedLocation && selectedLocation.lat && selectedLocation.lng && (
           <Marker
             position={selectedLocation}
             draggable={true}
@@ -682,8 +679,8 @@ const LocateMe = ({
           {hasSelectedLocation && (
             <>
               <div className="col-12 mb-2">
-                <div className="p-2 bg-success text-white rounded">
-                  <small>
+                <div className="p-2 bg-light rounded">
+                  <small className="text-muted">
                     <strong>Selected Location:</strong> {address || 'Location selected'}
                   </small>
                 </div>

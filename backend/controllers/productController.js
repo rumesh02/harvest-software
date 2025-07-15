@@ -51,7 +51,9 @@ const createProduct = async (req, res) => {
       price,
       quantity,
       image,
-      farmerID
+      farmerID,
+      description,
+      location
     } = req.body;
 
     // Validate required fields
@@ -60,6 +62,15 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ 
         message: "Missing required fields",
         details: "All fields are required" 
+      });
+    }
+
+    // Validate location data
+    if (!location || !location.coordinates || !location.coordinates.lat || !location.coordinates.lng) {
+      console.log("Missing location data:", location);
+      return res.status(400).json({ 
+        message: "Location data is required",
+        details: "Please provide valid location coordinates" 
       });
     }
 
@@ -73,11 +84,18 @@ const createProduct = async (req, res) => {
       image,
       productID: Date.now().toString(),
       listedDate: new Date(),
-      description: "",
+      description: description || "",
+      location: {
+        coordinates: {
+          lat: Number(location.coordinates.lat),
+          lng: Number(location.coordinates.lng)
+        },
+        address: location.address || ""
+      },
       harvestDetails: {
         harvestDate: new Date(),
         method: "",
-        location: ""
+        location: location.address || ""
       }
     };
 

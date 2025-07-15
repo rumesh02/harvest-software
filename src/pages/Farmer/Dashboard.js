@@ -218,7 +218,7 @@ const Dashboard = () => {
         {/* Enhanced Stats Cards */}
         <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mb: { xs: 2, md: 4 } }}>
           {statCards.map((card, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
               <Card 
                 elevation={0}
                 sx={{ 
@@ -311,7 +311,7 @@ const Dashboard = () => {
         )}
         
         <Grid container spacing={{ xs: 2.5, md: 4 }}>
-          <Grid item xs={12} lg={7}>
+          <Grid size={{ xs: 12, lg: 7 }}>
             <Paper 
               elevation={0}
               sx={{ 
@@ -379,7 +379,7 @@ const Dashboard = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} lg={5}>
+          <Grid size={{ xs: 12, lg: 5 }}>
             <Paper 
               elevation={0}
               sx={{ 

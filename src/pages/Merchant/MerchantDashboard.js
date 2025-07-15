@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
 import { 
@@ -40,7 +40,7 @@ const MerchantDashboard = () => {
   const [error, setError] = useState(null);
   const { user } = useAuth0();
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       if (!user?.sub) return;
       
@@ -72,11 +72,11 @@ const MerchantDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.sub]);
 
   useEffect(() => {
     fetchDashboardData();
-  }, [user]);
+  }, [fetchDashboardData]);
 
   // Format the monthly data to ensure it has proper names and values
   const formattedMonthlyData = (dashboardData.monthlyData || []).map(item => ({
@@ -223,7 +223,7 @@ const MerchantDashboard = () => {
         {/* Enhanced Stats Cards */}
         <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mb: { xs: 2, md: 4 } }}>
           {statCards.map((card, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
               <Card 
                 elevation={0}
                 sx={{ 
@@ -316,7 +316,7 @@ const MerchantDashboard = () => {
         )}
         
         <Grid container spacing={{ xs: 2.5, md: 4 }}>
-          <Grid item xs={12} lg={7}>
+          <Grid size={{ xs: 12, lg: 7 }}>
             <Paper 
               elevation={0}
               sx={{ 
@@ -384,7 +384,7 @@ const MerchantDashboard = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} lg={5}>
+          <Grid size={{ xs: 12, lg: 5 }}>
             <Paper 
               elevation={0}
               sx={{ 

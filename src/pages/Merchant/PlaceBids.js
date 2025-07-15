@@ -12,6 +12,7 @@ import {
   DialogActions,
   TextField,
   Box,
+  Container,
 } from "@mui/material";
 import { useCart } from "../../context/CartContext";
 import axios from "axios";
@@ -175,65 +176,150 @@ const PlaceBids = () => {
   }, [cartItems]);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <Typography variant="h5" gutterBottom>
-        Selected Products
+    <Container sx={{ mt: 4, px: 3 }}>
+      {/* Header */}
+      <Typography variant="h4" fontWeight={600} mb={3} sx={{ color: "#D97706", fontSize: "2.2rem" }}>
+        🛒 Selected Products
       </Typography>
       <Grid container spacing={3}>
         {cartItems.map((product, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
-            <Card sx={{ maxWidth: 345 }}>
-              <CardMedia component="img" height="140" image={product.img || product.image} alt={product.name} />
-              <CardContent>
-                <Typography variant="body2" color="textSecondary">
-                  <b>Name:</b> {product.name}
+          <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+            <Card sx={{
+              borderRadius: "12px",
+              overflow: "hidden",
+              textAlign: "center",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              background: "#FFEDD5",
+              border: "2px solid #FFD29D",
+              minHeight: "420px",
+              maxHeight: "420px",
+              width: '320px',
+              minWidth: '320px',
+              maxWidth: '320px',
+              margin: '0 auto',
+              transition: "all 0.3s ease",
+              '&:hover': {
+                transform: "translateY(-4px)",
+                boxShadow: "0 8px 25px rgba(0,0,0,0.12)"
+              }
+            }}>
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+                <CardMedia
+                  component="img"
+                  height="150"
+                  image={product.img || product.image}
+                  alt={product.name}
+                  sx={{
+                    transition: "transform 0.3s ease",
+                    '&:hover': {
+                      transform: "scale(1.05)"
+                    }
+                  }}
+                />
+                <Box sx={{ p: 2.5 }}>
+                  <Typography variant="h6" fontWeight={600} mt={1} sx={{ color: "#B45309", fontSize: "1.2rem" }}>
+                    {product.name}
+                  </Typography>
                   {product.location && (
-                    <>
-                      <br />
-                      <span style={{ color: '#388E3C' }}>
-                        <span role="img" aria-label="map">🗺️</span> Location: {product.location.lat.toFixed(4)}, {product.location.lng.toFixed(4)}
-                      </span>
-                    </>
+                    <Typography variant="caption" sx={{ color: '#388E3C', display: 'block', mb: 1, fontSize: '0.9rem' }}>
+                      <span role="img" aria-label="map">🗺️</span> Location: {product.location.lat.toFixed(4)}, {product.location.lng.toFixed(4)}
+                    </Typography>
                   )}
                   {product.price && (
-                    <>
-                      <br />
-                      <b>Price:</b> Rs. {product.price}
-                    </>
+                    <Typography variant="h6" sx={{ color: "#D97706", fontWeight: 600, fontSize: "1.3rem", mb: 1 }}>
+                      Rs. {product.price}
+                    </Typography>
                   )}
                   {product.quantity && (
-                    <>
-                      <br />
-                      <b>Quantity:</b> {product.quantity}
-                    </>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: product.quantity <= 0 ? 'error.main' :
+                          product.quantity <= 10 ? '#D97706' : '#374151',
+                        fontWeight: product.quantity <= 10 ? 'bold' : 'normal',
+                        fontSize: '1rem',
+                        mb: 1
+                      }}
+                    >
+                      Qty: {product.quantity} kg
+                      {product.quantity <= 0 && ' (Out of Stock)'}
+                      {product.quantity > 0 && product.quantity <= 10 && ' (Low Stock)'}
+                    </Typography>
                   )}
-                </Typography>
-              </CardContent>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px" }}>
+                  {product.listedDate && (
+                    <Typography variant="caption" sx={{ color: "#D97706", fontSize: '0.9rem' }}>
+                      Listed: {new Date(product.listedDate).toLocaleDateString()}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+              <Box sx={{ p: 2, display: 'flex', flexDirection: 'row', gap: 2, justifyContent: 'space-between', alignItems: 'center' }}>
                 <Button
                   variant="contained"
-                  color="secondary"
-                  onClick={() => handlePlaceBidClick(product)}
+                  size="large"
                   disabled={product.quantity <= 0}
+                  sx={{
+                    flex: 1,
+                    height: '48px',
+                    minHeight: '48px',
+                    maxHeight: '48px',
+                    backgroundColor: product.quantity <= 0 ? "#ccc" : "#D97706",
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: "1.1rem",
+                    borderRadius: "10px",
+                    p: 0,
+                    '&:hover': {
+                      backgroundColor: product.quantity <= 0 ? "#ccc" : "#B45309",
+                    },
+                  }}
+                  onClick={() => handlePlaceBidClick(product)}
                 >
                   {product.quantity <= 0 ? "Out of Stock" : "Place Bid"}
                 </Button>
                 <Button
                   variant="contained"
-                  color="warning"
-                  sx={{ border: "1px solid red" }}
+                  sx={{
+                    flex: 1,
+                    height: '48px',
+                    minHeight: '48px',
+                    maxHeight: '48px',
+                    fontWeight: 600,
+                    fontSize: "1.1rem",
+                    borderRadius: "10px",
+                    backgroundColor: '#DC2626',
+                    color: '#fff',
+                    p: 0,
+                    '&:hover': {
+                      backgroundColor: '#B91C1C',
+                      color: '#fff',
+                    },
+                  }}
                   onClick={() => removeFromCart(product.name)}
                 >
                   Remove
                 </Button>
-              </div>
+              </Box>
             </Card>
           </Grid>
         ))}
       </Grid>
       {/* Dialog for entering bid details */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Enter Bid Details</DialogTitle>
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth
+        PaperProps={{
+          sx: {
+            background: "#FFF8EC",
+            borderRadius: 3,
+            border: "2px solid #FFD29D"
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: '#D97706', fontWeight: 700, fontSize: '1.5rem', pb: 0 }}>
+          Enter Bid Details
+        </DialogTitle>
         <DialogContent>
           <Typography
             variant="h6"
@@ -246,7 +332,7 @@ const PlaceBids = () => {
           >
             Product: {selectedProduct?.name}
           </Typography>
-          <Box sx={{ mb: 2, p: 2, backgroundColor: '#FFF8EC', borderRadius: 1 }}>
+          <Box sx={{ mb: 2, p: 2, backgroundColor: '#FFF8EC', borderRadius: 1, border: '1.5px solid #FFD29D' }}>
             <Typography variant="body2" sx={{ color: '#B45309' }}>
               <strong>Available Quantity:</strong> {selectedProduct?.quantity} kg
             </Typography>
@@ -260,7 +346,7 @@ const PlaceBids = () => {
             fullWidth
             value={bidAmount}
             onChange={(e) => setBidAmount(e.target.value)}
-            sx={{ marginBottom: "15px" }}
+            sx={{ marginBottom: "15px", background: 'white', borderRadius: '10px' }}
             helperText={`Must be at least Rs. ${selectedProduct?.price}`}
             inputProps={{ min: selectedProduct?.price || 0 }}
             variant="outlined"
@@ -281,6 +367,7 @@ const PlaceBids = () => {
               max: selectedProduct?.quantity || 0,
               step: 0.1
             }}
+            sx={{ background: 'white', borderRadius: '10px' }}
             variant="outlined"
             InputLabelProps={{
               shrink: true,
@@ -288,7 +375,7 @@ const PlaceBids = () => {
             }}
           />
           {orderWeight && selectedProduct && (
-            <Box sx={{ mt: 2, p: 2, backgroundColor: '#FEF3C7', borderRadius: 1 }}>
+            <Box sx={{ mt: 2, p: 2, backgroundColor: '#FEF3C7', borderRadius: 1, border: '1.5px solid #FFD29D' }}>
               <Typography variant="body2" sx={{ color: '#92400E' }}>
                 <strong>Order Summary:</strong>
               </Typography>
@@ -310,12 +397,21 @@ const PlaceBids = () => {
             color="primary"
             variant="contained"
             disabled={!bidAmount || !orderWeight || Number(orderWeight) > Number(selectedProduct?.quantity)}
+            sx={{
+              backgroundColor: "#D97706",
+              color: "#fff",
+              fontWeight: 600,
+              borderRadius: "10px",
+              '&:hover': {
+                backgroundColor: "#B45309",
+              },
+            }}
           >
             Submit Bid
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Container>
   );
 };
 

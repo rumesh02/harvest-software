@@ -276,19 +276,23 @@ const LocateMe = ({
           setCurrentLocationAddress(formattedAddress);
           // Also set as selected location address since current location becomes selected
           setAddress(formattedAddress);
-          onLocationSelect({
-            coordinates: location,
-            address: formattedAddress
-          });
+          // Don't automatically call onLocationSelect for current location
+          // onLocationSelect({
+          //   coordinates: location,
+          //   address: formattedAddress,
+          //   userAction: 'getCurrentLocation'
+          // });
         } else {
           console.warn('Geocoding failed:', status);
           const fallbackAddress = `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
           setCurrentLocationAddress(fallbackAddress);
           setAddress(fallbackAddress);
-          onLocationSelect({
-            coordinates: location,
-            address: fallbackAddress
-          });
+          // Don't automatically call onLocationSelect for current location
+          // onLocationSelect({
+          //   coordinates: location,
+          //   address: fallbackAddress,
+          //   userAction: 'getCurrentLocation'
+          // });
         }
       });
     } else {
@@ -296,12 +300,14 @@ const LocateMe = ({
       const fallbackAddress = `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
       setCurrentLocationAddress(fallbackAddress);
       setAddress(fallbackAddress);
-      onLocationSelect({
-        coordinates: location,
-        address: fallbackAddress
-      });
+      // Don't automatically call onLocationSelect for current location
+      // onLocationSelect({
+      //   coordinates: location,
+      //   address: fallbackAddress,
+      //   userAction: 'getCurrentLocation'
+      // });
     }
-  }, [onLocationSelect]);
+  }, []);
 
   // Reverse geocoding function
   const reverseGeocode = useCallback((location) => {
@@ -466,14 +472,38 @@ const LocateMe = ({
 
         {/* Map Modal */}
         {showMapModal && (
-          <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
+          <div className="modal fade show" style={{ 
+            display: 'block', 
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 2000, // Higher z-index to appear above MUI Dialog
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%'
+          }}>
+            <div className="modal-dialog modal-lg" style={{ 
+              position: 'relative',
+              zIndex: 2001,
+              maxWidth: '800px',
+              margin: '1.75rem auto'
+            }}>
+              <div className="modal-content" style={{ 
+                position: 'relative',
+                zIndex: 2002,
+                maxHeight: '90vh',
+                overflow: 'hidden'
+              }}>
                 <div className="modal-header">
                   <h5 className="modal-title">Get Current Location</h5>
                   <button type="button" className="btn-close" onClick={handleCloseMap}></button>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body" style={{ 
+                  maxHeight: '70vh',
+                  overflowY: 'auto',
+                  position: 'relative',
+                  zIndex: 2003
+                }}>
                   <LocateMe 
                     onLocationSelect={onLocationSelect}
                     initialLocation={selectedLocation}
@@ -600,6 +630,7 @@ const LocateMe = ({
           fullscreenControl: false,
           mapTypeId: 'roadmap',
           clickableIcons: true,
+          zIndex: 1, // Lower z-index to stay below form elements
         }}
       >
         {/* Debug: Show what selectedLocation contains */}
@@ -661,12 +692,22 @@ const LocateMe = ({
       )}
 
       {/* Location Information Points */}
-      <div className="mt-3">
+      <div className="mt-3" style={{ 
+        position: 'relative',
+        zIndex: 1,
+        background: 'white',
+        borderRadius: '8px',
+        padding: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }}>
         <div className="row">
           {/* Current Location - always show when available */}
           {currentLocation && currentLocation.lat && currentLocation.lng && (
             <div className="col-12 mb-2">
-              <div className="p-2 bg-light rounded">
+              <div className="p-2 bg-light rounded" style={{ 
+                position: 'relative',
+                zIndex: 2
+              }}>
                 <small className="text-muted">
                   <strong>Current Location:</strong> {currentLocationAddress || 
                     `${currentLocation.lat.toFixed(6)}, ${currentLocation.lng.toFixed(6)}`}
@@ -679,7 +720,10 @@ const LocateMe = ({
           {hasSelectedLocation && (
             <>
               <div className="col-12 mb-2">
-                <div className="p-2 bg-light rounded">
+                <div className="p-2 bg-light rounded" style={{ 
+                  position: 'relative',
+                  zIndex: 2
+                }}>
                   <small className="text-muted">
                     <strong>Selected Location:</strong> {address || 'Location selected'}
                   </small>
@@ -687,7 +731,10 @@ const LocateMe = ({
               </div>
               
               <div className="col-12 mb-2">
-                <div className="p-2 bg-light rounded">
+                <div className="p-2 bg-light rounded" style={{ 
+                  position: 'relative',
+                  zIndex: 2
+                }}>
                   <small className="text-muted">
                     <strong>Coordinates:</strong> {selectedLocation && selectedLocation.lat && selectedLocation.lng 
                       ? `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`

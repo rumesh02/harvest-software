@@ -1,0 +1,228 @@
+const Collection = require('../models/collectionModel');
+const Product = require('../models/Product');
+const User = require('../models/User');
+const ConfirmedBid = require('../models/ConfirmedBid');
+
+// Get all collections for a merchant
+const getMerchantCollections = async (req, res) => {
+  try {
+    const { merchantId } = req.params;
+    
+    const collections = await Collection.find({ merchantId })
+      .sort({ createdAt: -1 })
+      .lean();
+    
+    res.json(collections);
+  } catch (error) {
+    console.error('Error fetching merchant collections:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Create collection from confirmed bid
+const createCollectionFromConfirmedBid = async (req, res) => {
+  try {
+    const { confirmedBidId } = req.body;
+    
+    // Get confirmed bid data
+    const confirmedBid = await ConfirmedBid.findById(confirmedBidId);
+    if (!confirmedBid) {
+      return res.status(404).json({ message: 'Confirmed bid not found' });
+    }
+    
+    // Get product data for location information
+    let productData = null;
+    if (confirmedBid.items && confirmedBid.items.length > 0) {
+      try {
+        productData = await Product.findById(confirmedBid.items[0].productId);
+      } catch (error) {
+        console.log('Product not found, will use farmer registered address');
+      }
+    }
+    
+    // Get farmer data for fallback address
+    const farmerData = await User.findOne({ auth0Id: confirmedBid.farmerId });
+    if (!farmerData) {
+      return res.status(404).json({ message: 'Farmer data not found' });
+    }
+    
+    // Create collection using static method
+    const collection = await Collection.createFromConfirmedBid(
+      confirmedBid, 
+      productData, 
+      farmerData
+    );
+    
+    // Save the collection
+    await collection.save();
+    
+    res.status(201).json(collection);
+  } catch (error) {
+    console.error('Error creating collection:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Update collection status
+const updateCollectionStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    const collection = await Collection.findByIdAndUpdate(
+      id,
+      { status, updatedAt: new Date() },
+      { new: true }
+    );
+    
+    if (!collection) {
+      return res.status(404).json({ message: 'Collection not found' });
+    }
+    
+    res.json(collection);
+  } catch (error) {
+    console.error('Error updating collection status:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Update collection selection status
+const updateCollectionSelection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isSelected } = req.body;
+    
+    const collection = await Collection.findByIdAndUpdate(
+      id,
+      { 
+        'collectionDetails.isSelected': isSelected,
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+    
+    if (!collection) {
+      return res.status(404).json({ message: 'Collection not found' });
+    }
+    
+    res.json(collection);
+  } catch (error) {
+    console.error('Error updating collection selection:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Update transport details
+const updateTransportDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { collectionMethod, transportDetails } = req.body;
+    
+    const updateData = {
+      'collectionDetails.collectionMethod': collectionMethod,
+      updatedAt: new Date()
+    };
+    
+    if (transportDetails) {
+      updateData['collectionDetails.transportDetails'] = transportDetails;
+    }
+    
+    const collection = await Collection.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+    
+    if (!collection) {
+      return res.status(404).json({ message: 'Collection not found' });
+    }
+    
+    res.json(collection);
+  } catch (error) {
+    console.error('Error updating transport details:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Get collection by ID
+const getCollectionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const collection = await Collection.findById(id);
+    if (!collection) {
+      return res.status(404).json({ message: 'Collection not found' });
+    }
+    
+    res.json(collection);
+  } catch (error) {
+    console.error('Error fetching collection:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Migrate existing confirmed bids to collections
+const migrateConfirmedBidsToCollections = async (req, res) => {
+  try {
+    const confirmedBids = await ConfirmedBid.find();
+    let migratedCount = 0;
+    
+    for (const confirmedBid of confirmedBids) {
+      try {
+        // Check if collection already exists
+        const existingCollection = await Collection.findOne({ orderId: confirmedBid.orderId });
+        if (existingCollection) {
+          continue; // Skip if already migrated
+        }
+        
+        // Get product data
+        let productData = null;
+        if (confirmedBid.items && confirmedBid.items.length > 0) {
+          try {
+            productData = await Product.findById(confirmedBid.items[0].productId);
+          } catch (error) {
+            console.log(`Product not found for bid ${confirmedBid.orderId}`);
+          }
+        }
+        
+        // Get farmer data
+        const farmerData = await User.findOne({ auth0Id: confirmedBid.farmerId });
+        if (!farmerData) {
+          console.log(`Farmer not found for bid ${confirmedBid.orderId}`);
+          continue;
+        }
+        
+        // Create collection
+        const collection = await Collection.createFromConfirmedBid(
+          confirmedBid,
+          productData,
+          farmerData
+        );
+        
+        await collection.save();
+        migratedCount++;
+        
+      } catch (error) {
+        console.error(`Error migrating bid ${confirmedBid.orderId}:`, error);
+      }
+    }
+    
+    res.json({ 
+      message: `Successfully migrated ${migratedCount} confirmed bids to collections`,
+      migratedCount
+    });
+  } catch (error) {
+    console.error('Error during migration:', error);
+    res.status(500).json({ message: 'Migration error', error: error.message });
+  }
+};
+
+module.exports = {
+  getMerchantCollections,
+  createCollectionFromConfirmedBid,
+  updateCollectionStatus,
+  updateCollectionSelection,
+  updateTransportDetails,
+  getCollectionById,
+  migrateConfirmedBidsToCollections
+};

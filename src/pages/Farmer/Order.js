@@ -1,13 +1,50 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import {
+  Container,
+  Paper,
+  Typography,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Select,
+  MenuItem,
+  Chip,
+  Avatar,
+  FormControl,
+  Alert,
+  Card,
+  CardContent,
+  Grid,
+  CircularProgress
+} from "@mui/material";
+import {
+  ShoppingCart as OrderIcon,
+  Person as PersonIcon,
+  Phone as PhoneIcon,
+  Scale as WeightIcon,
+  AttachMoney as MoneyIcon,
+  Inventory as InventoryIcon,
+  CheckCircle as CheckIcon,
+  Cancel as CancelIcon,
+  Schedule as ScheduleIcon
+} from "@mui/icons-material";
 
 const OrderPage = () => {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Fetch bids and convert them to orders
   useEffect(() => {
     const fetchBids = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const farmerId = localStorage.getItem("user_id"); // Get logged-in farmer's ID
         const response = await axios.get(`http://localhost:5000/api/bids?farmerId=${farmerId}`);
         const bids = response.data;
@@ -45,8 +82,11 @@ const OrderPage = () => {
         );
 
         setOrders(transformedOrders);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching orders:", error);
+        setError("Failed to load orders. Please try again.");
+        setLoading(false);
       }
     };
 
@@ -121,73 +161,210 @@ const OrderPage = () => {
   };
 
   return (
-    <div className="p-6 w-full overflow-x-auto">
-      <h2 className="text-2xl font-semibold mb-3 mt-3">Orders</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">No.</th>
-              <th className="border p-2">Harvest</th>
-              <th className="border p-2">Bid Price</th>
-              <th className="border p-2">Weight</th>
-              <th className="border p-2">Buyer</th>
-              <th className="border p-2">Mobile No.</th>
-              <th className="border p-2">Order fulfillment status</th>
-              <th className="border p-2">Payment Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order, index) => (
-              <tr key={order.id} className="bg-white border text-sm md:text-base">
-                <td className="border p-2 text-center">{index + 1}</td>
-                <td className="border p-2 text-center">{order.harvest}</td>
-                <td className="border p-2 text-center">{order.price}</td>
-                <td className="border p-2 text-center">{order.weight}</td>
-                <td className="border p-2 text-center">{order.buyer}</td>
-                <td className="border p-2 text-center">{order.phone}</td>
-                <td className="border p-2 text-center">
-                  <select
-                    value={order.status}
-                    onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                    className={`border p-1 rounded ${
-                      order.status === "Done"
-                        ? "bg-green-100"
-                        : order.status === "Pending"
-                        ? "bg-yellow-100"
-                        : order.status === "Reject"
-                        ? "bg-red-100"
-                        : ""
-                    }`}
-                  >
-                    <option value="Done">Done</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Reject">Reject</option>
-                  </select>
-                </td>
-                <td className="border p-2 text-center">
-                  <span
-                    className={`px-2 py-1 rounded ${
-                      order.status === "Reject"
-                        ? "bg-red-100"
-                        : order.paymentStatus === "Completed"
-                        ? "bg-green-100"
-                        : order.paymentStatus === "Pending"
-                        ? "bg-yellow-100"
-                        : "bg-gray-100"
-                    }`}
-                  >
-                    {order.status === "Reject"
-                      ? "Cancelled"
-                      : order.paymentStatus}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+        <OrderIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+        Orders
+      </Typography>
+
+      {/* Summary Cards */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={3}>
+          <Card sx={{ bgcolor: '#fff3e0', borderLeft: '4px solid #ff9800' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h6" color="text.secondary">
+                    Pending Orders
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#e65100' }}>
+                    {orders.filter(o => o.status === 'Pending').length}
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: '#ff9800', width: 56, height: 56 }}>
+                  <ScheduleIcon fontSize="large" />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card sx={{ bgcolor: '#e8f5e8', borderLeft: '4px solid #4caf50' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h6" color="text.secondary">
+                    Completed Orders
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                    {orders.filter(o => o.status === 'Done').length}
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: '#4caf50', width: 56, height: 56 }}>
+                  <CheckIcon fontSize="large" />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card sx={{ bgcolor: '#ffebee', borderLeft: '4px solid #f44336' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h6" color="text.secondary">
+                    Rejected Orders
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
+                    {orders.filter(o => o.status === 'Reject').length}
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: '#f44336', width: 56, height: 56 }}>
+                  <CancelIcon fontSize="large" />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card sx={{ bgcolor: '#f3e5f5', borderLeft: '4px solid #9c27b0' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h6" color="text.secondary">
+                    Total Orders
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#7b1fa2' }}>
+                    {orders.length}
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: '#9c27b0', width: 56, height: 56 }}>
+                  <OrderIcon fontSize="large" />
+                </Avatar>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Loading State */}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        /* Orders Table */
+        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+          <TableContainer>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>No.</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Harvest</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Bid Price</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Weight</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Buyer</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Mobile No.</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Order Status</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Payment Status</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {orders.map((order, index) => (
+                  <TableRow key={order.id} hover>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Avatar sx={{ bgcolor: '#2e7d32', mr: 2, width: 32, height: 32 }}>
+                          <InventoryIcon />
+                        </Avatar>
+                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                          {order.harvest}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <MoneyIcon sx={{ color: '#2e7d32', mr: 1 }} />
+                        <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                          {order.price}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <WeightIcon sx={{ color: '#666', mr: 1 }} />
+                        <Typography variant="body2">
+                          {order.weight}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <PersonIcon sx={{ color: '#666', mr: 1 }} />
+                        <Typography variant="body2">
+                          {order.buyer}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <PhoneIcon sx={{ color: '#666', mr: 1 }} />
+                        <Typography variant="body2">
+                          {order.phone}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <Select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                          sx={{
+                            bgcolor: order.status === "Done" ? "#e8f5e8" : 
+                                   order.status === "Pending" ? "#fff3e0" : 
+                                   order.status === "Reject" ? "#ffebee" : "#f5f5f5",
+                            '& .MuiSelect-select': {
+                              fontWeight: 'medium'
+                            }
+                          }}
+                        >
+                          <MenuItem value="Done">Done</MenuItem>
+                          <MenuItem value="Pending">Pending</MenuItem>
+                          <MenuItem value="Reject">Reject</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={order.status === "Reject" ? "Cancelled" : order.paymentStatus}
+                        color={
+                          order.status === "Reject" ? "error" :
+                          order.paymentStatus === "Completed" ? "success" :
+                          order.paymentStatus === "Pending" ? "warning" : "default"
+                        }
+                        size="small"
+                        sx={{ fontWeight: 'bold' }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
+    </Container>
   );
 };
 

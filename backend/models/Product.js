@@ -8,7 +8,8 @@ const productSchema = new mongoose.Schema({
   farmerID: { type: String, required: true },
   image: { type: String, required: true },
   listedDate: { type: Date, default: Date.now },
-  productID: { type: String, required: true },
+  productID: { type: String }, // Make productID optional since it can be auto-generated
+  itemCode: { type: String, required: true, unique: true }, // Add itemCode field
   description: { type: String },
   location: {
     coordinates: {

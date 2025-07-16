@@ -20,11 +20,23 @@ const OrderSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  itemCode: {
+    type: String,
+    index: true // Add item code field with index for faster searches
+  },
+  productLocation: {
+    coordinates: {
+      lat: { type: Number },
+      lng: { type: Number }
+    },
+    address: { type: String }
+  },
   items: [{
     productId: String,
     name: String,
     quantity: Number,
-    price: Number
+    price: Number,
+    itemCode: String // Add item code to items as well
   }],
   status: {
     type: String,

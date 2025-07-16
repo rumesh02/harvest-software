@@ -18,7 +18,7 @@ const getProducts = async (req, res) => {
     }
 
     const skip = (Number(page) - 1) * Number(limit);
-    const products = await Product.find(filter, "name price quantity image listedDate farmerID harvestDetails")
+    const products = await Product.find(filter, "name price quantity image listedDate farmerID harvestDetails itemCode location productID")
       .skip(skip)
       .limit(Number(limit));
     const total = await Product.countDocuments(filter);
@@ -74,6 +74,14 @@ const createProduct = async (req, res) => {
       });
     }
 
+    // Generate a structured item code: HVT-YYYY-MM-DD-XXXX
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const timeStamp = now.getTime().toString().slice(-4); // Last 4 digits of timestamp
+    const itemCode = `HVT-${year}-${month}-${day}-${timeStamp}`;
+
     // Create product with validated data
     const productData = {
       type,
@@ -82,7 +90,8 @@ const createProduct = async (req, res) => {
       quantity: Number(quantity),
       farmerID: farmerID || "default",
       image,
-      productID: Date.now().toString(),
+      productID: new mongoose.Types.ObjectId().toString(), // Generate unique productID
+      itemCode: itemCode, // User-facing structured item code
       listedDate: new Date(),
       description: description || "",
       location: {

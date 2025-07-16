@@ -69,7 +69,7 @@ app.use('/api/geolocation', geolocationRoutes);
 app.use('/api', locationRoutes);
 app.use(merchantRoutes); 
 app.use(farmerDashboardRoutes);
-app.use("/api/collection", collectionRoutes);
+app.use('/api/collections', collectionRoutes);
 
 // Initialize Socket.IO
 socketHandler(io);

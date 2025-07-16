@@ -74,24 +74,104 @@ const MyBids = () => {
       });
       console.log('Status update response:', statusUpdateResponse.data);
   
+      // Fetch the product details to get location information and item code
+      let productLocation = null;
+      let itemCode = null;
+      
+      console.log(`Attempting to fetch product with ID: ${bid.productId}`);
+      
+      try {
+        const productResponse = await axios.get(`http://localhost:5000/api/products/${bid.productId}`);
+        productLocation = productResponse.data.location;
+        itemCode = productResponse.data.itemCode || productResponse.data.productID;
+        console.log('Product location fetched successfully:', productLocation);
+        console.log('Item code fetched successfully:', itemCode);
+      } catch (error) {
+        console.error('Error fetching product details:', error);
+        console.log(`Product ID not found: ${bid.productId}, trying farmer location...`);
+        
+        // If product is not found, try to get location from farmer information
+        try {
+          const farmerResponse = await axios.get(`http://localhost:5000/api/users/${bid.farmerId}`);
+          if (farmerResponse.data.location) {
+            productLocation = {
+              address: farmerResponse.data.location.address || `Farmer location: ${farmerResponse.data.location}`,
+              coordinates: farmerResponse.data.location.coordinates || null
+            };
+            console.log('Using farmer location as fallback:', productLocation);
+          }
+        } catch (farmerError) {
+          console.error('Error fetching farmer location:', farmerError);
+        }
+        
+        // Generate item code from bid information if product not found
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const timeStamp = now.getTime().toString().slice(-4);
+        itemCode = `HVT-${year}-${month}-${day}-${timeStamp}`;
+      }
+      
+      // Ensure we always have location data
+      if (!productLocation) {
+        productLocation = {
+          address: `${bid.productName} harvest location (Details not available)`,
+          coordinates: null
+        };
+        console.log('Using fallback location:', productLocation);
+      }
+      
+      // Ensure we always have an item code
+      if (!itemCode) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const timeStamp = now.getTime().toString().slice(-4);
+        itemCode = `HVT-${year}-${month}-${day}-${timeStamp}`;
+      }
+      
+      console.log('Final location data:', productLocation);
+      console.log('Final item code:', itemCode);
+      
       // Create a new confirmed bid record
       const confirmedBidData = {
         orderId: `ORD-${Date.now().toString().slice(-6)}`,
         merchantId: user?.sub,
         farmerId: bid.farmerId,
         amount: bid.bidAmount * bid.orderWeight,
+        productLocation: productLocation, // Store the location information
+        itemCode: itemCode, // Store the item code
         items: [{
           productId: bid.productId,
           name: bid.productName,
           quantity: bid.orderWeight,
-          price: bid.bidAmount
+          price: bid.bidAmount,
+          itemCode: itemCode // Also store in items array
         }],
         bidId: bid._id // Reference to original bid
       };
       
-      console.log('Sending confirmed bid data to backend:', confirmedBidData);
+      console.log('Creating confirmed bid with location data:', {
+        orderId: confirmedBidData.orderId,
+        productLocation: confirmedBidData.productLocation,
+        itemCode: confirmedBidData.itemCode
+      });
+      
       const response = await axios.post('http://localhost:5000/api/confirmedbids', confirmedBidData);
-      console.log('Confirmed bid creation response:', response.data);
+      console.log('Confirmed bid created successfully:', response.data._id);
+      
+      // Also create a collection entry for the new collection system
+      try {
+        await axios.post('http://localhost:5000/api/collections', {
+          confirmedBidId: response.data._id
+        });
+        console.log('Collection created successfully from confirmed bid');
+      } catch (collectionError) {
+        console.error('Error creating collection:', collectionError);
+        // Don't fail the entire process if collection creation fails
+      }
       
       // Redirect to the Payments page with the ID and amount
       const finalPrice = bid.bidAmount * bid.orderWeight;

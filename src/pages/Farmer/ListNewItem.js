@@ -2,6 +2,38 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 import LocateMe from "../../components/LocateMe";
+import {
+  Container,
+  Paper,
+  Typography,
+  TextField,
+  MenuItem,
+  Button,
+  Grid,
+  Box,
+  Alert,
+  Card,
+  CardContent,
+  InputAdornment,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  LinearProgress,
+  Divider
+} from "@mui/material";
+import {
+  CloudUpload as CloudUploadIcon,
+  AddCircle as AddCircleIcon,
+  LocationOn as LocationOnIcon,
+  Image as ImageIcon,
+  Refresh as RefreshIcon,
+  AttachMoney as MoneyIcon,
+  Scale as ScaleIcon,
+  Category as CategoryIcon,
+  DriveFileRenameOutline as NameIcon
+} from "@mui/icons-material";
 
 const ListNewItem = () => {
   const [formData, setFormData] = useState({
@@ -193,171 +225,291 @@ const ListNewItem = () => {
   };
 
   return (
-    <div className="bg-white p-4 rounded">
-      <h5 className="mb-4">List New Item</h5>
-      <p className="text-muted mb-4">Add Your Harvest Here</p>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+        {/* Header */}
+        <Box sx={{ mb: 4 }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 600, 
+              color: '#2E7D32',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}
+          >
+            <AddCircleIcon fontSize="large" />
+            List New Item
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Add your harvest to the marketplace and connect with buyers
+          </Typography>
+        </Box>
 
-      {submitStatus.message && (
-        <div
-          className={`alert ${
-            submitStatus.type === "success" 
-              ? "alert-success" 
-              : "alert-danger"
-          } mb-4`}
-        >
-          {submitStatus.message}
-        </div>
-      )}
+        {/* Status Messages */}
+        {submitStatus.message && (
+          <Alert 
+            severity={submitStatus.type === "success" ? "success" : "error"}
+            sx={{ mb: 3 }}
+            onClose={() => setSubmitStatus({ type: "", message: "" })}
+          >
+            {submitStatus.message}
+          </Alert>
+        )}
 
-      <form onSubmit={handleSubmit}>
-        {/* Harvest Type & Name */}
-        <div className="row mb-3">
-          <div className="col-md-6">
-            <label className="form-label">Harvest Type</label>
-            <select
-              className="form-select"
-              value={formData.harvestType}
-              onChange={(e) =>
-                setFormData({ ...formData, harvestType: e.target.value })
-              }
-            >
-              <option value="">Select Harvest Type</option>
-              <option value="vegetables">Vegetables</option>
-              <option value="fruits">Fruits</option>
-              <option value="grains">Grains</option>
-            </select>
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Harvest Name</label>
-            <input
-              type="text"
-              className="form-control"
-              value={formData.harvestName}
-              onChange={(e) =>
-                setFormData({ ...formData, harvestName: e.target.value })
-              }
-            />
-          </div>
-        </div>
+        {/* Loading Progress */}
+        {isSubmitting && (
+          <Box sx={{ width: '100%', mb: 3 }}>
+            <LinearProgress />
+          </Box>
+        )}
 
-        {/* Minimum Bid Price & Available Weight */}
-        <div className="row mb-4">
-          <div className="col-md-6">
-            <label className="form-label">Minimum Bid Price</label>
-            <div className="input-group">
-              <span className="input-group-text" style={{ fontSize: "14px", height: "38px" }}>
-                Rs.
-              </span>
-              <input
+        <Box component="form" onSubmit={handleSubmit}>
+          {/* Harvest Type & Name */}
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                select
+                label="Harvest Type"
+                value={formData.harvestType}
+                onChange={(e) =>
+                  setFormData({ ...formData, harvestType: e.target.value })
+                }
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CategoryIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              >
+                <MenuItem value="">Select Harvest Type</MenuItem>
+                <MenuItem value="vegetables">Vegetables</MenuItem>
+                <MenuItem value="fruits">Fruits</MenuItem>
+                <MenuItem value="grains">Grains</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Harvest Name"
+                value={formData.harvestName}
+                onChange={(e) =>
+                  setFormData({ ...formData, harvestName: e.target.value })
+                }
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <NameIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                placeholder="e.g., Organic Tomatoes"
+              />
+            </Grid>
+          </Grid>
+
+          {/* Minimum Bid Price & Available Weight */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
                 type="number"
-                className="form-control"
+                label="Minimum Bid Price"
                 value={formData.minBidPrice}
                 onChange={(e) =>
                   setFormData({ ...formData, minBidPrice: e.target.value })
                 }
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <MoneyIcon />
+                      Rs.
+                    </InputAdornment>
+                  ),
+                }}
+                placeholder="Enter minimum price per kg"
               />
-            </div>
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Available Weight Of Stock</label>
-            <div className="input-group">
-              <input
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
                 type="number"
-                className="form-control"
+                label="Available Weight Of Stock"
                 value={formData.availableWeight}
                 onChange={(e) =>
                   setFormData({ ...formData, availableWeight: e.target.value })
                 }
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <ScaleIcon />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      Kg
+                    </InputAdornment>
+                  ),
+                }}
+                placeholder="Enter available weight"
               />
-              <span className="input-group-text" style={{ fontSize: "14px", height: "38px" }}>
-                Kg
-              </span>
-            </div>
-          </div>
-        </div>
+            </Grid>
+          </Grid>
 
-        {/* File Upload Section */}
-        <div className="mb-4">
-          <label className="form-label">Upload Images Of Harvest</label>
-          <div
-            className={`border p-5 rounded text-center ${
-              dragActive ? "border-primary" : "border-secondary"
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <input
-              type="file"
-              id="fileUpload"
-              className="d-none"
-              multiple
-              accept="image/*"
-              onChange={handleFileChange}
-            />
-            <label
-              htmlFor="fileUpload"
-              style={{
-                color: "black",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: "bold",
-              }}
-            >
-              Click to Upload
-            </label>
-            <p className="mt-2 text-muted">or drag and drop your files here</p>
-          </div>
+          {/* File Upload Section */}
+          <Card sx={{ mb: 4, border: dragActive ? '2px dashed #4CAF50' : '2px dashed #e0e0e0' }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <ImageIcon />
+                Upload Images Of Harvest
+              </Typography>
+              <Box
+                sx={{
+                  p: 4,
+                  textAlign: 'center',
+                  backgroundColor: dragActive ? '#f8f9fa' : '#fafafa',
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: '#f0f0f0'
+                  }
+                }}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById('fileUpload').click()}
+              >
+                <input
+                  type="file"
+                  id="fileUpload"
+                  style={{ display: 'none' }}
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+                <CloudUploadIcon sx={{ fontSize: 48, color: '#4CAF50', mb: 2 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                  Click to Upload
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  or drag and drop your files here
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Supported formats: JPG, PNG, GIF (Max 5MB each)
+                </Typography>
+              </Box>
 
-          {/* Show Selected Files */}
-          {formData.images.length > 0 && (
-            <ul className="list-group mt-3">
-              {formData.images.map((file, index) => (
-                <li key={index} className="list-group-item">
-                  {file.name}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+              {/* Show Selected Files */}
+              {formData.images.length > 0 && (
+                <Box sx={{ mt: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Selected Files ({formData.images.length})
+                  </Typography>
+                  <List dense>
+                    {formData.images.map((file, index) => (
+                      <ListItem key={index} sx={{ py: 0.5 }}>
+                        <ListItemIcon>
+                          <ImageIcon color="primary" />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={file.name}
+                          secondary={`${(file.size / 1024 / 1024).toFixed(2)} MB`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Location Selection */}
-        <div className="mb-4">
-          <h5 className="mb-3">Select Harvest Location</h5>
-          <LocateMe 
-            onLocationSelect={handleLocationSelect}
-            buttonText="Select Location"
-            className="w-100"
-          />
-          {formData.location.coordinates && (
-            <div className="mt-2 p-2 bg-light rounded">
-              <small className="text-muted">
-                <strong>Selected Location:</strong> {formData.location.address || 
-                  `${formData.location.coordinates.lat.toFixed(6)}, ${formData.location.coordinates.lng.toFixed(6)}`}
-              </small>
-            </div>
-          )}
-        </div>
+          {/* Location Selection */}
+          <Card sx={{ mb: 4 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <LocationOnIcon />
+                Select Harvest Location
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Choose the location where your harvest is available for pickup
+              </Typography>
+              <LocateMe 
+                onLocationSelect={handleLocationSelect}
+                buttonText="Select Location"
+                className="w-100"
+              />
+              {formData.location.coordinates && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  <Typography variant="body2">
+                    <strong>Selected Location:</strong> {formData.location.address || 
+                      `${formData.location.coordinates.lat.toFixed(6)}, ${formData.location.coordinates.lng.toFixed(6)}`}
+                  </Typography>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
 
-<div className="d-flex gap-2">
-  <button 
-    type="submit" 
-    className="btn btn-success flex-grow-1" 
-    disabled={isSubmitting}
-  >
-    {isSubmitting ? "Adding..." : "Add Listing"}
-  </button>
-  <button 
-    type="button" 
-    className="btn btn-secondary" 
-    onClick={handleReset}
-  >
-    Reset Form
-  </button>
-</div>
-      </form>
-    </div>
+          <Divider sx={{ mb: 3 }} />
+
+          {/* Action Buttons */}
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={8}>
+              <Button 
+                type="submit" 
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={isSubmitting}
+                startIcon={<AddCircleIcon />}
+                sx={{
+                  py: 1.5,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  backgroundColor: '#4CAF50',
+                  '&:hover': {
+                    backgroundColor: '#45a049'
+                  }
+                }}
+              >
+                {isSubmitting ? "Adding..." : "Add Listing"}
+              </Button>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Button 
+                type="button" 
+                variant="outlined"
+                size="large"
+                fullWidth
+                onClick={handleReset}
+                startIcon={<RefreshIcon />}
+                sx={{
+                  py: 1.5,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  borderColor: '#757575',
+                  color: '#757575',
+                  '&:hover': {
+                    borderColor: '#424242',
+                    backgroundColor: '#f5f5f5'
+                  }
+                }}
+              >
+                Reset Form
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 

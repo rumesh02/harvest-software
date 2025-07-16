@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Box, Container, Typography, TextField, Grid, Card, CardMedia, CardActions, Button, 
  InputAdornment, Autocomplete, Skeleton, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from "@mui/material"; // <-- Add Skeleton import
 import SearchIcon from '@mui/icons-material/Search';
@@ -8,6 +8,7 @@ import CloseIcon from '@mui/icons-material/Close'; // Import CloseIcon
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
 import Rating from '@mui/material/Rating';
+import { useNavigate } from "react-router-dom";
 
 // Sri Lankan districts for dropdown
 const districts = [
@@ -31,12 +32,10 @@ const BrowseListing = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [farmerInfo, setFarmerInfo] = useState(null);
   const [loadingFarmer, setLoadingFarmer] = useState(false);
+  const [addMoreItemsOpen, setAddMoreItemsOpen] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchProducts();
-  }, [searchQuery, districtFilter, maxPrice, page]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
@@ -54,7 +53,11 @@ const BrowseListing = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, districtFilter, maxPrice, page]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const fetchFarmerInfo = async (farmerID) => {
     try {
@@ -68,6 +71,56 @@ const BrowseListing = () => {
     } finally {
       setLoadingFarmer(false);
     }
+  };
+
+  // Function to get location display with farmer fallback
+  const getLocationDisplay = (product, farmer) => {
+    // First priority: Product's specific location (selected during listing)
+    if (product.location?.address) {
+      return product.location.address;
+    }
+    
+    // Second priority: Harvest details location
+    if (product.harvestDetails?.location) {
+      return product.harvestDetails.location;
+    }
+    
+    // Final fallback: Farmer's registered address + district
+    if (farmer && farmer.address && farmer.district) {
+      return `${farmer.address}, ${farmer.district}`;
+    }
+    
+    // If farmer has only address
+    if (farmer && farmer.address) {
+      return farmer.address;
+    }
+    
+    // If farmer has only district
+    if (farmer && farmer.district) {
+      return farmer.district;
+    }
+    
+    // If no location data is available
+    return 'Location not available';
+  };
+
+  const handleAddToCart = (product) => {
+    addToCart({
+      ...product,
+      farmerID: product.farmerID,
+    });
+    setAddMoreItemsOpen(true);
+  };
+
+  const handleYesAddMore = () => {
+    setAddMoreItemsOpen(false);
+    // Stay in current tab (BrowseListing)
+  };
+
+  const handleNoRedirect = () => {
+    setAddMoreItemsOpen(false);
+    // Redirect to PlaceBids tab
+    navigate("/merchant/buy");
   };
 
   const allProducts = fetchedProducts;
@@ -212,13 +265,13 @@ const BrowseListing = () => {
                   <Typography variant="subtitle1" fontWeight={600} mt={1}>
                     {product.name}
                   </Typography>
-                  {product.price && <Typography variant="body2">Rs. {product.price}</Typography>}
-                  {product.quantity && <Typography variant="body2">Qty: {product.quantity}</Typography>}
-                  {product.harvestDetails?.location && (
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Location: {product.harvestDetails.location}
+                  {product.itemCode && (
+                    <Typography variant="caption" color="primary" fontWeight={500}>
+                      Code: {product.itemCode}
                     </Typography>
                   )}
+                  {product.price && <Typography variant="body2">Rs. {product.price}</Typography>}
+                  {product.quantity && <Typography variant="body2">Qty: {product.quantity}</Typography>}
                   {product.listedDate && (
                     <Typography variant="caption" color="text.secondary">
                       Listed: {new Date(product.listedDate).toLocaleDateString()}
@@ -256,12 +309,7 @@ const BrowseListing = () => {
                         backgroundColor: "#FFA000", // Dark Amber
                       },
                     }}
-                    onClick={() => {
-                      addToCart({
-                        ...product,
-                        farmerID: product.farmerID,
-                      });
-                    }}
+                    onClick={() => handleAddToCart(product)}
                   >
                     ADD TO CART
                   </Button>
@@ -326,6 +374,11 @@ const BrowseListing = () => {
               <Typography variant="h6" fontWeight={600}>
                 {selectedProduct.name}
               </Typography>
+              {selectedProduct.itemCode && (
+                <Typography variant="body2" sx={{ mt: 1, color: 'primary.main', fontWeight: 500 }}>
+                  <strong>Item Code:</strong> {selectedProduct.itemCode}
+                </Typography>
+              )}
               <Typography variant="body2" sx={{ mt: 1 }}>
                 <strong>Price:</strong> Rs. {selectedProduct.price}
               </Typography>
@@ -333,8 +386,12 @@ const BrowseListing = () => {
                 <strong>Quantity:</strong> {selectedProduct.quantity}
               </Typography>
               <Typography variant="body2">
-                <strong>Location:</strong> {selectedProduct.harvestDetails?.location || "Unknown"}
+                <strong>Description:</strong> {selectedProduct.description || "No description available"}
               </Typography>
+              <Typography variant="body2">
+                <strong>Harvest Location:</strong> {getLocationDisplay(selectedProduct, farmerInfo)}
+              </Typography>
+
               <Typography variant="body2">
                 <strong>Listed Date:</strong> {new Date(selectedProduct.listedDate).toLocaleDateString()}
               </Typography>
@@ -359,6 +416,71 @@ const BrowseListing = () => {
         </DialogContent>
         <DialogActions>
           
+        </DialogActions>
+      </Dialog>
+
+      {/* Add More Items Popup Dialog */}
+      <Dialog 
+        open={addMoreItemsOpen} 
+        onClose={() => setAddMoreItemsOpen(false)} 
+        maxWidth="xs" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            padding: 2,
+            textAlign: 'center'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          fontWeight: 600, 
+          color: "#D97706", 
+          fontSize: "1.2rem",
+          pb: 1
+        }}>
+          Item Added to Cart!
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: 'center', py: 2 }}>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Would you like to add more items to your cart?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ 
+          justifyContent: 'center', 
+          gap: 2,
+          pb: 2
+        }}>
+          <Button
+            variant="contained"
+            onClick={handleYesAddMore}
+            sx={{
+              backgroundColor: "#4CAF50",
+              color: "white",
+              fontWeight: 600,
+              px: 3,
+              "&:hover": {
+                backgroundColor: "#45a049"
+              }
+            }}
+          >
+            Yes
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleNoRedirect}
+            sx={{
+              backgroundColor: "#f44336",
+              color: "white",
+              fontWeight: 600,
+              px: 3,
+              "&:hover": {
+                backgroundColor: "#d32f2f"
+              }
+            }}
+          >
+            No
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>

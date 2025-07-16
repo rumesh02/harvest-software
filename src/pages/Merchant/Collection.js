@@ -18,6 +18,7 @@ const Collection = () => {
     const [transportDialogOpen, setTransportDialogOpen] = useState(false);
     const [findVehiclesOpen, setFindVehiclesOpen] = useState(false);
     const [selectedOrders, setSelectedOrders] = useState([]);
+    const [farmerDetails, setFarmerDetails] = useState({});
 
     const fetchConfirmedBids = useCallback(async () => {
         try {
@@ -26,34 +27,94 @@ const Collection = () => {
                 setLoading(false);
                 return;
             }
-            // Fetch confirmed bids from the confirmedBids collection
-            const response = await axios.get(`http://localhost:5000/api/confirmedbids/merchant/${merchantId}`);
-            const allConfirmedBids = response.data;
             
-            // Filter for confirmed bids that are either 'confirmed', 'paid', or 'delivered'
-            const confirmed = allConfirmedBids.filter(
-                bid => bid.status === "confirmed" || bid.status === "paid" || bid.status === "delivered"
-            );
+            console.log("Fetching confirmed bids for merchant:", merchantId);
             
-            // Sort by status priority: Awaiting Payment -> Awaiting Pickup -> Delivered
+            // First try to get data from the new collections API
+            let collections = [];
+            try {
+                const collectionsResponse = await axios.get(`http://localhost:5000/api/collections/merchant/${merchantId}`);
+                collections = collectionsResponse.data || [];
+                console.log("Collections from new API:", collections);
+            } catch (collectionsError) {
+                console.log("Collections API error:", collectionsError);
+                collections = [];
+            }
+            
+            // Also get data from the confirmed bids API for fallback
+            let confirmedBids = [];
+            try {
+                const confirmedResponse = await axios.get(`http://localhost:5000/api/confirmedbids/merchant/${merchantId}`);
+                confirmedBids = confirmedResponse.data || [];
+                console.log("Confirmed bids from legacy API:", confirmedBids);
+            } catch (confirmedError) {
+                console.log("Confirmed bids API error:", confirmedError);
+                confirmedBids = [];
+            }
+            
+            // Combine and transform data from both sources
+            const allOrders = [];
+            
+            // Add collections (new format)
+            collections.forEach(collection => {
+                if (collection.status === "confirmed" || collection.status === "paid" || collection.status === "delivered") {
+                    allOrders.push({
+                        ...collection,
+                        source: 'collections'
+                    });
+                }
+            });
+            
+            // Add confirmed bids (legacy format) - only if not already in collections
+            confirmedBids.forEach(bid => {
+                // Check if this bid is already represented in collections
+                const existsInCollections = allOrders.some(order => order.orderId === bid.orderId);
+                if (!existsInCollections && (bid.status === "confirmed" || bid.status === "paid" || bid.status === "delivered")) {
+                    allOrders.push({
+                        ...bid,
+                        source: 'confirmedBids',
+                        // Transform legacy format to match new format
+                        productName: bid.items?.[0]?.name || 'N/A',
+                        bidAmount: bid.items?.[0]?.price || 0,
+                        orderWeight: bid.items?.[0]?.quantity || 0,
+                        finalPrice: bid.amount || 0
+                    });
+                }
+            });
+            
+            // Sort by status priority
             const statusOrder = {
                 "confirmed": 1,    // Awaiting Payment
-                "Confirmed": 1,    // Legacy support
                 "paid": 2,         // Awaiting Pickup
-                "Paid": 2,         // Legacy support
-                "delivered": 3,    // Delivered
-                "Delivered": 3     // Legacy support
+                "delivered": 3     // Delivered
             };
             
-            const sortedConfirmed = confirmed.sort((a, b) => {
+            const sortedOrders = allOrders.sort((a, b) => {
                 const orderA = statusOrder[a.status] || 999;
                 const orderB = statusOrder[b.status] || 999;
                 return orderA - orderB;
             });
             
-            setConfirmedBids(sortedConfirmed);
+            console.log("Final sorted orders:", sortedOrders);
+            setConfirmedBids(sortedOrders);
+            
+            // Extract farmer details
+            const farmerDetailsMap = {};
+            sortedOrders.forEach(order => {
+                if (order.farmerDetails) {
+                    farmerDetailsMap[order.farmerId] = {
+                        name: order.farmerDetails.name,
+                        phone: order.farmerDetails.phone,
+                        address: order.location?.farmerRegisteredAddress?.address,
+                        district: order.location?.farmerRegisteredAddress?.district
+                    };
+                }
+            });
+            
+            setFarmerDetails(farmerDetailsMap);
+            
         } catch (error) {
-            console.error("Error fetching confirmed bids:", error);
+            console.error("Error fetching collections:", error);
         } finally {
             setLoading(false);
         }
@@ -83,9 +144,9 @@ const Collection = () => {
     }, [fetchConfirmedBids]);
 
     const handleSelect = (id) => {
-        // Find the bid to check its status
-        const bid = confirmedBids.find(b => b._id === id);
-        const displayStatus = getDisplayStatus(bid?.status);
+        // Find the item to check its status
+        const item = confirmedBids.find(b => b._id === id);
+        const displayStatus = getDisplayStatus(item?.status);
         
         // Only allow selection for "Awaiting Pickup" status
         if (displayStatus === "Awaiting Pickup") {
@@ -107,7 +168,7 @@ const Collection = () => {
         if (useAppTransport) {
             // User wants to use app's transport facility
             // Get the selected orders data
-            const selectedOrdersData = confirmedBids.filter(bid => selected.includes(bid._id));
+            const selectedOrdersData = confirmedBids.filter(item => selected.includes(item._id));
             setSelectedOrders(selectedOrdersData);
             
             // Open the FindVehicles dialog
@@ -139,17 +200,79 @@ const Collection = () => {
         return status;
     };
 
+    // Function to get location display with farmer fallback
+    const getLocationDisplay = (item) => {
+        // For collections from new API
+        if (item.source === 'collections') {
+            // Priority 1: Use the computed display address from the new collection model
+            if (item.location && item.location.displayAddress) {
+                return item.location.displayAddress;
+            }
+            
+            // Priority 2: Use selectedLocation address from the new collection model
+            if (item.location && item.location.selectedLocation && item.location.selectedLocation.address) {
+                return item.location.selectedLocation.address;
+            }
+            
+            // Priority 3: Use farmer registered address from the new collection model
+            if (item.location && item.location.farmerRegisteredAddress) {
+                const { address, district } = item.location.farmerRegisteredAddress;
+                if (address && district) {
+                    return `${address}, ${district}`;
+                } else if (address) {
+                    return address;
+                } else if (district) {
+                    return district;
+                }
+            }
+        }
+        
+        // For legacy confirmed bids
+        if (item.source === 'confirmedBids') {
+            // Use productLocation from confirmed bid
+            if (item.productLocation && item.productLocation.address) {
+                return item.productLocation.address;
+            }
+        }
+        
+        // Fallback for old confirmed bid structure (backward compatibility)
+        if (item.productLocation && item.productLocation.address) {
+            return item.productLocation.address;
+        }
+        
+        if (item.harvestDetails && item.harvestDetails.location) {
+            return item.harvestDetails.location;
+        }
+        
+        // Final fallback: Farmer's registered address + district from farmerDetails
+        const farmer = farmerDetails[item.farmerId];
+        if (farmer && farmer.address && farmer.district) {
+            return `${farmer.address}, ${farmer.district}`;
+        }
+        
+        if (farmer && farmer.address) {
+            return farmer.address;
+        }
+        
+        if (farmer && farmer.district) {
+            return farmer.district;
+        }
+        
+        // If no location data is available
+        return 'Location not available';
+    };
+
     // Function to render conditional checkbox based on status
-    const renderCheckbox = (bid) => {
-        const status = bid.status;
+    const renderCheckbox = (item) => {
+        const status = item.status;
         const displayStatus = getDisplayStatus(status);
         
         if (displayStatus === "Awaiting Pickup") {
             // Show enabled checkbox for Awaiting Pickup
             return (
                 <Checkbox
-                    checked={selected.includes(bid._id)}
-                    onChange={() => handleSelect(bid._id)}
+                    checked={selected.includes(item._id)}
+                    onChange={() => handleSelect(item._id)}
                 />
             );
         } else if (displayStatus === "Awaiting Payment") {
@@ -213,30 +336,48 @@ const Collection = () => {
                             <TableCell>Order Weight</TableCell>
                             <TableCell>Final Price</TableCell>
                             <TableCell>Status</TableCell>
+                            <TableCell>Location</TableCell>
                             {/* Add more columns as needed */}
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {confirmedBids.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} align="center">No confirmed bids in collection</TableCell>
+                                <TableCell colSpan={7} align="center">No confirmed bids in collection</TableCell>
                             </TableRow>
                         ) : (
-                            confirmedBids.map((bid) => (
-                                <TableRow key={bid._id}>
+                            confirmedBids.map((item) => (
+                                <TableRow key={item._id}>
                                     <TableCell>
-                                        {renderCheckbox(bid)}
+                                        {renderCheckbox(item)}
                                     </TableCell>
-                                    <TableCell>{bid.items?.[0]?.name || 'N/A'}</TableCell>
-                                    <TableCell>Rs. {bid.items?.[0]?.price || 0} (per Kg)</TableCell>
-                                    <TableCell>{bid.items?.[0]?.quantity || 0} Kg</TableCell>
-                                    <TableCell>Rs. {bid.amount}</TableCell>
+                                    <TableCell>
+                                        {/* Handle both collection and confirmed bid structures */}
+                                        {item.productName || item.items?.[0]?.name || 'N/A'}
+                                    </TableCell>
+                                    <TableCell>
+                                        {/* Handle both collection and confirmed bid structures */}
+                                        Rs. {item.bidAmount || item.items?.[0]?.price || 0} (per Kg)
+                                    </TableCell>
+                                    <TableCell>
+                                        {/* Handle both collection and confirmed bid structures */}
+                                        {item.orderWeight || item.items?.[0]?.quantity || 0} Kg
+                                    </TableCell>
+                                    <TableCell>
+                                        {/* Handle both collection and confirmed bid structures */}
+                                        Rs. {item.finalPrice || item.amount}
+                                    </TableCell>
                                     <TableCell>
                                         <Chip
-                                            label={getDisplayStatus(bid.status)}
-                                            color={statusColors[bid.status] || "default"}
+                                            label={getDisplayStatus(item.status)}
+                                            color={statusColors[item.status] || "default"}
                                             sx={{ color: "#fff" }}
                                         />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2" sx={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {getLocationDisplay(item)}
+                                        </Typography>
                                     </TableCell>
                                 </TableRow>
                             ))

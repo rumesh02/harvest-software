@@ -5,7 +5,7 @@ const User = require('../models/User');
 // GET all users (for chat)
 router.get('/', async (req, res) => {
   try {
-    const users = await User.find({}, 'name role auth0Id');
+    const users = await User.find({}, 'name email role auth0Id picture');
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });

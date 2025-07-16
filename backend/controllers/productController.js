@@ -51,7 +51,9 @@ const createProduct = async (req, res) => {
       price,
       quantity,
       image,
-      farmerID
+      farmerID,
+      location,
+      address
     } = req.body;
 
     // Validate required fields
@@ -61,6 +63,11 @@ const createProduct = async (req, res) => {
         message: "Missing required fields",
         details: "All fields are required" 
       });
+    }
+    
+    // Log location data for debugging
+    if (location) {
+      console.log("Location data received:", location);
     }
 
     // Create product with validated data
@@ -72,6 +79,8 @@ const createProduct = async (req, res) => {
       originalQuantity: Number(quantity), // Add originalQuantity
       farmerID: farmerID || "default",
       image,
+      location: location || null,
+      address: address || "",
       productID: Date.now().toString(),
       listedDate: new Date(),
       description: "",

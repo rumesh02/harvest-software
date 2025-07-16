@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
   const { user, isAuthenticated } = useAuth0();
@@ -28,6 +29,12 @@ const Navbar = () => {
         {/* Navigation Links */}
         <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
           <ul className="navbar-nav align-items-center">
+            {/* Notification Bell - Only show for authenticated users */}
+            {isAuthenticated && (
+              <li className="nav-item">
+                <NotificationBell />
+              </li>
+            )}
             <li className="nav-item">
               <Link className="nav-link" to="/about">
                 About

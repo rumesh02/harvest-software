@@ -21,6 +21,7 @@ import {
   Payment as PaymentIcon,
   Info as InfoIcon,
   MarkEmailRead as MarkEmailReadIcon,
+  LocalShipping as LocalShippingIcon,
   Message as MessageIcon,
   Chat as ChatIcon
 } from '@mui/icons-material';
@@ -41,23 +42,39 @@ const NotificationBell = () => {
 
   // Fetch notifications and unread count
   useEffect(() => {
-    if (!user?.sub) return;
+    // Get user ID from Auth0 or localStorage (for farmers/merchants)
+    const userId = user?.sub || localStorage.getItem('user_id');
+    if (!userId) return;
 
     const fetchNotifications = async () => {
       try {
-        console.log('Fetching notifications for user:', user.sub);
+        console.log('🔔 Fetching notifications for user:', userId);
+        console.log('🔔 User role/type check:', {
+          hasAuth0User: !!user,
+          auth0Sub: user?.sub,
+          localStorageUserId: localStorage.getItem('user_id'),
+          finalUserId: userId
+        });
+        
         const [notificationsRes, unreadRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/notifications/${user.sub}`),
-          axios.get(`http://localhost:5000/api/notifications/unread/${user.sub}`)
+          axios.get(`http://localhost:5000/api/notifications/${userId}`),
+          axios.get(`http://localhost:5000/api/notifications/unread/${userId}`)
         ]);
 
-        console.log('Notifications fetched:', notificationsRes.data);
-        console.log('Unread count:', unreadRes.data.unreadCount);
+        console.log('📋 Notifications fetched:', notificationsRes.data);
+        console.log('🔢 Unread count:', unreadRes.data.unreadCount);
+        
+        // Filter for vehicle booking notifications to debug
+        const vehicleNotifications = notificationsRes.data.filter(n => n.type === 'vehicle_booked');
+        if (vehicleNotifications.length > 0) {
+          console.log('🚚 Vehicle booking notifications found:', vehicleNotifications);
+        }
+        
         setNotifications(notificationsRes.data);
         setUnreadCount(unreadRes.data.unreadCount);
       } catch (error) {
-        console.error('Error fetching notifications:', error);
-        console.error('Error details:', error.response?.data);
+        console.error('❌ Error fetching notifications:', error);
+        console.error('❌ Error details:', error.response?.data);
       }
     };
 
@@ -66,26 +83,28 @@ const NotificationBell = () => {
     // Refresh every 10 seconds to catch new notifications faster
     const interval = setInterval(fetchNotifications, 10000);
     return () => clearInterval(interval);
-  }, [user?.sub]);
+  }, [user]);
 
   // Listen for real-time notifications
   useEffect(() => {
-    if (!user?.sub) return;
+    // Get user ID from Auth0 or localStorage (for farmers/merchants)
+    const userId = user?.sub || localStorage.getItem('user_id');
+    if (!userId) return;
 
-    console.log('Setting up socket listeners for user:', user.sub);
+    console.log('Setting up socket listeners for user:', userId);
     
     // Join user to their specific room
-    socket.emit('join', user.sub);
+    socket.emit('join', userId);
 
     const handleBidAccepted = (data) => {
       console.log('Bid accepted event received:', data);
-      if (data.merchantId === user.sub) {
+      if (data.merchantId === userId) {
         // Refresh notifications when a bid is accepted for this merchant
         setTimeout(async () => {
           try {
             const [notificationsRes, unreadRes] = await Promise.all([
-              axios.get(`http://localhost:5000/api/notifications/${user.sub}`),
-              axios.get(`http://localhost:5000/api/notifications/unread/${user.sub}`)
+              axios.get(`http://localhost:5000/api/notifications/${userId}`),
+              axios.get(`http://localhost:5000/api/notifications/unread/${userId}`)
             ]);
 
             setNotifications(notificationsRes.data);
@@ -99,46 +118,75 @@ const NotificationBell = () => {
     };
 
     const handleNewNotification = (data) => {
-      console.log('New notification event received:', data);
-      console.log('Current user ID:', user.sub);
-      console.log('Notification user ID:', data.userId);
+      console.log('🔔 New notification event received:', data);
+      console.log('🔔 Current user ID:', userId);
+      console.log('🔔 Notification user ID:', data.userId);
+      console.log('🔔 Notification type:', data.notification?.type);
       
-      if (data.userId === user.sub) {
-        console.log('Adding notification to UI:', data.notification);
+      if (data.userId === userId) {
+        console.log('✅ Adding notification to UI:', data.notification);
         // Add the new notification to the current list
         setNotifications(prev => {
           const updated = [data.notification, ...prev];
-          console.log('Updated notifications list:', updated);
+          console.log('📋 Updated notifications list:', updated);
           return updated;
         });
         setUnreadCount(prev => {
           const newCount = prev + 1;
-          console.log('Updated unread count:', newCount);
+          console.log('🔢 Updated unread count:', newCount);
           return newCount;
         });
-        console.log('Notification added to UI for user:', user.sub);
+        console.log('✅ Notification added to UI for user:', userId);
       } else {
-        console.log('Notification not for this user, ignoring');
+        console.log('❌ Notification not for this user, ignoring');
+        console.log('❌ Expected userId:', userId, 'Received userId:', data.userId);
+      }
+    };
+
+    const handleNewBidReceived = (data) => {
+      console.log('New bid received event:', data);
+      if (data.farmerId === userId) {
+        console.log('New bid for this farmer, refreshing notifications');
+        // Refresh notifications when a new bid is received for this farmer
+        setTimeout(async () => {
+          try {
+            const [notificationsRes, unreadRes] = await Promise.all([
+              axios.get(`http://localhost:5000/api/notifications/${userId}`),
+              axios.get(`http://localhost:5000/api/notifications/unread/${userId}`)
+            ]);
+
+            setNotifications(notificationsRes.data);
+            setUnreadCount(unreadRes.data.unreadCount);
+            console.log('Notifications refreshed after new bid received');
+          } catch (error) {
+            console.error('Error refreshing notifications after new bid:', error);
+          }
+        }, 1000);
       }
     };
 
     socket.on('bidAccepted', handleBidAccepted);
     socket.on('newNotification', handleNewNotification);
+    socket.on('newBidReceived', handleNewBidReceived);
 
     return () => {
       socket.off('bidAccepted', handleBidAccepted);
       socket.off('newNotification', handleNewNotification);
+      socket.off('newBidReceived', handleNewBidReceived);
     };
-  }, [user?.sub]);
+  }, [user]);
 
   const handleClick = async (event) => {
     setAnchorEl(event.currentTarget);
     
+    // Get user ID from Auth0 or localStorage (for farmers/merchants)
+    const userId = user?.sub || localStorage.getItem('user_id');
+    
     // Fetch latest notifications when opening
-    if (!loading && user?.sub) {
+    if (!loading && userId) {
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5000/api/notifications/${user.sub}`);
+        const response = await axios.get(`http://localhost:5000/api/notifications/${userId}`);
         setNotifications(response.data);
       } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -169,8 +217,12 @@ const NotificationBell = () => {
   };
 
   const markAllAsRead = async () => {
+    // Get user ID from Auth0 or localStorage (for farmers/merchants)
+    const userId = user?.sub || localStorage.getItem('user_id');
+    if (!userId) return;
+    
     try {
-      await axios.put(`http://localhost:5000/api/notifications/read-all/${user.sub}`);
+      await axios.put(`http://localhost:5000/api/notifications/read-all/${userId}`);
       
       // Update local state
       setNotifications(prev => 
@@ -183,14 +235,16 @@ const NotificationBell = () => {
   };
 
   const forceRefreshNotifications = async () => {
-    if (!user?.sub) return;
+    // Get user ID from Auth0 or localStorage (for farmers/merchants)
+    const userId = user?.sub || localStorage.getItem('user_id');
+    if (!userId) return;
     
     setLoading(true);
     try {
-      console.log('Force refreshing notifications for user:', user.sub);
+      console.log('Force refreshing notifications for user:', userId);
       const [notificationsRes, unreadRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/notifications/${user.sub}`),
-        axios.get(`http://localhost:5000/api/notifications/unread/${user.sub}`)
+        axios.get(`http://localhost:5000/api/notifications/${userId}`),
+        axios.get(`http://localhost:5000/api/notifications/unread/${userId}`)
       ]);
 
       console.log('Force refresh - Notifications fetched:', notificationsRes.data);
@@ -212,6 +266,8 @@ const NotificationBell = () => {
         return <CancelIcon sx={{ color: '#F44336' }} />;
       case 'payment_received':
         return <PaymentIcon sx={{ color: '#2196F3' }} />;
+      case 'vehicle_booked':
+        return <LocalShippingIcon sx={{ color: '#9C27B0' }} />;
       case 'message':
         return <ChatIcon sx={{ color: '#10B981' }} />;
       default:

@@ -105,8 +105,17 @@ const Collection = () => {
                     farmerDetailsMap[order.farmerId] = {
                         name: order.farmerDetails.name,
                         phone: order.farmerDetails.phone,
+                        // For collections from new API, use the farmerRegisteredAddress
                         address: order.location?.farmerRegisteredAddress?.address,
                         district: order.location?.farmerRegisteredAddress?.district
+                    };
+                } else {
+                    // For legacy confirmed bids, try to extract from other sources
+                    farmerDetailsMap[order.farmerId] = {
+                        name: order.farmerName || 'Unknown',
+                        phone: order.farmerPhone || 'N/A',
+                        address: order.farmerAddress || order.productLocation?.farmerAddress,
+                        district: order.farmerDistrict || order.productLocation?.farmerDistrict
                     };
                 }
             });
@@ -204,14 +213,14 @@ const Collection = () => {
     const getLocationDisplay = (item) => {
         // For collections from new API
         if (item.source === 'collections') {
-            // Priority 1: Use the computed display address from the new collection model
-            if (item.location && item.location.displayAddress) {
-                return item.location.displayAddress;
-            }
-            
-            // Priority 2: Use selectedLocation address from the new collection model
+            // Priority 1: Use selectedLocation address from the new collection model (farmer's chosen location during listing)
             if (item.location && item.location.selectedLocation && item.location.selectedLocation.address) {
                 return item.location.selectedLocation.address;
+            }
+            
+            // Priority 2: Use the computed display address from the new collection model
+            if (item.location && item.location.displayAddress) {
+                return item.location.displayAddress;
             }
             
             // Priority 3: Use farmer registered address from the new collection model
@@ -229,9 +238,21 @@ const Collection = () => {
         
         // For legacy confirmed bids
         if (item.source === 'confirmedBids') {
-            // Use productLocation from confirmed bid
+            // Priority 1: Use productLocation from confirmed bid (farmer's chosen location during listing)
             if (item.productLocation && item.productLocation.address) {
                 return item.productLocation.address;
+            }
+            
+            // Priority 2: Use farmer registered address from confirmed bid
+            if (item.farmerRegisteredAddress) {
+                const { address, district } = item.farmerRegisteredAddress;
+                if (address && district) {
+                    return `${address}, ${district}`;
+                } else if (address) {
+                    return address;
+                } else if (district) {
+                    return district;
+                }
             }
         }
         
@@ -258,7 +279,7 @@ const Collection = () => {
             return farmer.district;
         }
         
-        // If no location data is available
+        // If no location data is available, return location not available
         return 'Location not available';
     };
 

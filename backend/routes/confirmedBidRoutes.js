@@ -44,7 +44,53 @@ router.get('/:id', async (req, res) => {
 router.get('/merchant/:merchantId', async (req, res) => {
   try {
     const confirmedBids = await ConfirmedBid.find({ merchantId: req.params.merchantId });
-    res.json(confirmedBids);
+    
+    // Populate farmer details for each confirmed bid
+    const User = require('../models/User');
+    const Product = require('../models/Product');
+    
+    const populatedBids = await Promise.all(
+      confirmedBids.map(async (bid) => {
+        const bidObj = bid.toObject();
+        
+        try {
+          // Fetch farmer details
+          const farmerData = await User.findOne({ auth0Id: bid.farmerId });
+          if (farmerData) {
+            bidObj.farmerDetails = {
+              name: farmerData.name,
+              phone: farmerData.phone,
+              rating: farmerData.farmerRatings || 0
+            };
+            
+            // Add farmer registered address for location fallback
+            bidObj.farmerRegisteredAddress = {
+              address: farmerData.address,
+              district: farmerData.district
+            };
+          }
+          
+          // Fetch product details for location if available
+          if (bid.items && bid.items.length > 0) {
+            const productData = await Product.findById(bid.items[0].productId);
+            if (productData && productData.location) {
+              bidObj.productLocation = {
+                coordinates: productData.location.coordinates,
+                address: productData.location.address,
+                farmerAddress: farmerData?.address,
+                farmerDistrict: farmerData?.district
+              };
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching farmer/product data for bid:', error);
+        }
+        
+        return bidObj;
+      })
+    );
+    
+    res.json(populatedBids);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

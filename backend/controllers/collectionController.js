@@ -12,7 +12,60 @@ const getMerchantCollections = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
     
-    res.json(collections);
+    // Populate farmer details for each collection if not already present
+    const populatedCollections = await Promise.all(
+      collections.map(async (collection) => {
+        // If farmer details are missing or incomplete, fetch from User model
+        if (!collection.farmerDetails || !collection.location?.farmerRegisteredAddress) {
+          try {
+            const farmerData = await User.findOne({ auth0Id: collection.farmerId });
+            if (farmerData) {
+              // Update farmer details
+              if (!collection.farmerDetails) {
+                collection.farmerDetails = {
+                  name: farmerData.name,
+                  phone: farmerData.phone,
+                  rating: farmerData.farmerRatings || 0
+                };
+              }
+              
+              // Update farmer registered address
+              if (!collection.location) {
+                collection.location = {};
+              }
+              
+              if (!collection.location.farmerRegisteredAddress) {
+                collection.location.farmerRegisteredAddress = {
+                  address: farmerData.address,
+                  district: farmerData.district
+                };
+              }
+              
+              // Update display address if not present
+              if (!collection.location.displayAddress) {
+                if (collection.location.selectedLocation && collection.location.selectedLocation.address) {
+                  collection.location.displayAddress = collection.location.selectedLocation.address;
+                } else if (farmerData.address && farmerData.district) {
+                  collection.location.displayAddress = `${farmerData.address}, ${farmerData.district}`;
+                } else if (farmerData.address) {
+                  collection.location.displayAddress = farmerData.address;
+                } else if (farmerData.district) {
+                  collection.location.displayAddress = farmerData.district;
+                } else {
+                  collection.location.displayAddress = 'Location not available';
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching farmer data for collection:', error);
+          }
+        }
+        
+        return collection;
+      })
+    );
+    
+    res.json(populatedCollections);
   } catch (error) {
     console.error('Error fetching merchant collections:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

@@ -250,6 +250,13 @@ const MessageStatus = ({ status, isOwn }) => {
 
 // Main ChatBox Component
 const ModernChatBox = ({ currentUserId, targetUserId, targetUser }) => {
+  // DEBUG: Log props received
+  console.log('🔵 ModernChatBox Props:', { 
+    currentUserId, 
+    targetUserId, 
+    targetUser: targetUser ? { _id: targetUser._id, name: targetUser.name } : null 
+  });
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -265,25 +272,106 @@ const ModernChatBox = ({ currentUserId, targetUserId, targetUser }) => {
 
   // Load chat history
   useEffect(() => {
-    if (!currentUserId || !targetUserId) return;
+    console.log('🔵 ModernChatBox useEffect - Loading messages for:', { currentUserId, targetUserId });
+    if (!currentUserId || !targetUserId) {
+      // Clear messages if no valid user IDs
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
     
+    // Clear previous messages before loading new ones
+    setMessages([]);
     setLoading(true);
-    axios.get(`http://localhost:5000/api/messages/${currentUserId}/${targetUserId}`)
-      .then(res => {
-        setMessages(res.data.map(msg => ({
-          ...msg,
-          status: msg.senderId === currentUserId ? 'read' : 'received'
-        })));
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching messages:', err);
-        setLoading(false);
-      });
     
-    // Mark message notifications as read when opening chat
-    markMessageNotificationsAsRead();
+    console.log('🔄 Clearing previous messages and loading new ones for chat:', { currentUserId, targetUserId });
+    
+    // Load messages with comprehensive error handling
+    loadMessagesForConversation(currentUserId, targetUserId);
   }, [currentUserId, targetUserId]);
+
+  // Comprehensive message loading function
+  const loadMessagesForConversation = async (user1, user2) => {
+    try {
+      console.log('� Loading conversation between:', { user1, user2 });
+      
+      const response = await axios.get(`http://localhost:5000/api/messages/${user1}/${user2}`);
+      console.log('�🔵 ModernChatBox - Full API response:', response.data);
+      
+      // Handle both possible response formats
+      let messagesData;
+      if (response.data.success && response.data.messages) {
+        // New format with success and messages wrapper
+        messagesData = response.data.messages;
+        console.log('🔵 Using new API format - Messages found:', messagesData.length);
+      } else if (Array.isArray(response.data)) {
+        // Old format - direct array
+        messagesData = response.data;
+        console.log('🔵 Using old API format - Messages found:', messagesData.length);
+      } else {
+        console.error('🔴 Unexpected API response format:', response.data);
+        messagesData = [];
+      }
+      
+      console.log('🔵 Raw messages data:', messagesData);
+      
+      // Double-check that we're only getting messages between these two users
+      const filteredMessages = messagesData.filter(msg => {
+        const isValidMessage = (
+          (msg.senderId === user1 && msg.receiverId === user2) ||
+          (msg.senderId === user2 && msg.receiverId === user1)
+        );
+        
+        if (!isValidMessage) {
+          console.warn('🚨 Invalid message found:', {
+            messageId: msg._id,
+            senderId: msg.senderId,
+            receiverId: msg.receiverId,
+            expectedUsers: { user1, user2 }
+          });
+        }
+        
+        return isValidMessage;
+      });
+      
+      // Sort messages by timestamp to ensure chronological order
+      const sortedMessages = filteredMessages.sort((a, b) => {
+        const timeA = new Date(a.timestamp || a.createdAt || 0);
+        const timeB = new Date(b.timestamp || b.createdAt || 0);
+        return timeA - timeB; // Oldest first
+      });
+      
+      console.log('🔵 Filtered and sorted messages count:', sortedMessages.length);
+      console.log('🔵 Sample messages:', sortedMessages.slice(0, 3));
+      console.log('🔵 Last 3 messages:', sortedMessages.slice(-3));
+      
+      // Set messages with proper status
+      const processedMessages = sortedMessages.map(msg => ({
+        ...msg,
+        status: msg.senderId === user1 ? 'read' : 'received'
+      }));
+      
+      setMessages(processedMessages);
+      setLoading(false);
+      
+      console.log('✅ Messages loaded successfully for conversation:', { user1, user2, count: processedMessages.length });
+      
+    } catch (error) {
+      console.error('🔴 ModernChatBox - Error fetching messages:', error);
+      console.error('🔴 Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      setMessages([]); // Clear messages on error
+      setLoading(false);
+    } finally {
+      // Mark message notifications as read when opening chat
+      markMessageNotificationsAsRead();
+    }
+  };
 
   // Mark message notifications from this user as read
   const markMessageNotificationsAsRead = async () => {
@@ -311,18 +399,50 @@ const ModernChatBox = ({ currentUserId, targetUserId, targetUser }) => {
   useEffect(() => {
     if (!currentUserId || !targetUserId) return;
 
+    console.log('🔵 Setting up socket for chat between:', { currentUserId, targetUserId });
+
+    // Clean up any existing listeners first
+    socket.off('receiveMessage');
+    socket.off('userTyping');
+    socket.off('userOnline');
+
+    // Join the specific room for this conversation
     socket.emit('joinRoom', { senderId: currentUserId, receiverId: targetUserId });
     socket.emit('join', currentUserId);
 
-    socket.on('receiveMessage', (message) => {
-      if (
+    // Create a unique message handler for this specific chat
+    const messageHandler = (message) => {
+      console.log('🔵 Socket message received:', message);
+      console.log('🔵 Current chat context:', { currentUserId, targetUserId });
+      
+      // STRICT filtering: only accept messages between current user and target user
+      const isValidMessage = (
         (message.senderId === currentUserId && message.receiverId === targetUserId) ||
         (message.senderId === targetUserId && message.receiverId === currentUserId)
-      ) {
-        setMessages(prev => [...prev, {
-          ...message,
-          status: message.senderId === currentUserId ? 'sent' : 'received'
-        }]);
+      );
+      
+      if (isValidMessage) {
+        console.log('✅ Message is valid for current chat, adding to messages');
+        setMessages(prev => {
+          // Prevent duplicate messages
+          const messageExists = prev.some(msg => 
+            msg._id === message._id || 
+            (msg.senderId === message.senderId && 
+             msg.receiverId === message.receiverId && 
+             msg.message === message.message && 
+             Math.abs(new Date(msg.createdAt) - new Date(message.createdAt)) < 1000)
+          );
+          
+          if (messageExists) {
+            console.log('⚠️ Duplicate message detected, skipping');
+            return prev;
+          }
+          
+          return [...prev, {
+            ...message,
+            status: message.senderId === currentUserId ? 'sent' : 'received'
+          }];
+        });
         
         // Mark message as read if we're the receiver
         if (message.receiverId === currentUserId) {
@@ -341,28 +461,40 @@ const ModernChatBox = ({ currentUserId, targetUserId, targetUser }) => {
             });
           }
         }
+      } else {
+        console.log('❌ Message rejected - not for current chat:', {
+          messageFrom: message.senderId,
+          messageTo: message.receiverId,
+          currentChat: { currentUserId, targetUserId }
+        });
       }
-    });
+    };
 
-    socket.on('userTyping', ({ userId, typing: isTyping }) => {
+    const typingHandler = ({ userId, typing: isTyping }) => {
       if (userId === targetUserId) {
         setTyping(isTyping);
       }
-    });
+    };
 
-    socket.on('userOnline', ({ userId, online }) => {
+    const onlineHandler = ({ userId, online }) => {
       if (userId === targetUserId) {
         setIsOnline(online);
         if (!online) {
           setLastSeen(new Date());
         }
       }
-    });
+    };
+
+    // Set up the listeners
+    socket.on('receiveMessage', messageHandler);
+    socket.on('userTyping', typingHandler);
+    socket.on('userOnline', onlineHandler);
 
     return () => {
-      socket.off('receiveMessage');
-      socket.off('userTyping');
-      socket.off('userOnline');
+      console.log('🔵 Cleaning up socket listeners for chat:', { currentUserId, targetUserId });
+      socket.off('receiveMessage', messageHandler);
+      socket.off('userTyping', typingHandler);
+      socket.off('userOnline', onlineHandler);
     };
   }, [currentUserId, targetUserId]);
 
@@ -505,6 +637,30 @@ const ModernChatBox = ({ currentUserId, targetUserId, targetUser }) => {
   };
 
   const groupedMessages = groupMessagesByDate(messages);
+
+  // Debug function to manually test message loading
+  const debugLoadMessages = () => {
+    console.log('🔧 DEBUG: Manual message reload triggered');
+    if (currentUserId && targetUserId) {
+      loadMessagesForConversation(currentUserId, targetUserId);
+    } else {
+      console.error('🔧 DEBUG: Missing user IDs', { currentUserId, targetUserId });
+    }
+  };
+
+  // Expose debug function to window for testing
+  useEffect(() => {
+    if (currentUserId && targetUserId) {
+      window.debugChatBox = {
+        reloadMessages: debugLoadMessages,
+        currentUsers: { currentUserId, targetUserId },
+        messagesCount: messages.length
+      };
+    }
+    return () => {
+      delete window.debugChatBox;
+    };
+  }, [currentUserId, targetUserId, messages.length]);
 
   if (loading) {
     return (

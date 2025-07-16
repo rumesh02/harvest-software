@@ -173,10 +173,46 @@ const ChatContainer = ({ currentUserId }) => {
   };
 
   const handleChatSelect = (chat) => {
-    const user = allUsers.find((u) => u.auth0Id === chat.userId);
-    if (user) {
-      setSelectedUser(user);
+    console.log('📱 ChatContainer - handleChatSelect called:', {
+      chatUserId: chat.userId,
+      chatName: chat.name,
+      currentUserId: currentUserId,
+      allUsersCount: allUsers.length
+    });
+    
+    // Validate that we're not selecting ourselves
+    if (chat.userId === currentUserId) {
+      console.error('❌ ERROR: Cannot select chat with self! chat.userId === currentUserId:', chat.userId);
+      return;
     }
+    
+    // Clear previous selection first to prevent state mixing
+    console.log('🔄 Clearing previous selected user before setting new one');
+    setSelectedUser(null);
+    
+    // Small delay to ensure state is cleared
+    setTimeout(() => {
+      const user = allUsers.find((u) => u.auth0Id === chat.userId);
+      console.log('👤 Found user in allUsers:', user);
+      
+      if (user) {
+        // Double-check user is not the current user
+        if (user.auth0Id === currentUserId) {
+          console.error('❌ ERROR: Found user is the same as current user! Aborting selection.');
+          return;
+        }
+        
+        console.log('✅ Setting selected user:', {
+          selectedUserAuth0Id: user.auth0Id,
+          selectedUserName: user.name,
+          currentUserId: currentUserId
+        });
+        setSelectedUser(user);
+      } else {
+        console.error('❌ User not found in allUsers for chat.userId:', chat.userId);
+        console.log('📋 Available users:', allUsers.map(u => ({ id: u.auth0Id, name: u.name })));
+      }
+    }, 100);
   };
 
   const handleUserSearchSelect = (user) => {
@@ -369,7 +405,19 @@ const ChatContainer = ({ currentUserId }) => {
         }}
       >
         {selectedUser ? (
-          <ModernChatBox currentUserId={currentUserId} targetUserId={selectedUser.auth0Id} targetUser={selectedUser} />
+          <>
+            {console.log('🔵 ChatContainer - Rendering ModernChatBox with:', { 
+              currentUserId, 
+              targetUserId: selectedUser.auth0Id, 
+              selectedUser: { _id: selectedUser._id, name: selectedUser.name, auth0Id: selectedUser.auth0Id }
+            })}
+            <ModernChatBox 
+              key={`${currentUserId}-${selectedUser.auth0Id}`}
+              currentUserId={currentUserId} 
+              targetUserId={selectedUser.auth0Id} 
+              targetUser={selectedUser} 
+            />
+          </>
         ) : (
           <Box sx={{ 
             display: 'flex', 

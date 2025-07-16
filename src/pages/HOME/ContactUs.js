@@ -133,12 +133,7 @@ const ContactUs = () => {
                 fontWeight: 'bold',
                 color: '#f8b400',
                 textTransform: 'uppercase',
-                letterSpacing: '2px',
-                animation: isVisible ? 'glowText 2s infinite alternate ease-in-out' : 'none',
-                '@keyframes glowText': {
-                  from: { textShadow: '0 0 5px rgba(255, 215, 0, 0.5)' },
-                  to: { textShadow: '0 0 20px rgba(255, 215, 0, 0.8)' }
-                }
+                letterSpacing: '2px'
               }}
             >
               Contact Us
@@ -244,13 +239,7 @@ const ContactUs = () => {
               justifyContent: 'center',
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? 'translateX(0)' : 'translateX(50px)',
-              transition: 'opacity 1s ease-out, transform 1s ease-out',
-              animation: isVisible ? 'floatUpDown 4s infinite ease-in-out' : 'none',
-              '@keyframes floatUpDown': {
-                '0%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
-                '100%': { transform: 'translateY(0)' }
-              }
+              transition: 'opacity 1s ease-out, transform 1s ease-out'
             }}
           >
             <Box

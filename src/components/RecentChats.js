@@ -79,21 +79,35 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
 
     try {
       setError(null);
+      console.log('🔍 Fetching recent chats for userId:', userId);
       const response = await axios.get(`http://localhost:5000/api/messages/recent/${userId}`);
       
       if (!mountedRef.current) return;
 
       let apiChats = response.data || [];
+      console.log('📋 API Response - Recent chats:', apiChats);
+      
+      // Validate that each chat has correct userId
+      apiChats.forEach((chat, index) => {
+        if (chat.userId === userId) {
+          console.warn(`⚠️ WARNING: Chat ${index} has same userId as current user. This might cause message mixing!`, {
+            chatUserId: chat.userId,
+            currentUserId: userId,
+            chatName: chat.name
+          });
+        }
+      });
       
       // Merge with localStorage data
       const localChats = loadFromLocalStorage();
       const mergedChats = mergeChats(apiChats, localChats);
       
+      console.log('🔄 Merged chats:', mergedChats);
       setRecentChats(mergedChats);
       saveToLocalStorage(mergedChats);
       
     } catch (error) {
-      console.error('Error fetching recent chats:', error);
+      console.error('❌ Error fetching recent chats:', error);
       if (!mountedRef.current) return;
       
       setError(error.message);
@@ -282,7 +296,20 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
   }, [addNewChat, updateChatMessage, clearUnreadCount]);
 
   const handleChatClick = (chat) => {
+    console.log('🖱️ Chat clicked:', {
+      chatUserId: chat.userId,
+      chatName: chat.name,
+      currentUserId: userId,
+      fullChatObject: chat
+    });
+    
     if (onChatSelect && chat) {
+      // Validate that we're not selecting our own chat
+      if (chat.userId === userId) {
+        console.error('❌ ERROR: Trying to open chat with self! This will cause message mixing.');
+        return;
+      }
+      
       // Clear unread count when chat is selected
       clearUnreadCount(chat.userId);
       onChatSelect(chat);

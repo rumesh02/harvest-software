@@ -310,6 +310,9 @@ router.get('/recent/:userId', async (req, res) => {
         }
       },
       {
+        $sort: { timestamp: -1 }
+      },
+      {
         $addFields: {
           otherUser: {
             $cond: {
@@ -323,7 +326,7 @@ router.get('/recent/:userId', async (req, res) => {
       {
         $group: {
           _id: '$otherUser',
-          lastMessage: { $last: '$$ROOT' },
+          lastMessage: { $first: '$$ROOT' },
           unreadCount: {
             $sum: {
               $cond: [
@@ -360,7 +363,7 @@ router.get('/recent/:userId', async (req, res) => {
         name: user?.name || 'Unknown User',
         role: user?.role || 'Unknown',
         picture: user?.picture || '',
-        lastMessage: conv.lastMessage.message,
+        lastMessage: conv.lastMessage.message || '',
         lastMessageTime: conv.lastMessage.timestamp,
         unreadCount: conv.unreadCount
       };

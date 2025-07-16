@@ -181,7 +181,17 @@ const PlaceBids = () => {
       <Typography variant="h4" fontWeight={600} mb={3} sx={{ color: "#D97706", fontSize: "2.2rem" }}>
         🛒 Selected Products
       </Typography>
-      <Grid container spacing={3}>
+      <Grid 
+        container 
+        spacing={{ xs: 1, sm: 2, md: 3 }}
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-start',
+          alignItems: 'stretch',
+          width: '100%',
+          margin: 0
+        }}
+      >
         {cartItems.map((product, index) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
             <Card sx={{
@@ -307,6 +317,7 @@ const PlaceBids = () => {
           </Grid>
         ))}
       </Grid>
+      
       {/* Dialog for entering bid details */}
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth
         PaperProps={{
@@ -327,7 +338,8 @@ const PlaceBids = () => {
             sx={{
               color: '#D97706',
               fontWeight: 'bold',
-              marginBottom: "20px"
+              mb: { xs: 2, sm: 3 },
+              fontSize: { xs: '1.1rem', sm: '1.25rem' }
             }}
           >
             Product: {selectedProduct?.name}
@@ -336,7 +348,13 @@ const PlaceBids = () => {
             <Typography variant="body2" sx={{ color: '#B45309' }}>
               <strong>Available Quantity:</strong> {selectedProduct?.quantity} kg
             </Typography>
-            <Typography variant="body2" sx={{ color: '#B45309' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#B45309',
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              }}
+            >
               <strong>Listed Price:</strong> Rs. {selectedProduct?.price}
             </Typography>
           </Box>
@@ -350,10 +368,7 @@ const PlaceBids = () => {
             helperText={`Must be at least Rs. ${selectedProduct?.price}`}
             inputProps={{ min: selectedProduct?.price || 0 }}
             variant="outlined"
-            InputLabelProps={{
-              shrink: true,
-              style: { marginTop: 0, fontSize: '18px' }
-            }}
+            InputLabelProps={{ shrink: true }}
           />
           <TextField
             label="Order Weight (kg)"
@@ -369,33 +384,58 @@ const PlaceBids = () => {
             }}
             sx={{ background: 'white', borderRadius: '10px' }}
             variant="outlined"
-            InputLabelProps={{
-              shrink: true,
-              style: { marginTop: 0, fontSize: '18px' }
-            }}
+            InputLabelProps={{ shrink: true }}
           />
           {orderWeight && selectedProduct && (
             <Box sx={{ mt: 2, p: 2, backgroundColor: '#FEF3C7', borderRadius: 1, border: '1.5px solid #FFD29D' }}>
               <Typography variant="body2" sx={{ color: '#92400E' }}>
                 <strong>Order Summary:</strong>
               </Typography>
-              <Typography variant="body2" sx={{ color: '#92400E' }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#92400E',
+                  mb: 0.5,
+                  fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                }}
+              >
                 Weight: {orderWeight} kg
               </Typography>
-              <Typography variant="body2" sx={{ color: '#92400E' }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#92400E',
+                  fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                }}
+              >
                 Total Bid Value: Rs. {(Number(bidAmount) * Number(orderWeight)).toFixed(2)}
               </Typography>
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="secondary">
+        <DialogActions sx={{ 
+          borderTop: '1px solid #E5E7EB',
+          padding: { xs: '12px 16px', sm: '16px 24px' },
+          gap: { xs: 1, sm: 2 }
+        }}>
+          <Button 
+            onClick={handleClose}
+            size="small"
+            sx={{
+              color: '#6B7280',
+              fontSize: { xs: '0.875rem', sm: '1rem' },
+              padding: { xs: '6px 12px', sm: '8px 16px' },
+              '&:hover': {
+                backgroundColor: '#F3F4F6'
+              }
+            }}
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSubmitBid}
-            color="primary"
             variant="contained"
+            size="small"
             disabled={!bidAmount || !orderWeight || Number(orderWeight) > Number(selectedProduct?.quantity)}
             sx={{
               backgroundColor: "#D97706",

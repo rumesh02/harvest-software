@@ -23,6 +23,8 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const fileRoutes = require('./routes/fileRoutes');
+const emojiRoutes = require('./routes/emojiRoutes');
 
 const Order = require('./models/Order');
 
@@ -83,6 +85,8 @@ app.use(farmerDashboardRoutes);
 app.use('/api/dashboard', transporterdashboardRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/files', fileRoutes);
+app.use('/api/emojis', emojiRoutes);
 
 // PayHere Notification Webhook
 app.post('/api/payments/payhere-notify', async (req, res) => {

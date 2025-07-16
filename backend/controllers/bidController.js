@@ -1,4 +1,5 @@
 const { MongoClient, ObjectId } = require("mongodb");
+const Notification = require('../models/Notification');
 
 const uri = "mongodb+srv://Piyumi:Piyu123@harvest-software.tgbx7.mongodb.net/harvest-sw?retryWrites=true&w=majority";
 
@@ -80,6 +81,62 @@ const createBid = async (req, res) => {
       });
     }
 
+    // Create notification for farmer when a merchant places a bid
+    try {
+      console.log('Creating farmer notification for new bid...');
+      console.log('Farmer ID:', farmerId);
+      console.log('Merchant details:', { merchantId, merchantName });
+      console.log('Bid details:', { productName, bidAmount, orderWeight });
+      
+      const farmerNotification = new Notification({
+        userId: farmerId,
+        title: '🎯 New Bid Received!',
+        message: `${merchantName || 'A merchant'} has placed a bid of Rs. ${bidAmount} per kg for your ${productName}. Total order: ${orderWeight} kg`,
+        type: 'general',
+        relatedId: result.insertedId.toString(),
+        metadata: {
+          bidId: result.insertedId.toString(),
+          productName: productName,
+          amount: bidAmount * orderWeight,
+          merchantId: merchantId,
+          merchantName: merchantName || 'Merchant'
+        }
+      });
+      
+      const savedFarmerNotification = await farmerNotification.save();
+      console.log('✅ Farmer notification for new bid created successfully:', savedFarmerNotification);
+
+      // Emit socket event for farmer notification
+      const io = req.app.get('io');
+      if (io) {
+        console.log('🔔 Emitting farmer notification via socket for new bid');
+        console.log('Socket event data:', {
+          userId: farmerId,
+          notification: savedFarmerNotification
+        });
+        
+        // Emit both events for compatibility
+        io.emit('newBidReceived', {
+          farmerId: farmerId,
+          notification: savedFarmerNotification
+        });
+        
+        // Also emit the standard newNotification event that NotificationBell listens for
+        io.emit('newNotification', {
+          userId: farmerId,
+          notification: savedFarmerNotification
+        });
+        
+        console.log('✅ Socket events emitted successfully');
+      } else {
+        console.log('❌ Socket.io instance not available - notification will only be visible after refresh');
+      }
+    } catch (notificationError) {
+      console.error('❌ Error creating farmer notification for new bid:', notificationError);
+      console.error('Notification error details:', notificationError.message);
+      // Don't fail the bid creation if notification creation fails
+    }
+
     res.status(201).json({
       message: "Bid created successfully!",
       bid: { ...newBid, _id: result.insertedId },
@@ -146,6 +203,56 @@ const acceptBid = async (req, res) => {
     // Get the updated product to return current quantity
     const updatedProduct = await productsCollection.findOne({ _id: new ObjectId(bid.productId) });
 
+    // Create notification for merchant when bid is accepted
+    try {
+      console.log('Creating notification for bid acceptance...');
+      console.log('Bid details:', {
+        merchantId: bid.merchantId,
+        productName: bid.productName,
+        bidAmount: bid.bidAmount,
+        orderWeight: bid.orderWeight
+      });
+      
+      const notification = new Notification({
+        userId: bid.merchantId,
+        title: '🎉 Your Bid was Accepted!',
+        message: `Your bid of Rs. ${bid.bidAmount} per kg for ${bid.productName} has been accepted by the farmer.`,
+        type: 'bid_accepted',
+        relatedId: bidId,
+        metadata: {
+          bidId: bidId,
+          productName: bid.productName,
+          amount: bid.bidAmount * bid.orderWeight,
+          farmerId: bid.farmerId,
+          farmerName: 'Farmer' // You can get farmer name from users collection if needed
+        }
+      });
+      
+      const savedNotification = await notification.save();
+      console.log('Notification saved successfully:', savedNotification);
+
+      // Emit socket event for real-time notification updates
+      if (io) {
+        console.log('Emitting socket event for notification...');
+        io.emit('newNotification', {
+          userId: bid.merchantId,
+          notification: savedNotification
+        });
+        console.log('Notification socket event emitted for:', bid.merchantId);
+        
+        // Also emit to specific user room if they're connected
+        io.to(bid.merchantId).emit('newNotification', {
+          userId: bid.merchantId,
+          notification: savedNotification
+        });
+      } else {
+        console.log('Socket IO instance not available');
+      }
+    } catch (notificationError) {
+      console.error('Error creating notification:', notificationError);
+      // Don't fail the bid acceptance if notification creation fails
+    }
+
     client.close();
     
     // Emit socket event for real-time updates
@@ -189,6 +296,9 @@ const rejectBid = async (req, res) => {
     const client = await MongoClient.connect(uri);
     const db = client.db("harvest-sw");
     const bidsCollection = db.collection("bids");
+    
+    // Get the global io instance
+    const io = req.app.get('io');
 
     // Find the bid to get productId and orderWeight
     const bid = await bidsCollection.findOne({ _id: new ObjectId(bidId) });
@@ -207,6 +317,47 @@ const rejectBid = async (req, res) => {
         }
       }
     );
+
+    // Create notification for merchant when bid is rejected
+    try {
+      console.log('Creating merchant notification for bid rejection...');
+      
+      const merchantNotification = new Notification({
+        userId: bid.merchantId,
+        title: '❌ Your Bid was Rejected',
+        message: `Your bid of Rs. ${bid.bidAmount} per kg for ${bid.productName} has been rejected by the farmer.`,
+        type: 'bid_rejected',
+        relatedId: bidId,
+        metadata: {
+          bidId: bidId,
+          productName: bid.productName,
+          amount: bid.bidAmount * bid.orderWeight,
+          farmerId: bid.farmerId,
+          farmerName: 'Farmer'
+        }
+      });
+      
+      const savedMerchantNotification = await merchantNotification.save();
+      console.log('Merchant notification saved successfully:', savedMerchantNotification);
+
+      // Emit socket event for merchant notification
+      if (io) {
+        console.log('Emitting socket event for merchant notification...');
+        io.emit('newNotification', {
+          userId: bid.merchantId,
+          notification: savedMerchantNotification
+        });
+        console.log('Merchant notification socket event emitted for:', bid.merchantId);
+        
+        // Also emit to specific merchant room if they're connected
+        io.to(bid.merchantId).emit('newNotification', {
+          userId: bid.merchantId,
+          notification: savedMerchantNotification
+        });
+      }
+    } catch (merchantNotificationError) {
+      console.error('Error creating merchant notification:', merchantNotificationError);
+    }
 
     client.close();
     res.json({
@@ -290,16 +441,6 @@ const updateBidStatus = async (req, res) => {
       error: error.message
     });
   }
-};
-
-const handleAcceptBid = async (bidId, productId) => {
-  // ...call backend to accept bid...
-  await refreshCartProduct(productId);
-};
-
-const handleRejectBid = async (bidId, productId) => {
-  // ...call backend to reject bid...
-  await refreshCartProduct(productId);
 };
 
 module.exports = {

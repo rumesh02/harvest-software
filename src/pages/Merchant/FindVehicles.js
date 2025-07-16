@@ -131,9 +131,10 @@ const FindVehicles = () => {
       return;
     }
 
-    console.log({
+    console.log('🚚 Booking Debug Info:', {
       vehicleId: selectedVehicle._id,
       transporterId: selectedVehicle.transporterId,
+      transporterIdType: typeof selectedVehicle.transporterId,
       phone: bookingForm.phone,
       startLocation: bookingForm.startLocation,
       endLocation: bookingForm.endLocation,
@@ -141,6 +142,8 @@ const FindVehicles = () => {
       weight: bookingForm.weight,
       weightIsNumber: !isNaN(Number(bookingForm.weight)),
     });
+    
+    console.log('🚚 Selected Vehicle Full Object:', selectedVehicle);
 
     const bookingData = {
       vehicleId: selectedVehicle._id,
@@ -155,6 +158,7 @@ const FindVehicles = () => {
 
     try {
       await createBooking(bookingData);
+      alert("🚚 Vehicle booking successful! The transporter has been notified and will contact you soon.");
       handleCloseModal();
     } catch (err) {
       alert("Booking failed: " + (err.response?.data?.error || err.message));

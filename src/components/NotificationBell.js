@@ -20,7 +20,9 @@ import {
   Cancel as CancelIcon,
   Payment as PaymentIcon,
   Info as InfoIcon,
-  MarkEmailRead as MarkEmailReadIcon
+  MarkEmailRead as MarkEmailReadIcon,
+  Message as MessageIcon,
+  Chat as ChatIcon
 } from '@mui/icons-material';
 import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
@@ -210,9 +212,86 @@ const NotificationBell = () => {
         return <CancelIcon sx={{ color: '#F44336' }} />;
       case 'payment_received':
         return <PaymentIcon sx={{ color: '#2196F3' }} />;
+      case 'message':
+        return <ChatIcon sx={{ color: '#10B981' }} />;
       default:
         return <InfoIcon sx={{ color: '#FF9800' }} />;
     }
+  };
+
+  const handleNotificationClick = async (notification) => {
+    if (notification.isRead) return;
+
+    // Mark as read
+    await markAsRead(notification._id);
+
+    // Handle different notification types
+    if (notification.type === 'message') {
+      // For message notifications, we can trigger chat opening
+      if (window.handleMessageNotificationClick) {
+        window.handleMessageNotificationClick(notification.metadata.senderId);
+      }
+      // Close the notification popup
+      handleClose();
+    }
+  };
+
+  const renderMessageNotification = (notification) => {
+    const { metadata } = notification;
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Avatar
+          src={metadata?.senderPicture}
+          sx={{ 
+            width: 32, 
+            height: 32,
+            border: '2px solid #10B981'
+          }}
+        >
+          {metadata?.senderName?.charAt(0).toUpperCase()}
+        </Avatar>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              fontWeight: notification.isRead ? 400 : 600,
+              color: '#374151',
+              fontSize: '0.9rem'
+            }}
+          >
+            {metadata?.senderName || 'Unknown User'}
+          </Typography>
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ 
+              fontSize: '0.8rem',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {metadata?.messagePreview || notification.message}
+          </Typography>
+          {metadata?.senderRole && (
+            <Chip
+              label={metadata.senderRole}
+              size="small"
+              sx={{ 
+                height: 16, 
+                fontSize: '0.6rem', 
+                mt: 0.5,
+                backgroundColor: metadata.senderRole === 'farmer' ? '#059669' : 
+                                metadata.senderRole === 'merchant' ? '#dc2626' : 
+                                metadata.senderRole === 'transporter' ? '#2563eb' : '#6b7280',
+                color: 'white',
+                textTransform: 'capitalize'
+              }}
+            />
+          )}
+        </Box>
+      </Box>
+    );
   };
 
   const formatTime = (timestamp) => {
@@ -351,52 +430,67 @@ const NotificationBell = () => {
                         backgroundColor: notification.isRead ? '#F9FAFB' : '#FFF3CD'
                       }
                     }}
-                    onClick={() => !notification.isRead && markAsRead(notification._id)}
+                    onClick={() => handleNotificationClick(notification)}
                   >
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: 'transparent' }}>
-                        {getNotificationIcon(notification.type)}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              fontWeight: notification.isRead ? 400 : 600,
-                              color: '#374151',
-                              flex: 1,
-                              mr: 1
-                            }}
-                          >
-                            {notification.title}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {formatTime(notification.createdAt)}
-                          </Typography>
-                        </Box>
-                      }
-                      secondary={
-                        <Box sx={{ mt: 0.5 }}>
-                          <Typography 
-                            variant="body2" 
-                            color="text.secondary"
-                            sx={{ fontSize: '0.85rem' }}
-                          >
-                            {notification.message}
-                          </Typography>
-                          {notification.metadata?.amount && (
-                            <Chip
-                              label={`Rs. ${notification.metadata.amount}`}
-                              size="small"
-                              color="primary"
-                              sx={{ mt: 0.5, fontSize: '0.7rem', height: 20 }}
-                            />
-                          )}
-                        </Box>
-                      }
-                    />
+                    {notification.type === 'message' ? (
+                      <ListItemText
+                        primary={
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            {renderMessageNotification(notification)}
+                            <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                              {formatTime(notification.createdAt)}
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                    ) : (
+                      <>
+                        <ListItemAvatar>
+                          <Avatar sx={{ bgcolor: 'transparent' }}>
+                            {getNotificationIcon(notification.type)}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <Typography 
+                                variant="body2" 
+                                sx={{ 
+                                  fontWeight: notification.isRead ? 400 : 600,
+                                  color: '#374151',
+                                  flex: 1,
+                                  mr: 1
+                                }}
+                              >
+                                {notification.title}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {formatTime(notification.createdAt)}
+                              </Typography>
+                            </Box>
+                          }
+                          secondary={
+                            <Box sx={{ mt: 0.5 }}>
+                              <Typography 
+                                variant="body2" 
+                                color="text.secondary"
+                                sx={{ fontSize: '0.85rem' }}
+                              >
+                                {notification.message}
+                              </Typography>
+                              {notification.metadata?.amount && (
+                                <Chip
+                                  label={`Rs. ${notification.metadata.amount}`}
+                                  size="small"
+                                  color="primary"
+                                  sx={{ mt: 0.5, fontSize: '0.7rem', height: 20 }}
+                                />
+                              )}
+                            </Box>
+                          }
+                        />
+                      </>
+                    )}
                   </ListItem>
                   {index < notifications.length - 1 && (
                     <Divider sx={{ my: 0.5 }} />

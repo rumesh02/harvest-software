@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Collection = require('../models/collectionModel');
 const Product = require('../models/Product');
 const User = require('../models/User');
@@ -270,8 +271,83 @@ const migrateConfirmedBidsToCollections = async (req, res) => {
   }
 };
 
+// Get farmer collections with bid details
+const getFarmerCollections = async (req, res) => {
+  try {
+    const { farmerId } = req.params;
+    console.log('Fetching collections for farmer:', farmerId);
+    
+    // Aggregate to get collections where the bid belongs to this farmer
+    const collections = await Collection.aggregate([
+      {
+        $lookup: {
+          from: 'confirmedbids',
+          localField: 'bidId',
+          foreignField: '_id',
+          as: 'bidDetails'
+        }
+      },
+      {
+        $unwind: '$bidDetails'
+      },
+      {
+        $match: {
+          'bidDetails.farmerId': new mongoose.Types.ObjectId(farmerId)
+        }
+      },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'bidDetails.productId',
+          foreignField: '_id',
+          as: 'productDetails'
+        }
+      },
+      {
+        $unwind: '$productDetails'
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'bidDetails.merchantId',
+          foreignField: '_id',
+          as: 'merchantDetails'
+        }
+      },
+      {
+        $unwind: '$merchantDetails'
+      },
+      {
+        $project: {
+          bidId: '$bidDetails._id',
+          productName: '$productDetails.name',
+          quantity: '$bidDetails.quantity',
+          price: '$bidDetails.price',
+          status: '$status',
+          selectedForCollection: '$selectedForCollection',
+          merchantName: '$merchantDetails.name',
+          merchantEmail: '$merchantDetails.email',
+          transportDetails: '$transportDetails',
+          createdAt: '$createdAt',
+          updatedAt: '$updatedAt'
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
+
+    console.log(`Found ${collections.length} collections for farmer ${farmerId}`);
+    res.json(collections);
+  } catch (error) {
+    console.error('Error fetching farmer collections:', error);
+    res.status(500).json({ message: 'Error fetching collections', error: error.message });
+  }
+};
+
 module.exports = {
   getMerchantCollections,
+  getFarmerCollections,
   createCollectionFromConfirmedBid,
   updateCollectionStatus,
   updateCollectionSelection,

@@ -40,6 +40,17 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// GET - Get all confirmed bids (for general use like farmer order tracking)
+router.get('/', async (req, res) => {
+  try {
+    const confirmedBids = await ConfirmedBid.find({});
+    res.json(confirmedBids);
+  } catch (error) {
+    console.error('Error fetching all confirmed bids:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // GET - Get all confirmed bids for a merchant
 router.get('/merchant/:merchantId', async (req, res) => {
   try {
@@ -93,6 +104,17 @@ router.get('/merchant/:merchantId', async (req, res) => {
     res.json(populatedBids);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// GET - Get all confirmed bids for a farmer
+router.get('/farmer/:farmerId', async (req, res) => {
+  try {
+    const confirmedBids = await ConfirmedBid.find({ farmerId: req.params.farmerId });
+    res.json(confirmedBids);
+  } catch (error) {
+    console.error('Error fetching farmer confirmed bids:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

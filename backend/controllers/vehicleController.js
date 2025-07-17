@@ -6,7 +6,7 @@ const User = require('../models/User'); // Import your User model
 // @route   POST /api/vehicles
 // @access  Public
 const addVehicle = asyncHandler(async (req, res) => {
-  const { vehicleType, licensePlate, loadCapacity, transporterId, district } = req.body;
+  const { vehicleType, licensePlate, loadCapacity, pricePerKm, transporterId, district } = req.body;
 
   const vehicleExists = await Vehicle.findOne({ licensePlate });
   if (vehicleExists) {
@@ -24,6 +24,7 @@ const addVehicle = asyncHandler(async (req, res) => {
     vehicleType,
     licensePlate,
     loadCapacity,
+    pricePerKm,
     transporterId, // Auth0 user.sub
     district,
     image,
@@ -70,6 +71,7 @@ const updateVehicle = asyncHandler(async (req, res) => {
   vehicle.vehicleType = req.body.vehicleType || vehicle.vehicleType;
   vehicle.licensePlate = req.body.licensePlate || vehicle.licensePlate;
   vehicle.loadCapacity = req.body.loadCapacity || vehicle.loadCapacity;
+  vehicle.pricePerKm = req.body.pricePerKm || vehicle.pricePerKm;
   
   // Update image if provided
   if (req.file) {

@@ -16,6 +16,7 @@ export default function EditListed() {
     vehicleType: "",
     licensePlate: "",
     loadCapacity: "",
+    pricePerKm: "",
     file: null,
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -47,6 +48,7 @@ export default function EditListed() {
       vehicleType: vehicle.vehicleType,
       licensePlate: vehicle.licensePlate,
       loadCapacity: vehicle.loadCapacity,
+      pricePerKm: vehicle.pricePerKm || "",
       file: null,
     });
     setShowModal(true);
@@ -138,6 +140,9 @@ export default function EditListed() {
                 <p className="load-capacity">
                   Capacity: {vehicle.loadCapacity}
                 </p>
+                <p className="price-per-km">
+                  Price: Rs. {vehicle.pricePerKm || 'Not set'}/km
+                </p>
               </div>
 
               <div className="card-actions" style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "8px" }}>
@@ -182,6 +187,16 @@ export default function EditListed() {
                     name="loadCapacity"
                     value={editFields.loadCapacity}
                     onChange={handleFieldChange}
+                  />
+                  <label>Price per KM (Rs.)</label>
+                  <input
+                    type="number"
+                    name="pricePerKm"
+                    value={editFields.pricePerKm}
+                    onChange={handleFieldChange}
+                    placeholder="Enter price per kilometer"
+                    min="0"
+                    step="0.01"
                   />
                   <label>Change Image (optional)</label>
                   <input

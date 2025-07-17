@@ -141,11 +141,16 @@ const ListNewItem = () => {
       if (response.status === 201) {
         setSubmitStatus({
           type: "success",
-          message: "Product listed successfully!"
+          message: `🎉 Success! Your ${formData.harvestName} listing has been added to the marketplace. Buyers can now discover and bid on your harvest!`
         });
 
-        // Reset form
-        handleReset();
+        // Scroll to top to show success message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Reset form after a short delay to let user see the success message
+        setTimeout(() => {
+          handleReset();
+        }, 3000);
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -253,7 +258,20 @@ const ListNewItem = () => {
         {submitStatus.message && (
           <Alert 
             severity={submitStatus.type === "success" ? "success" : "error"}
-            sx={{ mb: 3 }}
+            sx={{ 
+              mb: 3,
+              ...(submitStatus.type === "success" && {
+                backgroundColor: '#e8f5e8',
+                border: '2px solid #4CAF50',
+                '& .MuiAlert-icon': {
+                  fontSize: '2rem'
+                },
+                '& .MuiAlert-message': {
+                  fontSize: '1.1rem',
+                  fontWeight: 500
+                }
+              })
+            }}
             onClose={() => setSubmitStatus({ type: "", message: "" })}
           >
             {submitStatus.message}
@@ -474,13 +492,16 @@ const ListNewItem = () => {
                   py: 1.5,
                   fontSize: '1.1rem',
                   fontWeight: 600,
-                  backgroundColor: '#4CAF50',
+                  backgroundColor: submitStatus.type === "success" ? '#2E7D32' : '#4CAF50',
                   '&:hover': {
-                    backgroundColor: '#45a049'
-                  }
+                    backgroundColor: submitStatus.type === "success" ? '#1B5E20' : '#45a049'
+                  },
+                  transition: 'all 0.3s ease'
                 }}
               >
-                {isSubmitting ? "Adding..." : "Add Listing"}
+                {isSubmitting ? "Adding..." : 
+                 submitStatus.type === "success" ? "✓ Listed Successfully!" : 
+                 "Add Listing"}
               </Button>
             </Grid>
             <Grid item xs={12} md={4}>

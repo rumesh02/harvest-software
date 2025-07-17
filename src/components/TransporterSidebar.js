@@ -13,7 +13,7 @@ const menuItems = [
   { text: "Bookings", icon: <Gavel />, path: "bookings" },
   { text: "Edit Listed", icon: <PenFill />, path: "editListed" },
   { text: "Go to Inbox", icon: <MessageRounded />, path: "inbox" }, // Updated to include the full path
-  { text: "PaymentApproves", icon: <Payment />, path: "payments" } // Updated to include the full path
+  { text: "Payment Approves", icon: <Payment />, path: "payments" } // Updated to include the full path
 ];
 
 const TransporterSidebar = () => {
@@ -22,10 +22,10 @@ const TransporterSidebar = () => {
 
   return (
     <div style={{ 
-      width: 240, 
+      width: 320, 
       background: "#ffffff", 
       height: "100vh", 
-      padding: "20px", 
+      padding: "24px", 
       borderRadius: "0", 
       boxShadow: "0 0 10px rgba(0,0,0,0.05)",
       display: "flex",
@@ -35,12 +35,12 @@ const TransporterSidebar = () => {
       <div style={{ 
         display: "flex", 
         alignItems: "center", 
-        gap: "10px", 
-        marginBottom: "30px" 
+        gap: "12px", 
+        marginBottom: "24px" 
       }}>
-        <img src="/images/logo.png" alt="Logo" width={30} height={30} />
+        <img src="/images/logo.png" alt="Logo" width={50} height={50} />
         <h2 style={{ 
-          fontSize: "16px", 
+          fontSize: "20px", 
           fontWeight: "bold", 
           margin: 0, 
           color: "#333" 
@@ -55,9 +55,9 @@ const TransporterSidebar = () => {
             component={Link}
             to={item.path}  // Full path provided here
             sx={{
-              borderRadius: "8px",
-              marginBottom: "8px",
-              padding: "8px 12px",
+              borderRadius: "10px",
+              marginBottom: "10px",
+              padding: "12px 16px",
               backgroundColor: location.pathname.includes(item.path) ? "rgba(13, 110, 253, 0.1)" : "transparent",
               "&:hover": { 
                 backgroundColor: "rgba(13, 110, 253, 0.1)",
@@ -68,7 +68,7 @@ const TransporterSidebar = () => {
             <ListItemIcon 
               sx={{ 
                 color: location.pathname.includes(item.path) ? "#0d6efd" : "#6B7280",
-                minWidth: "36px"
+                minWidth: "48px"
               }}
             >
               {item.icon}
@@ -78,7 +78,7 @@ const TransporterSidebar = () => {
               primaryTypographyProps={{
                 fontWeight: location.pathname.includes(item.path) ? "500" : "normal",
                 color: location.pathname.includes(item.path) ? "#0d6efd" : "#374151",
-                fontSize: "14px"
+                fontSize: "16px"
               }}
             />
           </ListItemButton>
@@ -86,44 +86,44 @@ const TransporterSidebar = () => {
       </List>
 
       {/* Divider */}
-      <hr style={{ margin: "20px 0", border: "0", borderTop: "1px solid #E5E7EB" }} />
+      <hr style={{ margin: "24px 0", border: "0", borderTop: "1px solid #E5E7EB" }} />
 
       {/* Profile Section */}
       <div style={{ 
         display: "flex", 
         alignItems: "center", 
-        padding: "10px 0", 
-        marginBottom: "15px" 
+        padding: "12px 0", 
+        marginBottom: "20px" 
       }}>
         <Avatar 
           src={user?.picture} 
           sx={{ 
-            width: 40, 
-            height: 40, 
-            marginRight: "10px" 
+            width: 64, 
+            height: 64, 
+            marginRight: "12px" 
           }} 
         />
         <div>
           <h4 style={{ 
             margin: 0, 
-            fontSize: "14px", 
+            fontSize: "18px", 
             fontWeight: "500", 
             color: "#333" 
           }}>
             {user?.name}
           </h4>
           <span style={{ 
-            fontSize: "12px", 
+            fontSize: "14px", 
             color: "#6B7280", 
             display: "block" 
           }}>
             <Badge 
               sx={{ 
                 "& .MuiBadge-badge": { 
-                  fontSize: "10px", 
-                  height: "18px", 
-                  minWidth: "18px", 
-                  padding: "0 6px" 
+                  fontSize: "12px", 
+                  height: "20px", 
+                  minWidth: "20px", 
+                  padding: "0 8px" 
                 } 
               }} 
               color="primary" 
@@ -137,42 +137,42 @@ const TransporterSidebar = () => {
       <List sx={{ padding: 0 }}>
         <ListItemButton 
           sx={{ 
-            borderRadius: "8px", 
-            padding: "8px 12px",
+            borderRadius: "10px", 
+            padding: "12px 16px",
             "&:hover": { 
               backgroundColor: "rgba(13, 110, 253, 0.1)",
               color: "#0d6efd"
             },
           }}
         >
-          <ListItemIcon sx={{ color: "#6B7280", minWidth: "36px" }}>
+          <ListItemIcon sx={{ color: "#6B7280", minWidth: "48px" }}>
             <Settings />
           </ListItemIcon>
           <ListItemText 
             primary="Settings" 
             primaryTypographyProps={{
-              fontSize: "14px",
+              fontSize: "16px",
               color: "#374151"
             }}
           />
         </ListItemButton>
         <ListItemButton 
           sx={{ 
-            borderRadius: "8px", 
-            padding: "8px 12px",
+            borderRadius: "10px", 
+            padding: "12px 16px",
             "&:hover": { 
               backgroundColor: "rgba(13, 110, 253, 0.1)",
               color: "#0d6efd"
             },
           }} 
           onClick={() => logout({ returnTo: window.location.origin })}>
-          <ListItemIcon sx={{ color: "#6B7280", minWidth: "36px" }}>
+          <ListItemIcon sx={{ color: "#6B7280", minWidth: "48px" }}>
             <ExitToApp />
           </ListItemIcon>
           <ListItemText 
             primary="Log Out" 
             primaryTypographyProps={{
-              fontSize: "14px",
+              fontSize: "16px",
               color: "#374151"
             }}
           />

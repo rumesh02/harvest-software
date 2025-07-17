@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getMerchantCollections,
+  getFarmerCollections,
   createCollectionFromConfirmedBid,
   updateCollectionStatus,
   updateCollectionSelection,
@@ -12,6 +13,9 @@ const {
 
 // GET /api/collections/merchant/:merchantId - Get all collections for a merchant
 router.get('/merchant/:merchantId', getMerchantCollections);
+
+// GET /api/collections/farmer/:farmerId - Get all collections for a farmer
+router.get('/farmer/:farmerId', getFarmerCollections);
 
 // GET /api/collections/:id - Get collection by ID
 router.get('/:id', getCollectionById);

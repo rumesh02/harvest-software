@@ -132,6 +132,7 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [capacityError, setCapacityError] = useState(""); // Add capacity error state
   const [capacityFilter, setCapacityFilter] = useState("");
   const [districtFilter, setDistrictFilter] = useState("");
   const [openModal, setOpenModal] = useState(false);
@@ -144,14 +145,39 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
   // Booking form state
   const [bookingForm, setBookingForm] = useState({
     phone: "",
-    startLocation: "", // Will be populated from product details
+    startLocation: "", // Will be populated from product details or multiple locations
     endLocation: "", // Keep this empty - don't auto-fill
-    items: selectedConfirmedBid?.items?.[0]?.name || "",
-    weight: selectedConfirmedBid?.items?.[0]?.quantity || "",
+    items: selectedOrders?.length > 0 ? 
+      selectedOrders.map(order => order?.productName || order?.items?.[0]?.name || 'Product').join(', ') :
+      selectedConfirmedBid?.items?.[0]?.name || "",
+    weight: selectedOrders?.length > 0 ? 
+      selectedOrders.reduce((total, order) => total + (order?.orderWeight || order?.items?.[0]?.quantity || 0), 0) :
+      selectedConfirmedBid?.items?.[0]?.quantity || "",
   });
   
   // Update booking form when product details are loaded
   useEffect(() => {
+    // Handle multiple orders case
+    if (selectedOrders && selectedOrders.length > 1) {
+      const locations = selectedOrders.map((order, index) => {
+        const productName = order?.productName || order?.items?.[0]?.name || 'Product';
+        const location = order?.productLocation?.address || 
+                        order?.location?.displayAddress || 
+                        order?.farmerDetails?.address || 
+                        "Location not available";
+        return `${index + 1}. ${productName} - ${location}`;
+      }).join('\n');
+      
+      setBookingForm(prev => ({
+        ...prev,
+        startLocation: `Multiple Pickup Locations:\n${locations}`,
+        items: selectedOrders.map(order => order?.productName || order?.items?.[0]?.name || 'Product').join(', '),
+        weight: selectedOrders.reduce((total, order) => total + (order?.orderWeight || order?.items?.[0]?.quantity || 0), 0),
+      }));
+      return;
+    }
+    
+    // Handle single order case (existing logic)
     // First check if we have location data directly from confirmed bid
     if (selectedConfirmedBid?.productLocation) {
       setBookingForm(prev => ({
@@ -168,7 +194,7 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
         weight: selectedConfirmedBid?.items?.[0]?.quantity || prev.weight,
       }));
     }
-  }, [productDetails, selectedConfirmedBid]);
+  }, [productDetails, selectedConfirmedBid, selectedOrders]);
 
   // Map modal state
   const DEFAULT_MAP_CENTER = { lat: 6.9271, lng: 79.8612 }; // Default location (Colombo)
@@ -220,6 +246,27 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
   const handleBook = async (vehicle) => {
     console.log("Selected Vehicle:", vehicle); // Debugging log
     
+    // Calculate total weight of orders
+    const totalWeight = selectedOrders?.length > 0 ? 
+      selectedOrders.reduce((total, order) => total + (order?.orderWeight || order?.items?.[0]?.quantity || 0), 0) :
+      selectedConfirmedBid?.items?.[0]?.quantity || 0;
+    
+    const vehicleCapacity = parseInt(vehicle.loadCapacity, 10) || 0;
+    
+    console.log("Total weight:", totalWeight, "kg");
+    console.log("Vehicle capacity:", vehicleCapacity, "kg");
+    
+    // Check if total weight exceeds vehicle capacity
+    if (totalWeight > vehicleCapacity) {
+      setCapacityError(`Cannot book this vehicle! Total order weight (${totalWeight}kg) exceeds vehicle capacity (${vehicleCapacity}kg). Please choose another vehicle that matches your total quantity.`);
+      // Clear error after 5 seconds
+      setTimeout(() => setCapacityError(""), 5000);
+      return;
+    }
+    
+    // Clear any previous capacity errors
+    setCapacityError("");
+    
     // Fetch transporter details to get contact number
     try {
       const transporterResponse = await axios.get(`http://localhost:5000/api/users/${encodeURIComponent(vehicle.transporterId)}`);
@@ -241,13 +288,16 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
       });
     }
     
-    setBookingForm((prev) => ({
-      ...prev,
-      items: productDetails?.name || selectedConfirmedBid?.items?.[0]?.name || prev.items,
-      weight: selectedConfirmedBid?.items?.[0]?.quantity || prev.weight,
-      startLocation: productDetails?.location?.address || "Harvest location not available", // Use product location
-      endLocation: "", // Don't auto-fill end location
-    }));
+    // Don't override booking form if we have multiple orders (already properly initialized)
+    if (!selectedOrders || selectedOrders.length <= 1) {
+      setBookingForm((prev) => ({
+        ...prev,
+        items: productDetails?.name || selectedConfirmedBid?.items?.[0]?.name || prev.items,
+        weight: selectedConfirmedBid?.items?.[0]?.quantity || prev.weight,
+        startLocation: productDetails?.location?.address || "Harvest location not available", // Use product location
+        endLocation: "", // Don't auto-fill end location
+      }));
+    }
     setOpenModal(true);
   };
 
@@ -382,6 +432,37 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
             Find Vehicles
           </Typography>
         </Box>
+        
+        {/* Total Weight Information */}
+        {(() => {
+          const totalWeight = selectedOrders?.length > 0 ? 
+            selectedOrders.reduce((total, order) => total + (order?.orderWeight || order?.items?.[0]?.quantity || 0), 0) :
+            selectedConfirmedBid?.items?.[0]?.quantity || 0;
+          
+          if (totalWeight > 0) {
+            return (
+              <Box sx={{ 
+                mb: 3, 
+                p: 2, 
+                backgroundColor: '#e3f2fd', 
+                borderRadius: 2, 
+                border: '1px solid #1976d2',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2
+              }}>
+                <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 600 }}>
+                  📦 Total Load Weight: {totalWeight}kg
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#666' }}>
+                  Please choose a vehicle with capacity greater than {totalWeight}kg
+                </Typography>
+              </Box>
+            );
+          }
+          return null;
+        })()}
+        
         <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 3, flexWrap: "wrap" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography sx={{ fontWeight: 500, color: "#333", fontSize: "0.95rem" }}>Capacity:</Typography>
@@ -455,6 +536,27 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
             </FormControl>
           </Box>
         </Box>
+        
+        {/* Capacity Error Alert */}
+        {capacityError && (
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3, 
+              backgroundColor: '#ffebee',
+              borderColor: '#f44336',
+              '& .MuiAlert-icon': {
+                color: '#f44336'
+              }
+            }}
+            onClose={() => setCapacityError("")}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {capacityError}
+            </Typography>
+          </Alert>
+        )}
+        
         <Grid
           container
           spacing={4}
@@ -466,8 +568,17 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
               <Typography>No vehicles available.</Typography>
             </Grid>
           ) : (
-            filteredVehicles.map((vehicle) => (
-              <Grid item key={vehicle._id} xs={12} sm={6} md={4} lg={3}>
+            filteredVehicles.map((vehicle) => {
+              // Calculate total weight for each vehicle card
+              const totalWeight = selectedOrders?.length > 0 ? 
+                selectedOrders.reduce((total, order) => total + (order?.orderWeight || order?.items?.[0]?.quantity || 0), 0) :
+                selectedConfirmedBid?.items?.[0]?.quantity || 0;
+              
+              const vehicleCapacity = parseInt(vehicle.loadCapacity, 10) || 0;
+              const isCapacityExceeded = totalWeight > vehicleCapacity;
+              
+              return (
+                <Grid item key={vehicle._id} xs={12} sm={6} md={4} lg={3}>
                 <Card
                   sx={{
                     borderRadius: 3,
@@ -526,10 +637,23 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
                     </Typography>
                     <Typography
                       variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 0.5, fontSize: "0.85rem" }}
+                      sx={{ 
+                        mb: 0.5, 
+                        fontSize: "0.85rem",
+                        color: isCapacityExceeded ? "#f44336" : "#2e7d32",
+                        fontWeight: isCapacityExceeded ? 600 : 400
+                      }}
                     >
                       Capacity: {vehicle.loadCapacity}kg
+                      {totalWeight > 0 && (
+                        <span style={{ 
+                          display: 'block', 
+                          fontSize: '0.75rem',
+                          color: isCapacityExceeded ? "#f44336" : "#666"
+                        }}>
+                          Your load: {totalWeight}kg {isCapacityExceeded ? "⚠️ Exceeds capacity!" : "✓ Fits"}
+                        </span>
+                      )}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -548,26 +672,32 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
                   </CardContent>
                   <Button
                     variant="contained"
+                    disabled={isCapacityExceeded}
                     sx={{
                       width: "100%",
                       borderRadius: 1,
                       fontWeight: 600,
                       letterSpacing: 0.5,
-                      backgroundColor: "#1976d2",
+                      backgroundColor: isCapacityExceeded ? "#f44336" : "#1976d2",
                       color: "white",
                       fontSize: "0.9rem",
                       py: 1,
                       "&:hover": {
-                        backgroundColor: "#1565c0",
+                        backgroundColor: isCapacityExceeded ? "#f44336" : "#1565c0",
+                      },
+                      "&:disabled": {
+                        backgroundColor: "#bdbdbd",
+                        color: "#666",
                       },
                     }}
                     onClick={() => handleBook(vehicle)}
                   >
-                    BOOK
+                    {isCapacityExceeded ? "CAPACITY EXCEEDED" : "BOOK"}
                   </Button>
                 </Card>
               </Grid>
-            ))
+              );
+            })
           )}
         </Grid>
       </Box>
@@ -620,7 +750,10 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
           }
         }}>
           <IconButton
-            onClick={() => setOpenModal(false)}
+            onClick={() => {
+              setOpenModal(false);
+              if (onBack) onBack();
+            }}
             sx={{
               position: 'absolute',
               left: 16,
@@ -686,7 +819,7 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
                 <Box>
                   <Typography variant="body2" color="text.secondary">Price per KM:</Typography>
                   <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1.1rem' }}>
-                    {selectedVehicle?.pricePerKm ? `LKR ${selectedVehicle.pricePerKm}` : "Price not available (Please contact transporter)"}
+                    {selectedVehicle?.pricePerKm ? `LKR ${selectedVehicle.pricePerKm}` : "###(Please contact transporter)"}
                   </Typography>
                 </Box>
               </Box>
@@ -746,8 +879,88 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
               <Typography variant="h6" sx={{ mb: 3, color: '#1976d2', fontWeight: 600 }}>
                 📍 Delivery Locations
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <Box>
+              
+              {/* Multiple Pickup Locations Section */}
+              {selectedOrders && selectedOrders.length > 1 ? (
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    mb: 2 
+                  }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#333' }}>
+                      Pickup Locations * (As per your arranged sequence)
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        setOpenModal(false);
+                        if (onBack) onBack();
+                      }}
+                      sx={{
+                        fontSize: '0.75rem',
+                        textTransform: 'none',
+                        px: 2,
+                        py: 0.5,
+                        borderColor: '#1976d2',
+                        color: '#1976d2',
+                        '&:hover': {
+                          borderColor: '#1565c0',
+                          backgroundColor: '#e3f2fd',
+                        },
+                      }}
+                    >
+                      Change Pickup Orders
+                    </Button>
+                  </Box>
+                  <Box sx={{ 
+                    p: 2, 
+                    backgroundColor: '#e3f2fd', 
+                    borderRadius: 1, 
+                    border: '1px solid #1976d2',
+                    mb: 2
+                  }}>
+                    <Typography variant="body2" sx={{ color: '#1976d2', fontWeight: 600, mb: 1 }}>
+                      ℹ️ Collection Sequence:
+                    </Typography>
+                    {selectedOrders.map((order, index) => {
+                      const productName = order?.productName || order?.items?.[0]?.name || 'Product';
+                      const location = order?.productLocation?.address || 
+                                     order?.location?.displayAddress || 
+                                     order?.farmerDetails?.address || 
+                                     "Location not available";
+                      const farmerPhone = order?.farmerDetails?.phone || 
+                                         order?.farmerPhone || 
+                                         "Contact not available";
+                      return (
+                        <Box key={order._id || index} sx={{ 
+                          mb: 1, 
+                          p: 1.5, 
+                          backgroundColor: 'white', 
+                          borderRadius: 1, 
+                          border: '1px solid #bbdefb' 
+                        }}>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#1565c0' }}>
+                            {index + 1}. {productName}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#424242', fontSize: '0.85rem' }}>
+                            📍 {location}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#666', fontSize: '0.8rem', mt: 0.5 }}>
+                            📞 {farmerPhone}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                    <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic', mt: 1 }}>
+                      💡 If you need to change the collection order, please go back and rearrange the orders.
+                    </Typography>
+                  </Box>
+                </Box>
+              ) : (
+                <Box sx={{ mb: 3 }}>
                   <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: '#333' }}>
                     Start Delivery Location * (Harvest Location)
                   </Typography>
@@ -781,6 +994,9 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
                     }}
                   />
                 </Box>
+              )}
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <Box>
                   <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: '#333' }}>
                     End Delivery Location *
@@ -849,6 +1065,27 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
               <Typography variant="h6" sx={{ mb: 3, color: '#1976d2', fontWeight: 600 }}>
                 📦 Transport Details
               </Typography>
+              
+              {/* Show order summary for multiple orders */}
+              {selectedOrders && selectedOrders.length > 1 && (
+                <Box sx={{ 
+                  mb: 3, 
+                  p: 2, 
+                  backgroundColor: '#f0f9ff', 
+                  borderRadius: 1, 
+                  border: '1px solid #3b82f6' 
+                }}>
+                  <Typography variant="body2" sx={{ color: '#1e40af', fontWeight: 600, mb: 1 }}>
+                    📋 Multiple Orders Summary:
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#1e40af' }}>
+                    Total Items: {selectedOrders.length} different products<br/>
+                    Total Weight: {selectedOrders.reduce((total, order) => total + (order?.orderWeight || order?.items?.[0]?.quantity || 0), 0)} kg<br/>
+                    Collection Sequence: As arranged in the previous step
+                  </Typography>
+                </Box>
+              )}
+              
               <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                 <Box sx={{ flex: 1, minWidth: '300px' }}>
                   <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: '#333' }}>
@@ -863,11 +1100,15 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
                     variant="outlined"
                     placeholder="Describe items to be transported"
                     size="medium"
+                    multiline={selectedOrders && selectedOrders.length > 1}
+                    rows={selectedOrders && selectedOrders.length > 1 ? 3 : 1}
                     InputProps={{
                       style: { borderRadius: 10, fontSize: '1rem' },
+                      readOnly: selectedOrders && selectedOrders.length > 1,
                     }}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
+                        backgroundColor: selectedOrders && selectedOrders.length > 1 ? '#f5f5f5' : 'white',
                         '&:hover fieldset': {
                           borderColor: '#1976d2',
                         },
@@ -880,7 +1121,7 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
                 </Box>
                 <Box sx={{ flex: 1, minWidth: '250px' }}>
                   <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: '#333' }}>
-                    Weight to Transport (Kg) *
+                    Total Weight to Transport (Kg) *
                   </Typography>
                   <TextField
                     name="weight"
@@ -893,9 +1134,11 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
                     size="medium"
                     InputProps={{
                       style: { borderRadius: 10, fontSize: '1rem' },
+                      readOnly: selectedOrders && selectedOrders.length > 1,
                     }}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
+                        backgroundColor: selectedOrders && selectedOrders.length > 1 ? '#f5f5f5' : 'white',
                         '&:hover fieldset': {
                           borderColor: '#1976d2',
                         },
@@ -909,6 +1152,24 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
                   />
                 </Box>
               </Box>
+              
+              {/* Note about changing arrangement for multiple orders */}
+              {selectedOrders && selectedOrders.length > 1 && (
+                <Box sx={{ 
+                  mt: 3, 
+                  p: 2, 
+                  backgroundColor: '#fff3cd', 
+                  borderRadius: 1, 
+                  border: '1px solid #ffc107' 
+                }}>
+                  <Typography variant="body2" sx={{ color: '#856404', fontWeight: 600, mb: 1 }}>
+                    ⚠️ Need to change the collection order?
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#856404' }}>
+                    If you need to modify the pickup sequence or arrangement, please go back to the previous step and rearrange your orders before proceeding with the booking.
+                  </Typography>
+                </Box>
+              )}
             </Box>
 
             {/* Action Buttons */}
@@ -1201,7 +1462,7 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
               // Store the selected location data but don't close the modal
               setSelectedLocationData(locationData);
             }}
-            buttonText="📍 Get Current Location"
+            buttonText=" Get Current Location"
             showMap={true}
             mapHeight="400px"
           />

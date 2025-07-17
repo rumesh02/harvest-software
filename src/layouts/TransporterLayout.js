@@ -10,7 +10,7 @@ const TransporterLayout = () => {
       {/* ✅ Transporter Sidebar (Only for Transporter Pages) */}
       <TransporterSidebar />
 
-      <Box sx={{ flexGrow: 1, ml: "25px", p: 3 }}>
+      <Box sx={{ flexGrow: 1, ml: "32px", p: 3 }}>
         <Navbar />
         <Outlet /> {/* ✅ Ensures sub-pages load inside layout */}
       </Box>

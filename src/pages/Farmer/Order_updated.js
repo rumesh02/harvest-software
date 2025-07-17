@@ -65,21 +65,6 @@ const OrderPage = () => {
           console.error("Error fetching confirmed bids:", confirmedBidError);
         }
 
-        // Also fetch collections data to check for payment status
-        let collectionsMap = {};
-        try {
-          // Now using the new farmer collections endpoint
-          const collectionsResponse = await axios.get(`http://localhost:5000/api/collections/farmer/${farmerId}`);
-          const collections = collectionsResponse.data || [];
-          collections.forEach(collection => {
-            if (collection.bidId) {
-              collectionsMap[collection.bidId.toString()] = collection.status;
-            }
-          });
-        } catch (collectionsError) {
-          console.error("Error fetching collections:", collectionsError);
-        }
-
         // Fetch merchant details for each bid
         const transformedOrders = await Promise.all(
           bids.map(async (bid) => {
@@ -98,12 +83,9 @@ const OrderPage = () => {
               }
             }
 
-            // Check payment status from both confirmed bids and collections
+            // Check payment status from confirmed bids
             const confirmedBidKey = `${bid.farmerId}_${bid.merchantId}`;
             const confirmedBid = confirmedBidsMap[confirmedBidKey];
-            
-            // Look up collection by bidId (more direct)
-            const collectionStatus = collectionsMap[bid._id];
             
             // Transform bid to order format
             return {
@@ -114,7 +96,7 @@ const OrderPage = () => {
               buyer: merchantName,
               phone: merchantPhone,
               status: getOrderStatus(bid.status),
-              paymentStatus: getPaymentStatus(bid.status, collectionStatus, confirmedBid),
+              paymentStatus: getPaymentStatus(bid.status, confirmedBid),
               bidStatus: bid.status, // Keep original bid status for reference
             };
           })
@@ -148,18 +130,13 @@ const OrderPage = () => {
   };
 
   // Determine payment status based on merchant payment completion
-  const getPaymentStatus = (bidStatus, collectionStatus, confirmedBid) => {
-    // If order is rejected by farmer, payment status is disabled
+  const getPaymentStatus = (bidStatus, confirmedBid) => {
+    // If order is rejected by farmer, payment status is disabled/cancelled
     if (bidStatus === "Rejected") {
-      return "Disabled";
+      return "Cancelled";
     }
     
-    // Check if merchant has paid via collection status (most up-to-date)
-    if (collectionStatus === "paid") {
-      return "Completed";
-    }
-    
-    // Fallback to confirmed bid status
+    // If merchant has paid (confirmed bid status is "paid"), show Completed
     if (confirmedBid && confirmedBid.status === "paid") {
       return "Completed";
     }
@@ -421,18 +398,12 @@ const OrderPage = () => {
                         <Chip
                           label={order.paymentStatus}
                           color={
-                            order.paymentStatus === "Disabled" ? "default" :
+                            order.paymentStatus === "Cancelled" ? "error" :
                             order.paymentStatus === "Completed" ? "success" :
                             "warning"
                           }
                           size="small"
-                          sx={{ 
-                            fontWeight: 'bold',
-                            ...(order.paymentStatus === "Disabled" && {
-                              backgroundColor: '#f5f5f5',
-                              color: '#9e9e9e'
-                            })
-                          }}
+                          sx={{ fontWeight: 'bold' }}
                         />
                       </TableCell>
                     </TableRow>

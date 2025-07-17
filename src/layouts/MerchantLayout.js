@@ -10,7 +10,7 @@ const MerchantLayout = () => {
       {/* ✅ Merchant Sidebar (Only for Merchant Pages) */}
       <MerchantSidebar />
 
-      <Box sx={{ flexGrow: 1, ml: "25px", p: 3 }}>
+      <Box sx={{ flexGrow: 1, ml: "32px", p: 3 }}>
         <Navbar />
         <Outlet /> {/* ✅ Ensures sub-pages load inside layout */}
       </Box>

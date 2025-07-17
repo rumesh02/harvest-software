@@ -20,8 +20,7 @@ import {
   Card,
   CardContent,
   Grid,
-  CircularProgress,
-  Snackbar
+  CircularProgress
 } from "@mui/material";
 import {
   ShoppingCart as OrderIcon,
@@ -39,7 +38,6 @@ const OrderPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Fetch bids and convert them to orders
   useEffect(() => {
@@ -50,35 +48,6 @@ const OrderPage = () => {
         const farmerId = localStorage.getItem("user_id"); // Get logged-in farmer's ID
         const response = await axios.get(`http://localhost:5000/api/bids?farmerId=${farmerId}`);
         const bids = response.data;
-
-        // Fetch all confirmed bids to check payment status
-        let confirmedBidsMap = {};
-        try {
-          const confirmedBidsResponse = await axios.get(`http://localhost:5000/api/confirmedbids`);
-          const confirmedBids = confirmedBidsResponse.data || [];
-          // Create a map by farmerId + merchantId for quick lookup
-          confirmedBids.forEach(cb => {
-            const key = `${cb.farmerId}_${cb.merchantId}`;
-            confirmedBidsMap[key] = cb;
-          });
-        } catch (confirmedBidError) {
-          console.error("Error fetching confirmed bids:", confirmedBidError);
-        }
-
-        // Also fetch collections data to check for payment status
-        let collectionsMap = {};
-        try {
-          // Now using the new farmer collections endpoint
-          const collectionsResponse = await axios.get(`http://localhost:5000/api/collections/farmer/${farmerId}`);
-          const collections = collectionsResponse.data || [];
-          collections.forEach(collection => {
-            if (collection.bidId) {
-              collectionsMap[collection.bidId.toString()] = collection.status;
-            }
-          });
-        } catch (collectionsError) {
-          console.error("Error fetching collections:", collectionsError);
-        }
 
         // Fetch merchant details for each bid
         const transformedOrders = await Promise.all(
@@ -98,24 +67,16 @@ const OrderPage = () => {
               }
             }
 
-            // Check payment status from both confirmed bids and collections
-            const confirmedBidKey = `${bid.farmerId}_${bid.merchantId}`;
-            const confirmedBid = confirmedBidsMap[confirmedBidKey];
-            
-            // Look up collection by bidId (more direct)
-            const collectionStatus = collectionsMap[bid._id];
-            
             // Transform bid to order format
             return {
               id: bid._id,
               harvest: bid.productName,
               price: `Rs. ${bid.bidAmount}`,
               weight: `${bid.orderWeight}kg`,
-              buyer: merchantName,
-              phone: merchantPhone,
+              buyer: merchantName, // Use fetched merchant name
+              phone: merchantPhone, // Use fetched merchant phone
               status: getOrderStatus(bid.status),
-              paymentStatus: getPaymentStatus(bid.status, collectionStatus, confirmedBid),
-              bidStatus: bid.status, // Keep original bid status for reference
+              paymentStatus: getPaymentStatus(bid.status, bid.paymentStatus),
             };
           })
         );
@@ -135,11 +96,13 @@ const OrderPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Convert bid status to order status (only Pending and Done)
+  // Convert bid status to order status
   const getOrderStatus = (bidStatus) => {
     switch (bidStatus) {
       case "Accepted":
         return "Pending";
+      case "Rejected":
+        return "Reject";
       case "Completed":
         return "Done";
       default:
@@ -147,34 +110,18 @@ const OrderPage = () => {
     }
   };
 
-  // Determine payment status based on merchant payment completion
-  const getPaymentStatus = (bidStatus, collectionStatus, confirmedBid) => {
-    // If order is rejected by farmer, payment status is disabled
-    if (bidStatus === "Rejected") {
-      return "Disabled";
+  // Add new function to determine payment status
+  const getPaymentStatus = (bidStatus, currentPaymentStatus) => {
+    switch (bidStatus) {
+      case "Rejected":
+        return "Cancelled";
+      case "Completed":
+        return "Completed";
+      case "Accepted":
+        return "Pending";
+      default:
+        return currentPaymentStatus;
     }
-    
-    // Check if merchant has paid via collection status (most up-to-date)
-    if (collectionStatus === "paid") {
-      return "Completed";
-    }
-    
-    // Fallback to confirmed bid status
-    if (confirmedBid && confirmedBid.status === "paid") {
-      return "Completed";
-    }
-    
-    // If farmer has completed the order, show Completed
-    if (bidStatus === "Completed") {
-      return "Completed";
-    }
-    
-    // Default to Pending for accepted bids
-    if (bidStatus === "Accepted") {
-      return "Pending";
-    }
-    
-    return "Pending";
   };
 
   // Handle order status changes
@@ -185,6 +132,9 @@ const OrderPage = () => {
       switch (newStatus) {
         case "Done":
           bidStatus = "Completed";
+          break;
+        case "Reject":
+          bidStatus = "Rejected";
           break;
         case "Pending":
           bidStatus = "Accepted";
@@ -204,11 +154,9 @@ const OrderPage = () => {
           order.id === id ? { ...order, status: newStatus } : order
         )
       );
-      
-      setSnackbar({ open: true, message: 'Order status updated successfully', severity: 'success' });
     } catch (error) {
       console.error("Error updating order status:", error);
-      setSnackbar({ open: true, message: 'Failed to update order status', severity: 'error' });
+      alert("Failed to update order status");
     }
   };
 
@@ -270,7 +218,7 @@ const OrderPage = () => {
                     Rejected Orders
                   </Typography>
                   <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
-                    {orders.filter(o => o.bidStatus === 'Rejected').length}
+                    {orders.filter(o => o.status === 'Reject').length}
                   </Typography>
                 </Box>
                 <Avatar sx={{ bgcolor: '#f44336', width: 56, height: 56 }}>
@@ -332,132 +280,90 @@ const OrderPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {orders.map((order, index) => {
-                  const isRejected = order.bidStatus === 'Rejected';
-                  const isDone = order.status === 'Done';
-                  const isDisabled = isRejected || isDone;
-                  
-                  return (
-                    <TableRow 
-                      key={order.id} 
-                      hover={!isDisabled}
-                      sx={{ 
-                        opacity: isDisabled ? 0.6 : 1,
-                        backgroundColor: isDone ? '#f8f9fa' : 'inherit'
-                      }}
-                    >
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar sx={{ bgcolor: '#2e7d32', mr: 2, width: 32, height: 32 }}>
-                            <InventoryIcon />
-                          </Avatar>
-                          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                            {order.harvest}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <MoneyIcon sx={{ color: '#2e7d32', mr: 1 }} />
-                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
-                            {order.price}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <WeightIcon sx={{ color: '#666', mr: 1 }} />
-                          <Typography variant="body2">
-                            {order.weight}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <PersonIcon sx={{ color: '#666', mr: 1 }} />
-                          <Typography variant="body2">
-                            {order.buyer}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <PhoneIcon sx={{ color: '#666', mr: 1 }} />
-                          <Typography variant="body2">
-                            {order.phone}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        {isRejected ? (
-                          <Chip
-                            label="Rejected"
-                            color="error"
-                            size="small"
-                            sx={{ fontWeight: 'bold' }}
-                          />
-                        ) : (
-                          <FormControl size="small" sx={{ minWidth: 120 }}>
-                            <Select
-                              value={order.status}
-                              onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                              disabled={isDone} // Disable when status is Done
-                              sx={{
-                                bgcolor: order.status === "Done" ? "#e8f5e8" : 
-                                       order.status === "Pending" ? "#fff3e0" : "#f5f5f5",
-                                '& .MuiSelect-select': {
-                                  fontWeight: 'medium'
-                                }
-                              }}
-                            >
-                              <MenuItem value="Pending">Pending</MenuItem>
-                              <MenuItem value="Done">Done</MenuItem>
-                            </Select>
-                          </FormControl>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={order.paymentStatus}
-                          color={
-                            order.paymentStatus === "Disabled" ? "default" :
-                            order.paymentStatus === "Completed" ? "success" :
-                            "warning"
-                          }
-                          size="small"
-                          sx={{ 
-                            fontWeight: 'bold',
-                            ...(order.paymentStatus === "Disabled" && {
-                              backgroundColor: '#f5f5f5',
-                              color: '#9e9e9e'
-                            })
+                {orders.map((order, index) => (
+                  <TableRow key={order.id} hover>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Avatar sx={{ bgcolor: '#2e7d32', mr: 2, width: 32, height: 32 }}>
+                          <InventoryIcon />
+                        </Avatar>
+                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                          {order.harvest}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <MoneyIcon sx={{ color: '#2e7d32', mr: 1 }} />
+                        <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                          {order.price}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <WeightIcon sx={{ color: '#666', mr: 1 }} />
+                        <Typography variant="body2">
+                          {order.weight}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <PersonIcon sx={{ color: '#666', mr: 1 }} />
+                        <Typography variant="body2">
+                          {order.buyer}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <PhoneIcon sx={{ color: '#666', mr: 1 }} />
+                        <Typography variant="body2">
+                          {order.phone}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <Select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                          sx={{
+                            bgcolor: order.status === "Done" ? "#e8f5e8" : 
+                                   order.status === "Pending" ? "#fff3e0" : 
+                                   order.status === "Reject" ? "#ffebee" : "#f5f5f5",
+                            '& .MuiSelect-select': {
+                              fontWeight: 'medium'
+                            }
                           }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                        >
+                          <MenuItem value="Done">Done</MenuItem>
+                          <MenuItem value="Pending">Pending</MenuItem>
+                          <MenuItem value="Reject">Reject</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={order.status === "Reject" ? "Cancelled" : order.paymentStatus}
+                        color={
+                          order.status === "Reject" ? "error" :
+                          order.paymentStatus === "Completed" ? "success" :
+                          order.paymentStatus === "Pending" ? "warning" : "default"
+                        }
+                        size="small"
+                        sx={{ fontWeight: 'bold' }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>
         </Paper>
       )}
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert 
-          onClose={() => setSnackbar({ ...snackbar, open: false })} 
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };

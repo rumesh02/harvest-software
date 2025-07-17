@@ -12,7 +12,7 @@ const MAP_CONTAINER_STYLE = {
 };
 
 const LocateMe = ({ 
-  onLocationSelect, 
+  onLocationSelect = () => {}, 
   initialLocation, 
   buttonText = "Get Current Location",
   className = "",
@@ -147,10 +147,12 @@ const LocateMe = ({
       }
 
       // Call parent callback
-      onLocationSelect({
-        coordinates: newLocation,
-        address: place.formatted_address || place.name || `${newLocation.lat.toFixed(6)}, ${newLocation.lng.toFixed(6)}`
-      });
+      if (typeof onLocationSelect === 'function') {
+        onLocationSelect({
+          coordinates: newLocation,
+          address: place.formatted_address || place.name || `${newLocation.lat.toFixed(6)}, ${newLocation.lng.toFixed(6)}`
+        });
+      }
 
       console.log("Place selected:", place.name, newLocation.lat, newLocation.lng);
     }
@@ -194,10 +196,12 @@ const LocateMe = ({
           }
 
           // Call parent callback
-          onLocationSelect({
-            coordinates: newLocation,
-            address: place.formatted_address
-          });
+          if (typeof onLocationSelect === 'function') {
+            onLocationSelect({
+              coordinates: newLocation,
+              address: place.formatted_address
+            });
+          }
 
           console.log("Manual search result:", place.formatted_address, newLocation.lat, newLocation.lng);
         } else {
@@ -317,28 +321,34 @@ const LocateMe = ({
         if (status === 'OK' && results[0]) {
           const formattedAddress = results[0].formatted_address;
           setAddress(formattedAddress);
-          onLocationSelect({
-            coordinates: location,
-            address: formattedAddress
-          });
+          if (typeof onLocationSelect === 'function') {
+            onLocationSelect({
+              coordinates: location,
+              address: formattedAddress
+            });
+          }
         } else {
           console.warn('Geocoding failed:', status);
           const fallbackAddress = `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
           setAddress(fallbackAddress);
-          onLocationSelect({
-            coordinates: location,
-            address: fallbackAddress
-          });
+          if (typeof onLocationSelect === 'function') {
+            onLocationSelect({
+              coordinates: location,
+              address: fallbackAddress
+            });
+          }
         }
       });
     } else {
       // If geocoder is not available, just send coordinates
       const fallbackAddress = `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
       setAddress(fallbackAddress);
-      onLocationSelect({
-        coordinates: location,
-        address: fallbackAddress
-      });
+      if (typeof onLocationSelect === 'function') {
+        onLocationSelect({
+          coordinates: location,
+          address: fallbackAddress
+        });
+      }
     }
   }, [onLocationSelect]);
 

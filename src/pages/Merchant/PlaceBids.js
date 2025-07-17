@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -144,7 +144,7 @@ const PlaceBids = () => {
   };
 
   // Refresh product in cart
-  const refreshCartProduct = async (productId) => {
+  const refreshCartProduct = useCallback(async (productId) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/products/${productId}`);
       const updatedProduct = response.data;
@@ -152,7 +152,7 @@ const PlaceBids = () => {
     } catch (error) {
       console.error("Failed to refresh product in cart:", error);
     }
-  };
+  }, [updateCartItem]);
 
   useEffect(() => {
     const refreshAllCartItems = async () => {
@@ -172,7 +172,7 @@ const PlaceBids = () => {
     }, 30000); // every 30 seconds
 
     return () => clearInterval(interval);
-  }, [cartItems]);
+  }, [cartItems, refreshCartProduct]);
 
   return (
     <div style={{ padding: { xs: "12px", sm: "16px", md: "20px" } }}>

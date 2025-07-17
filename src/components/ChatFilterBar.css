@@ -1,0 +1,106 @@
+/* ChatFilterBar.css */
+.filter-bar-container {
+  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+}
+
+.search-field-focused {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+.role-chip-active {
+  animation: chipPulse 0.3s ease;
+}
+
+@keyframes chipPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.active-filter-indicator {
+  animation: slideInFromBottom 0.3s ease;
+}
+
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Tab transition effects */
+.tab-content {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.tab-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.tab-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tab-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+/* Enhanced hover effects */
+.user-item-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.user-item-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(217, 119, 6, 0.1),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.user-item-hover:hover::before {
+  left: 100%;
+}
+
+/* Smooth scrolling */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Custom focus styles */
+.custom-focus:focus-visible {
+  outline: 2px solid #D97706;
+  outline-offset: 2px;
+  border-radius: 8px;
+}

@@ -81,6 +81,28 @@ router.put('/read-all/:userId', async (req, res) => {
   }
 });
 
+// Mark all message notifications from a specific sender as read
+router.put('/read-messages/:userId/:senderId', async (req, res) => {
+  const { userId, senderId } = req.params;
+
+  try {
+    await Notification.updateMany(
+      { 
+        userId, 
+        type: 'message',
+        'metadata.senderId': senderId,
+        isRead: false 
+      },
+      { isRead: true }
+    );
+
+    res.json({ message: 'Message notifications marked as read' });
+  } catch (err) {
+    console.error('Error marking message notifications as read:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Create a new notification
 router.post('/', async (req, res) => {
   try {

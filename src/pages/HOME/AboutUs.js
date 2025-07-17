@@ -25,14 +25,15 @@ const AboutUs = () => {
       ref={aboutUsRef}
       sx={{
         width: '100%',
-        py: 6,
-        mb: 3,
-        background: 'linear-gradient(to right, #5e503f, #2E7D32)',
+        py: 8,
+        mb: 4,
+        background: 'linear-gradient(135deg, #eff1f7ff 0%, #1e40af 50%, #059669 100%)',
         color: 'white',
-        borderRadius: 2,
+        borderRadius: '1rem',
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(50px)',
         transition: 'opacity 1s ease-out, transform 1s ease-out',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.3)',
       }}
     >
       <Container>
@@ -46,30 +47,78 @@ const AboutUs = () => {
           >
             <Typography variant="h2" 
               sx={{ 
-                mb: 2, 
-                fontWeight: 'bold',
-                animation: isVisible ? 'pulse 2s infinite alternate ease-in-out' : 'none',
-                '@keyframes pulse': {
-                  from: { transform: 'scale(1)' },
-                  to: { transform: 'scale(1.05)' }
-                }
+                mb: 3, 
+                fontWeight: '800',
+                fontSize: '3rem',
+                color: '#ffffff',
+                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.7)'
               }}
             >
               About Us
             </Typography>
-            <Typography variant="body1" paragraph>
+            <Typography variant="body1" 
+              sx={{
+                mb: 3,
+                fontSize: '1.2rem',
+                lineHeight: '1.6',
+                color: 'rgba(255, 255, 255, 0.9)',
+                textShadow: '1px 1px 3px rgba(0, 0, 0, 0.5)'
+              }}
+              paragraph
+            >
               Farm-to-Market connects Farmers, Merchants, and Transporters for a seamless harvest journey.
               By eliminating middlemen, we ensure fair pricing and efficient transactions.
             </Typography>
-            <List>
-              <ListItem>
-                <ListItemText primary="Empowers farmers by providing direct marketplace access." />
+            <List sx={{ 
+              '& .MuiListItem-root': {
+                padding: '8px 0',
+                '&::before': {
+                  content: '"✓"',
+                  color: '#10b981',
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem',
+                  marginRight: '12px'
+                }
+              }
+            }}>
+              <ListItem sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                <ListItemText 
+                  primary="Empowers farmers by providing direct marketplace access."
+                  primaryTypographyProps={{
+                    sx: {
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      fontSize: '1rem',
+                      lineHeight: '1.5',
+                      textShadow: '1px 1px 2px rgba(0, 0, 0, 0.6)'
+                    }
+                  }}
+                />
               </ListItem>
-              <ListItem>
-                <ListItemText primary="Merchants can filter, bid, and buy harvests securely." />
+              <ListItem sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                <ListItemText 
+                  primary="Merchants can filter, bid, and buy harvests securely."
+                  primaryTypographyProps={{
+                    sx: {
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      fontSize: '1rem',
+                      lineHeight: '1.5',
+                      textShadow: '1px 1px 2px rgba(0, 0, 0, 0.6)'
+                    }
+                  }}
+                />
               </ListItem>
-              <ListItem>
-                <ListItemText primary="Transporters streamline delivery for a complete ecosystem." />
+              <ListItem sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                <ListItemText 
+                  primary="Transporters streamline delivery for a complete ecosystem."
+                  primaryTypographyProps={{
+                    sx: {
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      fontSize: '1rem',
+                      lineHeight: '1.5',
+                      textShadow: '1px 1px 2px rgba(0, 0, 0, 0.6)'
+                    }
+                  }}
+                />
               </ListItem>
             </List>
           </Grid>
@@ -79,13 +128,7 @@ const AboutUs = () => {
               justifyContent: 'center',
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? 'translateX(0)' : 'translateX(50px)',
-              transition: 'opacity 1s ease-out, transform 1s ease-out',
-              animation: isVisible ? 'floatUpDown 4s infinite ease-in-out' : 'none',
-              '@keyframes floatUpDown': {
-                '0%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
-                '100%': { transform: 'translateY(0)' }
-              }
+              transition: 'opacity 1s ease-out, transform 1s ease-out'
             }}
           >
             <Box
@@ -93,10 +136,15 @@ const AboutUs = () => {
               src="/Images/home/about-us.jpg"  
               alt="About Us"
               sx={{
-                width: '90%',
+                width: '85%',
                 maxWidth: '500px',
-                borderRadius: '15px',
-                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)'
+                borderRadius: '1.5rem',
+                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                transition: 'transform 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.02)'
+                }
               }}
             />
           </Grid>

@@ -6,11 +6,11 @@ const notificationSchema = new mongoose.Schema({
   message: { type: String, required: true },
   type: { 
     type: String, 
-    enum: ['bid_accepted', 'bid_rejected', 'order_confirmed', 'payment_received', 'vehicle_booked', 'general'],
+    enum: ['bid_accepted', 'bid_rejected', 'order_confirmed', 'payment_received', 'vehicle_booked', 'message', 'general'],
     default: 'general'
   },
   isRead: { type: Boolean, default: false },
-  relatedId: { type: String }, // ID of related bid, order, etc.
+  relatedId: { type: String }, // ID of related bid, order, message, etc.
   metadata: {
     bidId: String,
     productName: String,
@@ -27,7 +27,14 @@ const notificationSchema = new mongoose.Schema({
     startLocation: String,
     endLocation: String,
     weight: String,
-    items: String
+    items: String,
+    // Message notification metadata
+    senderId: String,
+    senderName: String,
+    senderPicture: String,
+    senderRole: String,
+    messagePreview: String,
+    messageId: String
   }
 }, { timestamps: true });
 

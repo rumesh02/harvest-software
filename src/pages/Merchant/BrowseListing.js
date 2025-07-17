@@ -24,8 +24,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import InventoryIcon from "@mui/icons-material/Inventory";
-import ClearIcon from "@mui/icons-material/Clear";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import EmojiNatureIcon from "@mui/icons-material/EmojiNature";
@@ -61,32 +59,7 @@ const BrowseListing = () => {
     setFetchedProducts(prev => prev.map(p => (p._id === productId ? { ...p, ...updatedProduct } : p)));
   }, []);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setPage(1);
-      fetchProducts();
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, districtFilter, maxPrice]);
-
-  useEffect(() => {
-    if (page > 1) fetchProducts();
-  }, [page]);
-
-  useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    if (userId) {
-      joinUserRoom(userId);
-      setupProductUpdateListeners(null, updateProductInList);
-      return () => disconnectSocket();
-    }
-  }, [updateProductInList]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({ page, limit: 9 });
@@ -108,7 +81,32 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchQuery, districtFilter, maxPrice]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setPage(1);
+      fetchProducts();
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, districtFilter, maxPrice, fetchProducts]);
+
+  useEffect(() => {
+    if (page > 1) fetchProducts();
+  }, [page, fetchProducts]);
+
+  useEffect(() => {
+    const userId = localStorage.getItem("user_id");
+    if (userId) {
+      joinUserRoom(userId);
+      setupProductUpdateListeners(null, updateProductInList);
+      return () => disconnectSocket();
+    }
+  }, [updateProductInList]);
 
   const handleAddToCart = (product) => {
     addToCart({ ...product, farmerID: product.farmerID });

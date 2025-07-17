@@ -1,13 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth0 } from "@auth0/auth0-react";
-import { Link, useNavigate } from 'react-router-dom';  
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaGoogle } from "react-icons/fa";
+import {
+  Box,
+  Button,
+  Typography,
+  Paper,
+  CircularProgress,
+  Fade,
+  Avatar,
+  Stack,
+  Zoom,
+} from '@mui/material';
+import { green, grey, teal } from '@mui/material/colors';
+const mint = '#CFFFE5';
 
 function LoginPage() {
   const { loginWithRedirect, logout, isAuthenticated, user, getAccessTokenSilently, isLoading } = useAuth0();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   // If already authenticated, redirect to appropriate dashboard
   useEffect(() => {
@@ -45,62 +58,117 @@ function LoginPage() {
   }, [isAuthenticated, user, navigate, getAccessTokenSilently]);
 
   if (isLoading || checking) {
-    return <div>Loading...</div>;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor={grey[50]}>
+        <CircularProgress color="success" />
+      </Box>
+    );
   }
 
   console.log("Auth0 user:", user);
 
   return (
-    <div className="container-fluid vh-100">
-      <div className="row h-100">
-        {/* Image Section */}
-        <div className="col-lg-6 d-none d-lg-block p-0">
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, bgcolor: '#3a5a40' }}>
+      {/* Image Section */}
+      <Fade in timeout={1200}>
+        <Box
+          sx={{
+            flex: 1,
+            display: { xs: 'none', lg: 'flex' },
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+            minHeight: '100vh',
+            background: 'transparent',
+          }}
+        >
+          {/* Blurred overlay for #3a5a40 area */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: '#3a5a40',
+              filter: 'blur(12px)',
+              zIndex: 1,
+            }}
+          />
           <img
             src={`${process.env.PUBLIC_URL}/Images/pexels.jpg`}
-            alt="Farmers handshake illustration"
-            className="w-100 h-100 object-fit-cover"
+            alt="Login page image"
+            style={{ height: '100vh', width: '50vw', objectFit: 'cover', transition: 'filter 0.7s', borderRadius: '0px', position: 'relative', zIndex: 2 }}
+            onLoad={() => setImgLoaded(true)}
           />
-        </div>
-        {/* Form Section */}
-        <div className="col-lg-6 d-flex align-items-center justify-content-center">
-          <div className="w-75 max-w-400">
-            <div className="text-center mb-4">
-              <h1 className="fw-bold text-center">WELCOME BACK!</h1>
-              <p className="text-muted">Welcome back! Please enter your details.</p>
-            </div>
+        </Box>
+      </Fade>
+      {/* Form Section */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'white',
+        }}
+      >
+        <Zoom in timeout={800}>
+          <Paper elevation={5} sx={{ width: { xs: '95%', sm: 400 }, p: 4, borderRadius: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
+            <Box textAlign="center" mb={3}>
+              <Typography variant="h3" fontWeight={700} color="success.main" sx={{ fontSize: { xs: 30, sm: 36, md: 40 }, letterSpacing: 1 }}>
+                WELCOME BACK!
+              </Typography>
+              <Typography variant="body1" color="text.secondary" fontSize={17}>
+                Please enter your details.
+              </Typography>
+            </Box>
             {/* Show user details if logged in */}
             {isAuthenticated ? (
-              <div className="text-center">
-                <h3>Welcome, {user.name}!</h3>
-                <p>{user.email}</p>
-                <button className="btn btn-danger w-100 mb-3" onClick={() => logout({ returnTo: window.location.origin })}>
-                  Logout
-                </button>
-              </div>
+              <Box textAlign="center">
+                <Stack direction="column" alignItems="center" spacing={2}>
+                  <Avatar src={user.picture} alt={user.name} sx={{ width: 56, height: 56, mb: 1, boxShadow: 2 }} />
+                  <Typography variant="h6" fontWeight={600} color="success.main">Welcome, {user.name}!</Typography>
+                  <Typography variant="body2" color="text.secondary">{user.email}</Typography>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    fullWidth
+                    sx={{ mt: 2, fontWeight: 600, borderRadius: 2, textTransform: 'none' }}
+                    onClick={() => logout({ returnTo: window.location.origin })}
+                  >
+                    Logout
+                  </Button>
+                </Stack>
+              </Box>
             ) : (
-              <form>
-                <button
+              <Box component="form" noValidate>
+                <Button
                   type="button"
-                  className="btn btn-success w-100 mb-3"
+                  variant="contained"
+                  fullWidth
+                  sx={{ mb: 2, backgroundColor: green[600], fontWeight: 600, fontSize: 17, borderRadius: 2, textTransform: 'none', boxShadow: 1, '&:hover': { backgroundColor: green[700] } }}
                   onClick={() => loginWithRedirect()}
                 >
-                  Sign in 
-                </button>
-                <button
+                  Sign in
+                </Button>
+                <Button
                   type="button"
-                  className="btn btn-outline-secondary w-100 mb-4 d-flex align-items-center justify-content-center gap-2"
+                  variant="outlined"
+                  fullWidth
+                  startIcon={<FaGoogle size={18} />}
+                  sx={{ mb: 2, color: grey[700], borderColor: grey[400], fontWeight: 600, fontSize: 17, borderRadius: 2, textTransform: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, '&:hover': { borderColor: green[600], color: green[700] } }}
                   onClick={() => loginWithRedirect({ connection: "google-oauth2" })}
                 >
-                  <FaGoogle size={18} />
                   Sign in with Google
-                </button>
-                
-              </form>
+                </Button>
+              </Box>
             )}
-          </div>
-        </div>
-      </div>
-    </div>
+          </Paper>
+        </Zoom>
+      </Box>
+    </Box>
   );
 }
 

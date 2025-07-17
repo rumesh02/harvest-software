@@ -799,7 +799,7 @@ useEffect(() => {
                     <CardMedia
                       component="img"
                       height={220}
-                      image="/Images/home/farmer home.jpg"
+                      image="/Images/home/farmer_home.jpg"
                       alt="Farmer"
                       sx={{
                         transition: 'transform 0.5s ease',
@@ -908,7 +908,7 @@ useEffect(() => {
                     <CardMedia
                       component="img"
                       height={220}
-                      image="/Images/home/merchant home.jpeg"
+                      image="/Images/home/merchant_home.jpg"
                       alt="Merchant"
                       sx={{
                         transition: 'transform 0.5s ease',
@@ -1018,7 +1018,7 @@ useEffect(() => {
                     <CardMedia
                       component="img"
                       height={220}
-                      image="/Images/home/transporter home.jpeg"
+                      image="/Images/home/transporter_home.jpeg"
                       alt="Transporter"
                       sx={{
                         transition: 'transform 0.5s ease',

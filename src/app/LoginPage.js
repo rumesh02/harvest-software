@@ -94,12 +94,7 @@ function LoginPage() {
                   <FaGoogle size={18} />
                   Sign in with Google
                 </button>
-                <p className="text-center">
-                  Don't have an account?{' '}
-                  <Link to="/register" className="text-success text-decoration-none">
-                    Sign up for free!
-                  </Link>
-                </p>
+                
               </form>
             )}
           </div>

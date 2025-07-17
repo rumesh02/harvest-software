@@ -18,7 +18,8 @@ import {
   Alert,
   Card,
   CardContent,
-  InputAdornment
+  InputAdornment,
+  IconButton
 } from "@mui/material";
 import {
   Inventory as InventoryIcon,
@@ -26,7 +27,8 @@ import {
   AttachMoney as MoneyIcon,
   Scale as ScaleIcon,
   DriveFileRenameOutline as NameIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  ArrowBack
 } from "@mui/icons-material";
 
 const ListedItems = () => {
@@ -227,21 +229,43 @@ const ListedItems = () => {
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: 2
+            borderRadius: 3,
+            maxHeight: '95vh',
+            overflow: 'hidden',
+            background: "#f0f9ff"
           }
         }}
       >
         <DialogTitle sx={{ 
-          fontWeight: 600, 
-          color: '#2E7D32',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1
+          display: 'flex', 
+          alignItems: 'center', 
+          pb: 2,
+          background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+          color: 'white',
+          position: 'relative'
         }}>
-          <EditIcon />
-          Edit Product
+          <IconButton
+            onClick={() => setEditDialogOpen(false)}
+            sx={{
+              mr: 2,
+              color: 'white',
+              borderRadius: 2,
+              padding: '8px',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          >
+            <ArrowBack />
+          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <EditIcon sx={{ mr: 1, color: 'white' }} />
+            <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', fontSize: '20px' }}>
+              Edit Product
+            </Typography>
+          </Box>
         </DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
+        <DialogContent sx={{ pt: 2, p: 3 }}>
           <TextField
             label="Product Name"
             fullWidth
@@ -249,10 +273,20 @@ const ListedItems = () => {
             value={editForm.name}
             onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
             variant="outlined"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-focused fieldset': {
+                  borderColor: '#2563eb',
+                },
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#2563eb',
+              },
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <NameIcon />
+                  <NameIcon sx={{ color: '#2563eb' }} />
                 </InputAdornment>
               ),
             }}
@@ -265,10 +299,20 @@ const ListedItems = () => {
             value={editForm.price}
             onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
             variant="outlined"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-focused fieldset': {
+                  borderColor: '#2563eb',
+                },
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#2563eb',
+              },
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <MoneyIcon />
+                  <MoneyIcon sx={{ color: '#2563eb' }} />
                   Rs.
                 </InputAdornment>
               ),
@@ -282,10 +326,20 @@ const ListedItems = () => {
             value={editForm.quantity}
             onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
             variant="outlined"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-focused fieldset': {
+                  borderColor: '#2563eb',
+                },
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#2563eb',
+              },
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <ScaleIcon />
+                  <ScaleIcon sx={{ color: '#2563eb' }} />
                 </InputAdornment>
               ),
               endAdornment: (
@@ -296,17 +350,19 @@ const ListedItems = () => {
             }}
           />
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
+        <DialogActions sx={{ p: 3, gap: 2 }}>
           <Button 
             onClick={() => setEditDialogOpen(false)} 
             variant="outlined"
             sx={{
-              borderColor: '#757575',
-              color: '#757575',
-              '&:hover': {
-                borderColor: '#424242',
-                backgroundColor: '#f5f5f5'
-              }
+              borderColor: '#64748b',
+              color: '#64748b',
+              '&:hover': { 
+                borderColor: '#475569', 
+                backgroundColor: '#f8fafc'
+              },
+              textTransform: 'none',
+              fontWeight: 600
             }}
           >
             Cancel
@@ -315,10 +371,12 @@ const ListedItems = () => {
             onClick={handleEditSubmit} 
             variant="contained"
             sx={{
-              backgroundColor: '#4CAF50',
-              '&:hover': {
-                backgroundColor: '#45a049'
-              }
+              background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+              '&:hover': { 
+                background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)'
+              },
+              textTransform: 'none',
+              fontWeight: 600
             }}
           >
             Save Changes

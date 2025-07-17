@@ -12,7 +12,11 @@ const vehicleSchema = mongoose.Schema(
       unique: true,
     },
     loadCapacity: {
-      type: String,
+      type: Number,
+      required: true,
+    },
+    pricePerKm: {
+      type: Number,
       required: true,
     },
     image: {

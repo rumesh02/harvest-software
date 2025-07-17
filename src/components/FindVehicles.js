@@ -24,6 +24,7 @@ import {
   Tooltip,
   IconButton,
 } from "@mui/material";
+import { ArrowBack } from "@mui/icons-material";
 import LocateMe from "../components/LocateMe"; // Import LocateMe component
 
 const allDistricts = [
@@ -33,7 +34,7 @@ const allDistricts = [
   "Mullaitivu", "Nuwara Eliya", "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee"
 ];
 
-const FindVehicles = ({ selectedOrders }) => {
+const FindVehicles = ({ selectedOrders, onBack }) => {
   // Debug logging to see what's in selectedOrders
   console.log("FindVehicles - selectedOrders:", selectedOrders);
   
@@ -137,6 +138,8 @@ const FindVehicles = ({ selectedOrders }) => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [openLocationModal, setOpenLocationModal] = useState(false); // Add location modal state
   const [selectedLocationData, setSelectedLocationData] = useState(null); // Track selected location
+  const [bookingSuccess, setBookingSuccess] = useState(false); // Track booking success
+  const [bookedVehicleDetails, setBookedVehicleDetails] = useState(null); // Store booked vehicle details
 
   // Booking form state
   const [bookingForm, setBookingForm] = useState({
@@ -145,7 +148,6 @@ const FindVehicles = ({ selectedOrders }) => {
     endLocation: "", // Keep this empty - don't auto-fill
     items: selectedConfirmedBid?.items?.[0]?.name || "",
     weight: selectedConfirmedBid?.items?.[0]?.quantity || "",
-    itemCode: selectedConfirmedBid?.itemCode || selectedConfirmedBid?.items?.[0]?.itemCode || "",
   });
   
   // Update booking form when product details are loaded
@@ -157,7 +159,6 @@ const FindVehicles = ({ selectedOrders }) => {
         startLocation: selectedConfirmedBid.productLocation.address || "Harvest location not available",
         items: selectedConfirmedBid?.items?.[0]?.name || prev.items,
         weight: selectedConfirmedBid?.items?.[0]?.quantity || prev.weight,
-        itemCode: selectedConfirmedBid?.itemCode || selectedConfirmedBid?.items?.[0]?.itemCode || prev.itemCode,
       }));
     } else if (productDetails && productDetails.location) {
       setBookingForm(prev => ({
@@ -165,7 +166,6 @@ const FindVehicles = ({ selectedOrders }) => {
         startLocation: productDetails.location.address || "Harvest location not available",
         items: productDetails.name || selectedConfirmedBid?.items?.[0]?.name || prev.items,
         weight: selectedConfirmedBid?.items?.[0]?.quantity || prev.weight,
-        itemCode: selectedConfirmedBid?.itemCode || selectedConfirmedBid?.items?.[0]?.itemCode || prev.itemCode,
       }));
     }
   }, [productDetails, selectedConfirmedBid]);
@@ -185,7 +185,13 @@ const FindVehicles = ({ selectedOrders }) => {
     const fetchVehicles = async () => {
       try {
         const data = await getVehicles();
-        setVehicles(data);
+        // Sort vehicles by creation date in descending order (newest first)
+        const sortedVehicles = data.sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.updatedAt || 0);
+          const dateB = new Date(b.createdAt || b.updatedAt || 0);
+          return dateB - dateA; // Newest first
+        });
+        setVehicles(sortedVehicles);
       } catch (err) {
         setError("Failed to load vehicles");
       } finally {
@@ -211,14 +217,34 @@ const FindVehicles = ({ selectedOrders }) => {
   });
 
   // Handle opening the booking modal
-  const handleBook = (vehicle) => {
+  const handleBook = async (vehicle) => {
     console.log("Selected Vehicle:", vehicle); // Debugging log
-    setSelectedVehicle(vehicle);
+    
+    // Fetch transporter details to get contact number
+    try {
+      const transporterResponse = await axios.get(`http://localhost:5000/api/users/${encodeURIComponent(vehicle.transporterId)}`);
+      const transporterData = transporterResponse.data;
+      
+      // Set vehicle with transporter contact info
+      setSelectedVehicle({
+        ...vehicle,
+        transporterPhone: transporterData.phone,
+        transporterName: transporterData.name
+      });
+    } catch (error) {
+      console.error("Error fetching transporter details:", error);
+      // Still set vehicle even if transporter details fail
+      setSelectedVehicle({
+        ...vehicle,
+        transporterPhone: "Contact number not available",
+        transporterName: "Name not available"
+      });
+    }
+    
     setBookingForm((prev) => ({
       ...prev,
       items: productDetails?.name || selectedConfirmedBid?.items?.[0]?.name || prev.items,
       weight: selectedConfirmedBid?.items?.[0]?.quantity || prev.weight,
-      itemCode: selectedConfirmedBid?.itemCode || selectedConfirmedBid?.items?.[0]?.itemCode || prev.itemCode,
       startLocation: productDetails?.location?.address || "Harvest location not available", // Use product location
       endLocation: "", // Don't auto-fill end location
     }));
@@ -229,13 +255,14 @@ const FindVehicles = ({ selectedOrders }) => {
   const handleCloseModal = () => {
     setOpenModal(false);
     setSelectedVehicle(null);
+    setBookingSuccess(false);
+    setBookedVehicleDetails(null);
     setBookingForm({
       phone: "",
       startLocation: productDetails?.location?.address || "Location not available", // Use product location
       endLocation: "", // Reset to empty
       items: productDetails?.name || selectedConfirmedBid?.items?.[0]?.name || "",
       weight: selectedConfirmedBid?.items?.[0]?.quantity || "",
-      itemCode: selectedConfirmedBid?.itemCode || selectedConfirmedBid?.items?.[0]?.itemCode || "",
     });
   };
 
@@ -283,7 +310,27 @@ const FindVehicles = ({ selectedOrders }) => {
 
     try {
       await createBooking(bookingData);
-      handleCloseModal();
+      
+      // Fetch transporter details to get phone number
+      try {
+        const transporterResponse = await axios.get(`http://localhost:5000/api/users/${encodeURIComponent(selectedVehicle.transporterId)}`);
+        const transporterData = transporterResponse.data;
+        console.log("Transporter details fetched:", transporterData);
+        
+        // Store booked vehicle details with transporter phone
+        setBookedVehicleDetails({
+          ...selectedVehicle,
+          transporterPhone: transporterData.phone,
+          transporterName: transporterData.name
+        });
+      } catch (transporterError) {
+        console.error("Error fetching transporter details:", transporterError);
+        // Still show success but without phone number
+        setBookedVehicleDetails(selectedVehicle);
+      }
+      
+      setBookingSuccess(true);
+      // Don't close modal immediately - show success message first
     } catch (err) {
       alert("Booking failed: " + (err.response?.data?.error || err.message));
     }
@@ -303,66 +350,110 @@ const FindVehicles = ({ selectedOrders }) => {
     );
 
   return (
-    <Box sx={{ p: 3, background: "#f7fbff", minHeight: "100vh" }}>
+    <Box sx={{ p: 3, background: "#f0f9ff", minHeight: "100vh" }}>
       <Box sx={{ maxWidth: 1200, mx: "auto" }}>
-        <Typography
-          variant="h4"
-          sx={{
-            textAlign: "left",
-            mb: 1,
-            fontWeight: 700,
-            color: "#1a237e",
-            letterSpacing: 1,
-          }}
-        >
-          Find Vehicles
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 2 }}>
-          <Typography sx={{ fontWeight: 500, color: "#333" }}>Capacity:</Typography>
-          <FormControl
-            size="small"
+        {/* Header with Back Button */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+          {onBack && (
+            <IconButton
+              onClick={onBack}
+              sx={{
+                mr: 2,
+                backgroundColor: "#2563eb",
+                color: "white",
+                borderRadius: 2,
+                padding: "8px",
+                "&:hover": {
+                  backgroundColor: "#1d4ed8",
+                },
+              }}
+            >
+              <ArrowBack />
+            </IconButton>
+          )}
+          <Typography
+            variant="h4"
             sx={{
-              minWidth: 180,
-              background: "#fff",
-              borderRadius: 2,
-              boxShadow: 1,
+              fontWeight: 700,
+              color: "#1e40af",
+              letterSpacing: 1,
             }}
           >
-            <Select
-              value={capacityFilter}
-              onChange={(e) => setCapacityFilter(e.target.value)}
-              displayEmpty
+            Find Vehicles
+          </Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 3, flexWrap: "wrap" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography sx={{ fontWeight: 500, color: "#333", fontSize: "0.95rem" }}>Capacity:</Typography>
+            <FormControl
+              size="small"
+              sx={{
+                minWidth: 150,
+                background: "#fff",
+                borderRadius: 1,
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             >
-              {capacityRanges.map((range) => (
-                <MenuItem key={range.value} value={range.value}>
-                  {range.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Typography sx={{ fontWeight: 500, color: "#333" }}>District:</Typography>
-          <FormControl
-            size="small"
-            sx={{
-              minWidth: 180,
-              background: "#fff",
-              borderRadius: 2,
-              boxShadow: 1,
-            }}
-          >
-            <Select
-              value={districtFilter}
-              onChange={(e) => setDistrictFilter(e.target.value)}
-              displayEmpty
+              <Select
+                value={capacityFilter}
+                onChange={(e) => setCapacityFilter(e.target.value)}
+                displayEmpty
+                sx={{
+                  fontSize: "0.9rem",
+                  color: capacityFilter ? "#333" : "#666",
+                }}
+              >
+                {capacityRanges.map((range) => (
+                  <MenuItem key={range.value} value={range.value}>
+                    {range.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography sx={{ fontWeight: 500, color: "#333", fontSize: "0.95rem" }}>District:</Typography>
+            <FormControl
+              size="small"
+              sx={{
+                minWidth: 150,
+                background: "#fff",
+                borderRadius: 1,
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             >
-              <MenuItem value="">All Districts</MenuItem>
-              {allDistricts.map((district) => (
-                <MenuItem key={district} value={district}>
-                  {district}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <Select
+                value={districtFilter}
+                onChange={(e) => setDistrictFilter(e.target.value)}
+                displayEmpty
+                sx={{
+                  fontSize: "0.9rem",
+                  color: districtFilter ? "#333" : "#666",
+                }}
+              >
+                <MenuItem value="">All Districts</MenuItem>
+                {allDistricts.map((district) => (
+                  <MenuItem key={district} value={district}>
+                    {district}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
         </Box>
         <Grid
           container
@@ -379,16 +470,18 @@ const FindVehicles = ({ selectedOrders }) => {
               <Grid item key={vehicle._id} xs={12} sm={6} md={4} lg={3}>
                 <Card
                   sx={{
-                    borderRadius: 4,
-                    boxShadow: "0 4px 24px rgba(60,72,88,0.10)",
+                    borderRadius: 3,
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
                     p: 2,
-                    minHeight: 320,
+                    minHeight: 280,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    transition: "box-shadow 0.2s",
+                    transition: "all 0.3s ease",
+                    border: "1px solid #e0e0e0",
                     "&:hover": {
-                      boxShadow: "0 8px 32px rgba(60,72,88,0.18)",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                      transform: "translateY(-1px)",
                     },
                   }}
                 >
@@ -397,37 +490,36 @@ const FindVehicles = ({ selectedOrders }) => {
                     image={vehicle.image || placeholderImage}
                     alt={vehicle.vehicleType}
                     sx={{
-                      width: 180,
-                      height: 120,
+                      width: 150,
+                      height: 100,
                       objectFit: "cover",
-                      borderRadius: 3,
-                      border: "2px solid #e3e3e3",
-                      mb: 2,
-                      background: "#f4f8fb",
+                      borderRadius: 2,
+                      mb: 1.5,
+                      background: "#f5f5f5",
                     }}
                     onError={(e) => {
                       e.target.src = placeholderImage;
                     }}
                   />
-                  <CardContent sx={{ p: 0, textAlign: "center", width: "100%" }}>
+                  <CardContent sx={{ p: 0, textAlign: "center", width: "100%", flex: 1 }}>
                     <Typography
                       variant="h6"
-                      fontWeight={700}
-                      sx={{ color: "#3949ab", mb: 0.5 }}
+                      fontWeight={600}
+                      sx={{ 
+                        color: "#1976d2", 
+                        mb: 0.5,
+                        fontSize: "1.1rem"
+                      }}
                     >
                       {vehicle.vehicleType}
                     </Typography>
                     <Typography
                       variant="body2"
-                      color="primary"
-                      fontWeight={600}
                       sx={{
                         mb: 0.5,
-                        letterSpacing: 1,
-                        background: "#e3f2fd",
-                        borderRadius: 1,
-                        px: 1,
-                        display: "inline-block",
+                        color: "#1976d2",
+                        fontWeight: 500,
+                        fontSize: "0.9rem"
                       }}
                     >
                       {vehicle.licensePlate}
@@ -435,31 +527,43 @@ const FindVehicles = ({ selectedOrders }) => {
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{ mb: 1, mt: 0.5 }}
+                      sx={{ mb: 0.5, fontSize: "0.85rem" }}
                     >
-                      Capacity: <b>{vehicle.loadCapacity}</b>
+                      Capacity: {vehicle.loadCapacity}kg
                     </Typography>
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{ mb: 1 }}
+                      sx={{ mb: 0.5, fontSize: "0.85rem" }}
                     >
-                      District: <b>{vehicle.district || "N/A"}</b>
+                      District: {vehicle.district || "N/A"}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 1.5, fontSize: "0.85rem" }}
+                    >
+                      Price per Km: {vehicle.pricePerKm || "###"}
                     </Typography>
                   </CardContent>
                   <Button
                     variant="contained"
-                    color="primary"
                     sx={{
-                      mt: "auto",
-                      width: "90%",
-                      borderRadius: 2,
+                      width: "100%",
+                      borderRadius: 1,
                       fontWeight: 600,
-                      letterSpacing: 1,
+                      letterSpacing: 0.5,
+                      backgroundColor: "#1976d2",
+                      color: "white",
+                      fontSize: "0.9rem",
+                      py: 1,
+                      "&:hover": {
+                        backgroundColor: "#1565c0",
+                      },
                     }}
                     onClick={() => handleBook(vehicle)}
                   >
-                    Book
+                    BOOK
                   </Button>
                 </Card>
               </Grid>
@@ -493,11 +597,16 @@ const FindVehicles = ({ selectedOrders }) => {
         <DialogTitle sx={{ 
           textAlign: "center", 
           fontWeight: 700, 
-          background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
+          background: bookingSuccess 
+            ? "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)" 
+            : "linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)",
           color: "white",
           fontSize: "1.5rem",
           py: 3,
           position: "relative",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           '&::after': {
             content: '""',
             position: 'absolute',
@@ -505,48 +614,80 @@ const FindVehicles = ({ selectedOrders }) => {
             left: 0,
             right: 0,
             height: '3px',
-            background: 'linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1)',
+            background: bookingSuccess 
+              ? 'linear-gradient(90deg, #22c55e, #16a34a, #15803d)' 
+              : 'linear-gradient(90deg, #2563eb, #3b82f6, #1d4ed8)',
           }
         }}>
-          🚚 Book Your Vehicle
-        </DialogTitle>
-        <DialogContent sx={{ p: 0, maxHeight: '80vh', overflowY: 'auto' }}>
-          <Box
-            component="form"
-            onSubmit={handleBookingSubmit}
+          <IconButton
+            onClick={() => setOpenModal(false)}
             sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 3,
-              p: 5,
-              background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-              minHeight: "600px",
+              position: 'absolute',
+              left: 16,
+              color: 'white',
+              borderRadius: 2,
+              padding: '8px',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
             }}
           >
+            <ArrowBack />
+          </IconButton>
+          {bookingSuccess ? '🎉 Booking Confirmed!' : '🚚 Book Your Vehicle'}
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, maxHeight: '80vh', overflowY: 'auto' }}>
+          {!bookingSuccess ? (
+            // Booking Form
+            <Box
+              component="form"
+              onSubmit={handleBookingSubmit}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 3,
+                p: 5,
+                background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                minHeight: "600px",
+              }}
+            >
             {/* Vehicle Info Section */}
             <Box sx={{ 
               background: 'white', 
               borderRadius: 2, 
               p: 4, 
               mb: 2, 
-              boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-              border: '1px solid #e2e8f0'
+              boxShadow: '0 2px 10px rgba(37, 99, 235, 0.1)',
+              border: '1px solid #dbeafe'
             }}>
-              <Typography variant="h6" sx={{ mb: 3, color: '#1976d2', fontWeight: 600 }}>
+              <Typography variant="h6" sx={{ mb: 3, color: '#2563eb', fontWeight: 600 }}>
                 🚗 Selected Vehicle Details
               </Typography>
-              <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                <Box sx={{ flex: 1, minWidth: '250px' }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3 }}>
+                <Box>
                   <Typography variant="body2" color="text.secondary">Vehicle Type:</Typography>
                   <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1.1rem' }}>{selectedVehicle?.vehicleType}</Typography>
                 </Box>
-                <Box sx={{ flex: 1, minWidth: '250px' }}>
+                <Box>
                   <Typography variant="body2" color="text.secondary">License Plate:</Typography>
                   <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1.1rem' }}>{selectedVehicle?.licensePlate}</Typography>
                 </Box>
-                <Box sx={{ flex: 1, minWidth: '250px' }}>
+                <Box>
                   <Typography variant="body2" color="text.secondary">Load Capacity:</Typography>
                   <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1.1rem' }}>{selectedVehicle?.loadCapacity} kg</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">Transporter Contact:</Typography>
+                  <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1.1rem' }}>
+                    {selectedVehicle?.transporterPhone || "Loading..."}
+                  </Typography>
+
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">Price per KM:</Typography>
+                  <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1.1rem' }}>
+                    {selectedVehicle?.pricePerKm ? `LKR ${selectedVehicle.pricePerKm}` : "Price not available (Please contact transporter)"}
+                  </Typography>
                 </Box>
               </Box>
             </Box>
@@ -708,36 +849,6 @@ const FindVehicles = ({ selectedOrders }) => {
               <Typography variant="h6" sx={{ mb: 3, color: '#1976d2', fontWeight: 600 }}>
                 📦 Transport Details
               </Typography>
-              <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 3 }}>
-                <Box sx={{ flex: 1, minWidth: '300px' }}>
-                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: '#333' }}>
-                    Item Code
-                  </Typography>
-                  <TextField
-                    name="itemCode"
-                    value={bookingForm.itemCode}
-                    fullWidth
-                    variant="outlined"
-                    placeholder="Item code"
-                    size="medium"
-                    InputProps={{
-                      style: { borderRadius: 10, fontSize: '1rem' },
-                      readOnly: true,
-                    }}
-                    sx={{ 
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#f5f5f5',
-                        '&:hover fieldset': {
-                          borderColor: '#1976d2',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#1976d2',
-                        },
-                      },
-                    }}
-                  />
-                </Box>
-              </Box>
               <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                 <Box sx={{ flex: 1, minWidth: '300px' }}>
                   <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: '#333' }}>
@@ -852,6 +963,177 @@ const FindVehicles = ({ selectedOrders }) => {
               </Button>
             </DialogActions>
           </Box>
+          ) : (
+            // Success Message
+            <Box sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 4,
+              p: 5,
+              background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+              minHeight: "600px",
+              textAlign: "center"
+            }}>
+              {/* Success Icon */}
+              <Box sx={{
+                width: 100,
+                height: 100,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 8px 32px rgba(34, 197, 94, 0.3)",
+                mb: 2
+              }}>
+                <Box component="span" sx={{ fontSize: "3rem", color: "white" }}>✅</Box>
+              </Box>
+
+              {/* Success Message */}
+              <Typography variant="h4" sx={{ 
+                color: "#1976d2", 
+                fontWeight: 700, 
+                mb: 2,
+                fontSize: "2rem"
+              }}>
+                🎉 Booking Successful!
+              </Typography>
+              
+              <Typography variant="h6" sx={{ 
+                color: "#374151", 
+                fontWeight: 500,
+                mb: 3,
+                maxWidth: "600px",
+                lineHeight: 1.6
+              }}>
+                Your vehicle booking has been confirmed! The transporter {bookedVehicleDetails?.transporterName ? `"${bookedVehicleDetails.transporterName}"` : ''} has been notified and will contact you shortly to coordinate the pickup and delivery details.
+              </Typography>
+
+              {/* Vehicle Details */}
+              <Box sx={{ 
+                background: 'white', 
+                borderRadius: 2, 
+                p: 4, 
+                mb: 3, 
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                border: '1px solid #e2e8f0',
+                width: '100%',
+                maxWidth: '600px'
+              }}>
+                <Typography variant="h6" sx={{ mb: 3, color: '#1976d2', fontWeight: 600 }}>
+                  🚗 Booked Vehicle Details
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                  <Box sx={{ flex: 1, minWidth: '150px' }}>
+                    <Typography variant="body2" color="text.secondary">Vehicle Type:</Typography>
+                    <Typography variant="body1" fontWeight={600}>{bookedVehicleDetails?.vehicleType}</Typography>
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: '150px' }}>
+                    <Typography variant="body2" color="text.secondary">License Plate:</Typography>
+                    <Typography variant="body1" fontWeight={600}>{bookedVehicleDetails?.licensePlate}</Typography>
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: '150px' }}>
+                    <Typography variant="body2" color="text.secondary">Load Capacity:</Typography>
+                    <Typography variant="body1" fontWeight={600}>{bookedVehicleDetails?.loadCapacity} kg</Typography>
+                  </Box>
+                </Box>
+                
+                {/* Transporter Contact Info */}
+                {bookedVehicleDetails?.transporterName && (
+                  <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid #e2e8f0' }}>
+                    <Typography variant="h6" sx={{ mb: 2, color: '#1976d2', fontWeight: 600 }}>
+                      📞 Transporter Contact
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                      <Box sx={{ flex: 1, minWidth: '150px' }}>
+                        <Typography variant="body2" color="text.secondary">Name:</Typography>
+                        <Typography variant="body1" fontWeight={600}>{bookedVehicleDetails.transporterName}</Typography>
+                      </Box>
+                      <Box sx={{ flex: 1, minWidth: '150px' }}>
+                        <Typography variant="body2" color="text.secondary">Phone:</Typography>
+                        <Typography variant="body1" fontWeight={600}>
+                          {bookedVehicleDetails.transporterPhone || 'Contact number loading...'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Action Buttons */}
+              <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Button 
+                  variant="contained" 
+                  disabled={!bookedVehicleDetails?.transporterPhone}
+                  sx={{ 
+                    borderRadius: 3, 
+                    px: 6, 
+                    py: 2,
+                    background: bookedVehicleDetails?.transporterPhone 
+                      ? 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)'
+                      : 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    fontSize: '18px',
+                    minWidth: '180px',
+                    boxShadow: bookedVehicleDetails?.transporterPhone 
+                      ? '0 4px 15px rgba(22, 163, 74, 0.3)'
+                      : '0 4px 15px rgba(107, 114, 128, 0.3)',
+                    '&:hover': {
+                      background: bookedVehicleDetails?.transporterPhone 
+                        ? 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)'
+                        : 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)',
+                      boxShadow: bookedVehicleDetails?.transporterPhone 
+                        ? '0 6px 20px rgba(22, 163, 74, 0.4)'
+                        : '0 6px 20px rgba(107, 114, 128, 0.4)',
+                    }
+                  }}
+                  onClick={() => {
+                    // Make a call to the transporter
+                    if (bookedVehicleDetails?.transporterPhone) {
+                      window.location.href = `tel:${bookedVehicleDetails.transporterPhone}`;
+                    } else {
+                      alert(`Transporter phone number not available yet. Please wait for ${bookedVehicleDetails?.transporterName || 'the transporter'} to contact you, or try refreshing the page.`);
+                    }
+                  }}
+                >
+                  📞 Call {bookedVehicleDetails?.transporterName || 'Transporter'}
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  sx={{ 
+                    borderRadius: 3, 
+                    px: 6, 
+                    py: 2,
+                    borderColor: '#1976d2',
+                    color: '#1976d2',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    fontSize: '18px',
+                    minWidth: '150px',
+                    '&:hover': {
+                      borderColor: '#1565c0',
+                      backgroundColor: '#f0f9ff'
+                    }
+                  }}
+                  onClick={handleCloseModal}
+                >
+                  Close
+                </Button>
+              </Box>
+
+              {/* Status Message */}
+              <Typography variant="body2" sx={{ 
+                color: "#6b7280", 
+                fontStyle: "italic",
+                mt: 2,
+                maxWidth: "500px"
+              }}>
+                💡 Stay connected! {bookedVehicleDetails?.transporterName || 'The transporter'} will contact you once they confirm the booking. You can also call them directly using the button above{bookedVehicleDetails?.transporterPhone ? '' : ' once their contact information is available'}.
+              </Typography>
+            </Box>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -883,6 +1165,9 @@ const FindVehicles = ({ selectedOrders }) => {
           fontSize: "1.5rem",
           py: 3,
           position: "relative",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           '&::after': {
             content: '""',
             position: 'absolute',
@@ -893,6 +1178,21 @@ const FindVehicles = ({ selectedOrders }) => {
             background: 'linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1)',
           }
         }}>
+          <IconButton
+            onClick={() => setOpenLocationModal(false)}
+            sx={{
+              position: 'absolute',
+              left: 16,
+              color: 'white',
+              borderRadius: 2,
+              padding: '8px',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          >
+            <ArrowBack />
+          </IconButton>
           📍 Select Your Delivery Location
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>

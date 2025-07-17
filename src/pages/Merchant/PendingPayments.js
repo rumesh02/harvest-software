@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Paper, List, ListItem, ListItemText, Button, Divider, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Alert } from '@mui/material';
+import { Box, Typography, Paper, List, ListItem, ListItemText, Button, Divider, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Alert, IconButton } from '@mui/material';
 import { useAuth0 } from "@auth0/auth0-react";
 import { fetchPendingPayments, updateConfirmedBidStatus, generatePayHereHash } from '../../services/orderService';
 import PaymentIcon from "@mui/icons-material/Payment";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { ArrowBack } from '@mui/icons-material';
 
 const PendingPayments = () => {
   const [pendingPayments, setPendingPayments] = useState([]);
@@ -288,55 +289,113 @@ const PendingPayments = () => {
         onClose={handleDialogClose}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            maxHeight: '95vh',
+            overflow: 'hidden',
+            background: "#f0f9ff"
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          pb: 2,
+          background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+          color: 'white',
+          position: 'relative'
+        }}>
+          <IconButton
+            onClick={handleDialogClose}
+            sx={{
+              mr: 2,
+              color: 'white',
+              borderRadius: 2,
+              padding: '8px',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          >
+            <ArrowBack />
+          </IconButton>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <PaymentIcon sx={{ mr: 1, color: '#FFA000' }} />
-            Confirm Payment
+            <PaymentIcon sx={{ mr: 1, color: 'white' }} />
+            <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', fontSize: '20px' }}>
+              Confirm Payment
+            </Typography>
           </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: 3 }}>
           {paymentDialog.payment && (
             <Box>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: '#1e40af', fontWeight: 'bold' }}>
                 Order #{paymentDialog.payment.orderId}
               </Typography>
-              <Typography variant="body1" gutterBottom>
+              <Typography variant="body1" gutterBottom sx={{ fontSize: '18px', color: '#1e40af' }}>
                 <strong>Amount: Rs.{paymentDialog.payment.amount.toFixed(2)}</strong>
               </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+              <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontSize: '16px', mb: 2 }}>
                 Items: {paymentDialog.payment.items.map(item => `${item.quantity}kg of ${item.name}`).join(', ')}
               </Typography>
-              <Alert severity="info" sx={{ mt: 2 }}>
+              <Alert severity="info" sx={{ mt: 2, backgroundColor: '#e0f2fe', color: '#0277bd' }}>
                 Use PayHere for secure payment processing, or choose the demo option for testing purposes.
               </Alert>
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 3, gap: 2 }}>
           <Button 
             onClick={handleDialogClose} 
             disabled={processingPayment}
+            variant="outlined"
+            sx={{
+              borderColor: '#64748b',
+              color: '#64748b',
+              '&:hover': { 
+                borderColor: '#475569', 
+                backgroundColor: '#f8fafc'
+              },
+              textTransform: 'none',
+              fontWeight: 600
+            }}
           >
             Cancel
           </Button>
           <Button 
             variant="contained" 
-            color="primary"
             onClick={() => processPayHerePayment(paymentDialog.payment)}
             disabled={processingPayment || !isPayHereLoaded}
             startIcon={processingPayment ? <CircularProgress size={20} /> : <PaymentIcon />}
-            sx={{ mr: 1 }}
+            sx={{ 
+              mr: 1,
+              background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+              '&:hover': { 
+                background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)'
+              },
+              textTransform: 'none',
+              fontWeight: 600
+            }}
           >
             {!isPayHereLoaded ? 'Loading PayHere...' : 
              processingPayment ? 'Processing...' : 'Pay with PayHere'}
           </Button>
           <Button 
             variant="outlined" 
-            color="secondary"
             onClick={() => processPayment(paymentDialog.payment)}
             disabled={processingPayment}
             startIcon={processingPayment ? <CircularProgress size={20} /> : <CheckCircleIcon />}
+            sx={{
+              borderColor: '#2563eb',
+              color: '#2563eb',
+              '&:hover': { 
+                borderColor: '#1d4ed8', 
+                backgroundColor: '#f0f9ff'
+              },
+              textTransform: 'none',
+              fontWeight: 600
+            }}
           >
             {processingPayment ? 'Processing...' : 'Test Payment (Demo)'}
           </Button>

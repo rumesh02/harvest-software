@@ -3,8 +3,9 @@ import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, Chip, Button, Checkbox, Box, Typography, Dialog, DialogTitle, 
-    DialogContent, DialogActions, DialogContentText
+    DialogContent, DialogActions, DialogContentText, IconButton
 } from "@mui/material";
+import { ArrowBack } from "@mui/icons-material";
 import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 
@@ -413,19 +414,48 @@ const Collection = () => {
                 onClose={() => setTransportDialogOpen(false)}
                 maxWidth="sm"
                 fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        maxHeight: '95vh',
+                        overflow: 'hidden',
+                        background: "#f0f9ff"
+                    }
+                }}
             >
-                <DialogTitle>
-                    <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', color: '#2E7D32', fontSize: '20px' }}>
+                <DialogTitle sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    pb: 2,
+                    background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+                    color: 'white',
+                    position: 'relative'
+                }}>
+                    <IconButton
+                        onClick={() => setTransportDialogOpen(false)}
+                        sx={{
+                            mr: 2,
+                            color: 'white',
+                            borderRadius: 2,
+                            padding: '8px',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            },
+                        }}
+                    >
+                        <ArrowBack />
+                    </IconButton>
+                    <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', fontSize: '20px' }}>
                         🚚 Choose Your Transport Option
                     </Typography>
                 </DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ p: 3 }}>
                     <DialogContentText sx={{ mb: 3, fontSize: '18px', lineHeight: 1.6 }}>
-                        <Typography variant="body1" sx={{ mb: 2, fontSize: '18px' }}>
+                        <Typography variant="body1" sx={{ mb: 2, fontSize: '18px', color: '#1e40af' }}>
                             You've selected <strong>{selected.length}</strong> order(s) for collection. 
                             How would you like to collect your orders?
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#666', mb: 1, fontSize: '16px' }}>
+                        <Typography variant="body2" sx={{ color: '#64748b', mb: 1, fontSize: '16px' }}>
                             💡 <strong>Choose the option that works best for you:</strong>
                         </Typography>
                     </DialogContentText>
@@ -436,11 +466,15 @@ const Collection = () => {
                         variant="contained"
                         fullWidth
                         sx={{
-                            bgcolor: '#4CAF50',
-                            '&:hover': { bgcolor: '#45a049' },
+                            background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+                            '&:hover': { 
+                                background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)'
+                            },
                             py: 1.5,
                             fontSize: '18px',
-                            textTransform: 'none'
+                            textTransform: 'none',
+                            borderRadius: 2,
+                            fontWeight: 600
                         }}
                     >
                          Use App Transport Service
@@ -451,27 +485,21 @@ const Collection = () => {
                         variant="outlined"
                         fullWidth
                         sx={{
-                            borderColor: '#2196F3',
-                            color: '#2196F3',
-                            '&:hover': { borderColor: '#1976D2', bgcolor: '#f5f5f5' },
+                            borderColor: '#2563eb',
+                            color: '#2563eb',
+                            '&:hover': { 
+                                borderColor: '#1d4ed8', 
+                                backgroundColor: '#f0f9ff'
+                            },
                             py: 1.5,
                             fontSize: '18px',
-                            textTransform: 'none'
+                            textTransform: 'none',
+                            borderRadius: 2,
+                            fontWeight: 600
                         }}
                     >
                          Use My Own Transport
 
-                    </Button>
-                    <Button
-                        onClick={() => setTransportDialogOpen(false)}
-                        sx={{
-                            color: '#757575',
-                            textTransform: 'none',
-                            mt: 1,
-                            fontSize: '16px'
-                        }}
-                    >
-                        Cancel
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -483,16 +511,21 @@ const Collection = () => {
                     onClose={() => setFindVehiclesOpen(false)}
                     maxWidth="lg"
                     fullWidth
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 3,
+                            maxHeight: '95vh',
+                            overflow: 'hidden',
+                            background: "#f0f9ff"
+                        }
+                    }}
                 >
-                    <DialogTitle>Find Transport Vehicles</DialogTitle>
-                    <DialogContent dividers>
-                        <FindVehicles selectedOrders={selectedOrders} />
+                    <DialogContent sx={{ p: 0 }}>
+                        <FindVehicles 
+                            selectedOrders={selectedOrders} 
+                            onBack={() => setFindVehiclesOpen(false)}
+                        />
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setFindVehiclesOpen(false)} color="primary">
-                            Close
-                        </Button>
-                    </DialogActions>
                 </Dialog>
             </Suspense>
         </Paper>

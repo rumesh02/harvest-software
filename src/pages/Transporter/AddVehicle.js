@@ -10,6 +10,7 @@ const AddVehicle = () => {
   const [vehicleType, setVehicleType] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
   const [loadCapacity, setLoadCapacity] = useState("");
+  const [pricePerKm, setPricePerKm] = useState("");
   const [file, setFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -45,7 +46,8 @@ const AddVehicle = () => {
       const vehicleData = {
         vehicleType,
         licensePlate,
-        loadCapacity,
+        loadCapacity: parseFloat(loadCapacity.toString().replace(/[^0-9.]/g, '')), // Remove letters, keep only numbers and decimal points
+        pricePerKm,
         transporterId: user.sub, // Auth0 user.sub
         district: user['https://your-app/district'] || "Colombo", // Replace with actual path or form value
         file
@@ -56,6 +58,7 @@ const AddVehicle = () => {
       setVehicleType("");
       setLicensePlate("");
       setLoadCapacity("");
+      setPricePerKm("");
       setFile(null);
       setError(null);
       setSuccess(true);
@@ -136,6 +139,17 @@ const AddVehicle = () => {
           type="text"
           value={loadCapacity}
           onChange={(e) => setLoadCapacity(e.target.value)}
+          required
+        />
+
+        <label>Price per Kilometer (LKR)</label>
+        <input
+          type="number"
+          value={pricePerKm}
+          onChange={(e) => setPricePerKm(e.target.value)}
+          placeholder="Enter price per kilometer"
+          min="0"
+          step="0.01"
           required
         />
 

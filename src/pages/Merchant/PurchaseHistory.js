@@ -12,7 +12,9 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  IconButton,
 } from "@mui/material";
+import { ArrowBack, LocationOn } from "@mui/icons-material";
 import ReviewDialog from "../../components/ReviewDialog";
 import LocateMe from "../../components/LocateMe";
 
@@ -157,15 +159,61 @@ const PurchaseHistory = () => {
         onClose={() => setLocationDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            maxHeight: '95vh',
+            overflow: 'hidden',
+            background: "#f0f9ff"
+          }
+        }}
       >
-        <DialogTitle>Enter Location Details</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          pb: 2,
+          background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+          color: 'white',
+          position: 'relative'
+        }}>
+          <IconButton
+            onClick={() => setLocationDialogOpen(false)}
+            sx={{
+              mr: 2,
+              color: 'white',
+              borderRadius: 2,
+              padding: '8px',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          >
+            <ArrowBack />
+          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <LocationOn sx={{ mr: 1, color: 'white' }} />
+            <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', fontSize: '20px' }}>
+              Enter Location Details
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
           <TextField
             label="Street Name"
             fullWidth
             margin="normal"
             value={streetName}
             onChange={(e) => setStreetName(e.target.value)}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-focused fieldset': {
+                  borderColor: '#2563eb',
+                },
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#2563eb',
+              },
+            }}
           />
           <TextField
             label="City"
@@ -173,13 +221,33 @@ const PurchaseHistory = () => {
             margin="normal"
             value={city}
             onChange={(e) => setCity(e.target.value)}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-focused fieldset': {
+                  borderColor: '#2563eb',
+                },
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#2563eb',
+              },
+            }}
           />
           <LocateMe onLocationUpdate={handleLocationUpdate} />
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 3, gap: 2 }}>
           <Button
             onClick={() => setLocationDialogOpen(false)}
-            color="secondary"
+            variant="outlined"
+            sx={{
+              borderColor: '#64748b',
+              color: '#64748b',
+              '&:hover': { 
+                borderColor: '#475569', 
+                backgroundColor: '#f8fafc'
+              },
+              textTransform: 'none',
+              fontWeight: 600
+            }}
           >
             Cancel
           </Button>
@@ -192,7 +260,15 @@ const PurchaseHistory = () => {
               );
               setLocationDialogOpen(false);
             }}
-            color="primary"
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+              '&:hover': { 
+                background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)'
+              },
+              textTransform: 'none',
+              fontWeight: 600
+            }}
           >
             Submit
           </Button>

@@ -90,13 +90,12 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setPage(1);
-      fetchProducts();
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, districtFilter, maxPrice, fetchProducts]);
+  }, [searchQuery, districtFilter, maxPrice]);
 
   useEffect(() => {
-    if (page > 1) fetchProducts();
+    fetchProducts();
   }, [page, fetchProducts]);
 
   useEffect(() => {

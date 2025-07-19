@@ -7,6 +7,6 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Merchant routes are working!' });
 });
 
-router.get('/dashboard/:userSub', merchantController.getDashboardData);
+router.get('/dashboard/:farmerId', merchantController.getFarmerDashboard);
 
 module.exports = router;

@@ -19,6 +19,12 @@ import {
   Stack,
   Divider,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Rating
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
@@ -27,6 +33,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import EmojiNatureIcon from "@mui/icons-material/EmojiNature";
+import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
 import {
@@ -55,6 +62,12 @@ const BrowseListing = () => {
   const [snackbarMsg, setSnackbarMsg] = useState("");
   const { addToCart } = useCart();
 
+  // Add these states for See More functionality
+  const [seeMoreOpen, setSeeMoreOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [farmerInfo, setFarmerInfo] = useState(null);
+  const [loadingFarmer, setLoadingFarmer] = useState(false);
+
   const updateProductInList = useCallback((productId, updatedProduct) => {
     setFetchedProducts(prev => prev.map(p => (p._id === productId ? { ...p, ...updatedProduct } : p)));
   }, []);
@@ -67,7 +80,7 @@ const BrowseListing = () => {
       if (districtFilter !== "All Districts") params.append("district", districtFilter);
       if (maxPrice && maxPrice > 0) params.append("maxPrice", maxPrice);
 
-const res = await axios.get(`http://localhost:5000/api/products?${params}`);
+      const res = await axios.get(`http://localhost:5000/api/products?${params}`);
       if (res.data?.products) {
         setFetchedProducts(res.data.products);
         setTotalPages(res.data.totalPages || 1);
@@ -118,13 +131,29 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
     setSnackbarOpen(true);
   };
 
+  // Add the handleSeeMore function
+  const handleSeeMore = async (product) => {
+    setSelectedProduct(product);
+    setSeeMoreOpen(true);
+    setLoadingFarmer(true);
+    try {
+      const res = await axios.get(`http://localhost:5000/api/users/${product.farmerID}`);
+      setFarmerInfo(res.data);
+    } catch (error) {
+      console.error("Failed to fetch farmer info:", error);
+      setFarmerInfo(null);
+    } finally {
+      setLoadingFarmer(false);
+    }
+  };
+
   const renderProductCard = (product, index) => (
     <Grid item xs={12} sm={6} md={4} lg={3} key={index} sx={{ display: 'flex', justifyContent: 'center' }}>
       <Card sx={{
         display: 'flex',
         flexDirection: 'column',
         width: 300, // Fixed width for all cards
-        height: 420, // Fixed height for all cards
+        height: 520, // Increased height to accommodate both buttons properly
         borderRadius: 2,
         boxShadow: 3,
         transition: 'all 0.3s ease',
@@ -152,7 +181,7 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
           display: "flex", 
           flexDirection: "column",
           p: 1.5, // Reduced padding
-          height: 'calc(100% - 200px - 52px)' // Subtract image height and button height
+          height: 'calc(100% - 200px - 100px)' // Adjusted to account for two buttons with proper spacing
         }}>
           {/* Product name and Listed date in same row */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
@@ -265,7 +294,9 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
             )}
           </Box>
         </CardContent>
-        <CardActions sx={{ p: 1.5, height: 52 }}>
+
+        {/* Modified CardActions with both buttons */}
+        <CardActions sx={{ p: 1.5, height: 100, flexDirection: "column", gap: 1, mt: 'auto' }}>
           <Button
             fullWidth
             variant="contained"
@@ -276,16 +307,36 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
               borderRadius: 2,
               fontWeight: "medium",
               textTransform: 'none',
-              height: 36,
-              backgroundColor: '#f9c80e', // Changed background color
-              color: '#222', // Optional: dark text for contrast
+              height: 40,
+              backgroundColor: '#f9c80e',
+              color: '#222',
               '&:hover': {
-                backgroundColor: '#e6b800', // Slightly darker yellow on hover
+                backgroundColor: '#e6b800',
                 color: '#222'
               }
             }}
           >
             {product.quantity <= 0 ? "Out of Stock" : "Add to Cart"}
+          </Button>
+
+          {/* Add the See More button */}
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={() => handleSeeMore(product)}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 'medium',
+              color: '#1976d2',
+              borderColor: '#1976d2',
+              height: 40,
+              '&:hover': {
+                backgroundColor: '#e3f2fd'
+              }
+            }}
+          >
+            See More
           </Button>
         </CardActions>
       </Card>
@@ -567,7 +618,7 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
             <Grid item xs={12} sm={6} md={4} lg={4} key={i} sx={{ display: 'flex', justifyContent: 'center' }}>
               <Card sx={{
                 width: 300,
-                height: 420,
+                height: 520, // Updated to match the actual card height
                 borderRadius: 2,
                 boxShadow: 2,
                 display: 'flex',
@@ -581,8 +632,9 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
                   <Skeleton variant="text" width="50%" height={20} sx={{ mb: 0.5 }} />
                   <Skeleton variant="text" width="70%" height={16} />
                 </CardContent>
-                <CardActions sx={{ p: 1.5, height: 52 }}>
-                  <Skeleton variant="rectangular" width="100%" height={36} />
+                <CardActions sx={{ p: 1.5, height: 100 }}>
+                  <Skeleton variant="rectangular" width="100%" height={40} sx={{ mb: 1 }} />
+                  <Skeleton variant="rectangular" width="100%" height={40} />
                 </CardActions>
               </Card>
             </Grid>
@@ -590,22 +642,22 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
         </Grid>
       ) : fetchedProducts.length > 0 ? (
         <Box sx={{ px: 0 }}>
-  <Grid 
-    container 
-    spacing={3}
-    columns={{ xs: 4, sm: 8, md: 12 }}
-    sx={{
-      paddingLeft: 0,
-      paddingRight: 0,
-      marginLeft: 0,
-      marginRight: 0,
-      width: '100%',
-      justifyContent: 'space-between', // Added to dynamically adjust horizontal spacing
-    }}
-  >
-    {fetchedProducts.slice().reverse().map(renderProductCard)}
-  </Grid>
-</Box>
+          <Grid 
+            container 
+            spacing={3}
+            columns={{ xs: 4, sm: 8, md: 12 }}
+            sx={{
+              paddingLeft: 0,
+              paddingRight: 0,
+              marginLeft: 0,
+              marginRight: 0,
+              width: '100%',
+              justifyContent: 'space-between', // Added to dynamically adjust horizontal spacing
+            }}
+          >
+            {fetchedProducts.slice().reverse().map(renderProductCard)}
+          </Grid>
+        </Box>
       ) : (
         <Box textAlign="center" py={8}>
           <Typography variant="h5" color="text.disabled" sx={{ mb: 1 }}>
@@ -643,6 +695,7 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
         </Stack>
       )}
 
+      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={2000}
@@ -657,6 +710,59 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
           {snackbarMsg}
         </Alert>
       </Snackbar>
+
+      {/* SEE MORE Dialog - Added this from your branch */}
+      <Dialog open={seeMoreOpen} onClose={() => setSeeMoreOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          Product Details
+          <IconButton
+            aria-label="close"
+            onClick={() => setSeeMoreOpen(false)}
+            sx={{ color: (theme) => theme.palette.grey[500] }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {selectedProduct && (
+            <>
+              <Typography variant="h6" fontWeight={600}>
+                {selectedProduct.name}
+              </Typography>
+              {selectedProduct.itemCode && (
+                <Typography variant="body2" sx={{ mt: 1, color: 'primary.main', fontWeight: 500 }}>
+                  <strong>Item Code:</strong> {selectedProduct.itemCode}
+                </Typography>
+              )}
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                <strong>Price:</strong> Rs. {selectedProduct.price}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Quantity:</strong> {selectedProduct.quantity}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Description:</strong> {selectedProduct.description || "No description available"}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Harvest Location:</strong> {selectedProduct.harvestDetails?.location || "N/A"}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Listed Date:</strong> {new Date(selectedProduct.listedDate).toLocaleDateString()}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                <strong>Farmer:</strong> {loadingFarmer ? "Loading..." : farmerInfo?.name || "Unknown"}
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                <Rating value={farmerInfo?.farmerRatings || 0} precision={0.1} readOnly size="large" />
+                <Typography variant="caption" sx={{ ml: 1 }}>
+                  {farmerInfo?.farmerRatings ? `${farmerInfo.farmerRatings.toFixed(1)} / 5` : "No ratings"}
+                </Typography>
+              </Box>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions />
+      </Dialog>
     </Container>
   );
 };

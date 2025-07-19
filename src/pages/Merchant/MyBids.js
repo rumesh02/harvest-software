@@ -363,8 +363,8 @@ const MyBids = () => {
       </TableContainer>
 
       {/* Confirmed Bids */}
-      <Typography variant="h6" sx={{ display: "flex", alignItems: "center", color: "#388E3C", mb: 1 }}>
-        <CheckCircleIcon sx={{ mr: 1 }} /> Confirmed Bids
+      <Typography variant="h6" sx={{ display: "flex", alignItems: "center", color: "#003153", mb: 1 }}>
+        <CheckCircleIcon sx={{ mr: 1, color: '#003153' }} /> Confirmed Bids
       </Typography>
       <TableContainer component={Paper} sx={{ mb: 3 }}>
         <Table>

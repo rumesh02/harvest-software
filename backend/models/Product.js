@@ -8,18 +8,24 @@ const productSchema = new mongoose.Schema({
   farmerID: { type: String, required: true },
   image: { type: String, required: true },
   listedDate: { type: Date, default: Date.now },
-  productID: { type: String, required: true },
+  productID: { type: String }, // Optional: Auto-generated if not provided
+  itemCode: { type: String, required: true, unique: true }, // Unique item code (HVT-YYYY-MM-DD-XXXX)
   description: { type: String },
+
   location: {
-    lat: { type: Number, required: false },
-    lng: { type: Number, required: false }
+    coordinates: {
+      lat: { type: Number, required: true },
+      lng: { type: Number, required: true }
+    },
+    address: { type: String, required: true }
   },
-  address: { type: String, required: false },
+
   harvestDetails: {
-    harvestDate: Date,
-    method: String,
-    location: String
+    harvestDate: { type: Date },
+    method: { type: String },
+    location: { type: String }
   }
+
 }, { collection: 'products' }); // Explicitly specify collection name
 
 module.exports = mongoose.model("Product", productSchema);

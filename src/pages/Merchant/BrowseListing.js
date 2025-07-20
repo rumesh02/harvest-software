@@ -73,7 +73,7 @@ const BrowseListing = () => {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({ page, limit: 8 });
+      const params = new URLSearchParams({ page, limit: 8, sort: 'desc', sortBy: 'listedDate' });
       if (searchQuery.trim()) params.append("search", searchQuery.trim());
       if (districtFilter !== "All Districts") params.append("district", districtFilter);
       if (maxPrice && maxPrice > 0) params.append("maxPrice", maxPrice);
@@ -723,7 +723,7 @@ const BrowseListing = () => {
               alignItems: 'stretch',
             }}
           >
-            {fetchedProducts.slice().reverse().map(renderProductCard)}
+            {fetchedProducts.map(renderProductCard)}
           </Grid>
         </Box>
       ) : (

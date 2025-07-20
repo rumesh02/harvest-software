@@ -1,5 +1,5 @@
 const express = require('express');
-const { createBid, acceptBid, rejectBid, getBids, updateBidStatus } = require('../controllers/bidController');
+const { createBid, acceptBid, rejectBid, getBids, updateBidStatus, deleteBid } = require('../controllers/bidController');
 
 const router = express.Router();
 
@@ -13,5 +13,8 @@ router.post("/", createBid);
 router.put('/accept/:bidId', acceptBid);
 router.put('/reject/:bidId', rejectBid);
 router.put('/status/:bidId', updateBidStatus);
+
+// DELETE: Delete a bid
+router.delete('/:bidId', deleteBid);
 
 module.exports = router;

@@ -1,103 +1,90 @@
 const Order = require('../models/Order');
 const ConfirmedBid = require('../models/ConfirmedBid');
+const Bid = require('../models/Bid');
+const Payment = require('../models/Payment');
 
-const revenueController = {
-  getMonthlyRevenue: async (req, res) => {
+const merchantController = {
+  getMerchantDashboard: async (req, res) => {
     try {
-      const { farmerId } = req.params;
-      const year = new Date().getFullYear();
-      
-      // Get all completed orders for this farmer in current year
-      const orders = await Order.find({
-        farmerId,
-        status: 'completed',
-        completedDate: {
-          $gte: new Date(year, 0, 1),
-          $lte: new Date(year, 11, 31)
+      const { merchantId } = req.params;
+      console.log('Fetching dashboard data for merchant:', merchantId);
+
+      // Get current year for filtering
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth();
+
+      // Get all merchant's confirmed bids (purchases) for current year
+      const confirmedBids = await ConfirmedBid.find({
+        merchantId,
+        status: "confirmed",
+        createdAt: {
+          $gte: new Date(currentYear, 0, 1),
+          $lte: new Date(currentYear, 11, 31, 23, 59, 59)
         }
       });
 
-      // Initialize monthly data array
-      const monthlyData = Array.from({ length: 12 }, (_, i) => ({
-        name: new Date(year, i).toLocaleString('default', { month: 'short' }),
-        revenue: 0
-      }));
-
-      // Calculate revenue for each month
-      orders.forEach(order => {
-        const month = new Date(order.completedDate).getMonth();
-        monthlyData[month].revenue += order.totalAmount;
+      // Get pending bids
+      const pendingBids = await Bid.find({
+        merchantId,
+        status: "Pending"
       });
 
-      // Calculate totals
-      const currentMonth = new Date().getMonth();
-      const monthlyRevenue = monthlyData[currentMonth].revenue;
-      const yearlyRevenue = monthlyData.reduce((sum, month) => sum + month.revenue, 0);
-      const totalOrders = orders.length;
-
-      return res.json({
-        monthlyData,
-        monthlyRevenue,
-        yearlyRevenue,
-        totalOrders
-      });
-    } catch (error) {
-      console.error('Revenue calculation error:', error);
-      return res.status(500).json({ 
-        message: "Error calculating revenue",
-        error: error.message 
-      });
-    }
-  },
-
-  getFarmerDashboard: async (req, res) => {
-    try {
-      const { farmerId } = req.params;
-
-      // Only get confirmed bids for this farmer
-      const confirmedBids = await ConfirmedBid.find({
-        farmerId,
-        status: "confirmed" // must match your document's status exactly (case-sensitive)
+      // Get pending payments (ConfirmedBids that are not yet paid)
+      const pendingPayments = await ConfirmedBid.find({
+        merchantId,
+        status: { $in: ['confirmed', 'processing'] } // Same logic as in confirmedBidRoutes.js
       });
 
-      // Calculate stats
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
-
-      let monthlyRevenue = 0;
-      let yearlyRevenue = 0;
-      let totalOrders = confirmedBids.length;
-      let monthlyDataArr = Array(12).fill(0);
+      // Calculate monthly purchase data
+      const monthlyDataArr = Array(12).fill(0);
+      let totalPurchaseAmount = 0;
 
       confirmedBids.forEach(bid => {
         const bidDate = new Date(bid.createdAt);
-        const revenue = bid.amount; // use .amount field from your document
-
+        const amount = bid.amount || 0; // ConfirmedBid uses 'amount'
+        
         if (bidDate.getFullYear() === currentYear) {
-          yearlyRevenue += revenue;
-          monthlyDataArr[bidDate.getMonth()] += revenue;
-          if (bidDate.getMonth() === currentMonth) {
-            monthlyRevenue += revenue;
-          }
+          monthlyDataArr[bidDate.getMonth()] += amount;
+          totalPurchaseAmount += amount;
         }
       });
 
-      const monthlyData = monthlyDataArr.map((revenue, i) => ({
-        name: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
-        revenue
+      // Format monthly data for chart
+      const monthlyData = monthlyDataArr.map((amount, index) => ({
+        name: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index],
+        revenue: amount // Using 'revenue' to match frontend expectation
       }));
 
-      res.json({
-        monthlyRevenue,
-        yearlyRevenue,
+      // Calculate pending payments total (from ConfirmedBids, not Payment model)
+      const pendingPaymentsTotal = pendingPayments.reduce((sum, payment) => {
+        return sum + (payment.amount || 0);
+      }, 0);
+
+      // Get total orders (confirmed bids count)
+      const totalOrders = confirmedBids.length;
+
+      // TODO: Get top farmers data (for now returning empty array)
+      const topFarmers = [];
+
+      const dashboardData = {
+        PendingPayments: `Rs. ${pendingPaymentsTotal.toLocaleString()}`,
+        PendingBids: pendingBids.length,
+        totalOrders,
         monthlyData,
-        totalOrders
-      });
+        topFarmers
+      };
+
+      console.log('Dashboard data prepared:', dashboardData);
+      res.json(dashboardData);
+
     } catch (error) {
-      res.status(500).json({ message: "Failed to load farmer dashboard", error: error.message });
+      console.error('Error fetching merchant dashboard:', error);
+      res.status(500).json({ 
+        error: "Failed to load merchant dashboard", 
+        details: error.message 
+      });
     }
   }
 };
 
-module.exports = revenueController;
+module.exports = merchantController;

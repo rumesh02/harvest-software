@@ -44,12 +44,10 @@ const ListedItems = () => {
   });
   const { user, isAuthenticated } = useAuth0();
 
-  // Fetch products from backend
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      // Use the dedicated endpoint for farmer's products
       const response = await axios.get(`http://localhost:5000/api/products/farmer/${user.sub}`);
       setProducts(response.data);
     } catch (error) {
@@ -90,7 +88,7 @@ const ListedItems = () => {
 
       if (response.status === 200) {
         setEditDialogOpen(false);
-        fetchProducts(); // Refresh the list
+        fetchProducts();
         setError(null);
       }
     } catch (error) {
@@ -107,7 +105,7 @@ const ListedItems = () => {
         );
 
         if (response.status === 200) {
-          fetchProducts(); // Refresh the list
+          fetchProducts();
           setError(null);
         }
       } catch (error) {
@@ -138,19 +136,12 @@ const ListedItems = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
-        {/* Header */}
         <Box sx={{ mb: 4 }}>
           <Typography 
             variant="h4" 
             component="h1" 
             gutterBottom
-            sx={{ 
-              fontWeight: 600, 
-              color: '#2E7D32',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}
+            sx={{ fontWeight: 600, color: '#2E7D32', display: 'flex', alignItems: 'center', gap: 1 }}
           >
             <InventoryIcon fontSize="large" />
             My Listed Harvests
@@ -160,14 +151,12 @@ const ListedItems = () => {
           </Typography>
         </Box>
 
-        {/* Error Alert */}
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
           </Alert>
         )}
 
-        {/* Empty State */}
         {products.length === 0 ? (
           <Card sx={{ textAlign: 'center', py: 8, bgcolor: '#f8f9fa' }}>
             <CardContent>
@@ -195,12 +184,10 @@ const ListedItems = () => {
           </Card>
         ) : (
           <>
-            {/* Products Summary */}
             <Alert severity="info" sx={{ mb: 3 }}>
               You have <strong>{products.length}</strong> listed harvest{products.length !== 1 ? 's' : ''}
             </Alert>
 
-            {/* Products Grid */}
             <Grid container spacing={3}>
               {products.map((product) => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={product._id}>
@@ -221,7 +208,6 @@ const ListedItems = () => {
         )}
       </Paper>
 
-      {/* Edit Dialog */}
       <Dialog 
         open={editDialogOpen} 
         onClose={() => setEditDialogOpen(false)}
@@ -273,16 +259,6 @@ const ListedItems = () => {
             value={editForm.name}
             onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
             variant="outlined"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                '&.Mui-focused fieldset': {
-                  borderColor: '#2563eb',
-                },
-              },
-              '& .MuiInputLabel-root.Mui-focused': {
-                color: '#2563eb',
-              },
-            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -299,16 +275,6 @@ const ListedItems = () => {
             value={editForm.price}
             onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
             variant="outlined"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                '&.Mui-focused fieldset': {
-                  borderColor: '#2563eb',
-                },
-              },
-              '& .MuiInputLabel-root.Mui-focused': {
-                color: '#2563eb',
-              },
-            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -326,16 +292,6 @@ const ListedItems = () => {
             value={editForm.quantity}
             onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
             variant="outlined"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                '&.Mui-focused fieldset': {
-                  borderColor: '#2563eb',
-                },
-              },
-              '& .MuiInputLabel-root.Mui-focused': {
-                color: '#2563eb',
-              },
-            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">

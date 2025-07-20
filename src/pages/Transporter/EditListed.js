@@ -26,9 +26,9 @@ export default function EditListed() {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const data = await getVehicles();
-        // Filter vehicles for this transporter
-        setVehicles(data.filter((v) => v.transporterId === user.sub));
+        // Use backend filtering instead of client-side filtering
+        const data = await getVehicles(user.sub);
+        setVehicles(data);
       } catch (err) {
         console.error("Error fetching vehicles:", err);
         setError("Failed to load vehicles. Please try again later.");

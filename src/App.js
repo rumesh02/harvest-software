@@ -60,6 +60,10 @@ import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 
+// Legal Pages
+import TermsOfService from "./pages/Legal/TermsOfService";
+import PrivacyPolicy from "./pages/Legal/PrivacyPolicy";
+
 import FarmerSidebar from "./components/Sidebar";
 import TransporterSidebar from "./components/TransporterSidebar";
 import MerchantSidebar from "./components/Merchantsidebar";
@@ -109,6 +113,8 @@ const AppRoutes = () => {
       <Route path="/about" element={<AboutUs />} />
       <Route path="/contact" element={<ContactUs />} />
       <Route path="/help" element={<Help />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
 
       {/* Farmer */}
       <Route

@@ -8,7 +8,6 @@ import {
   Card,
   CardMedia,
   CardContent,
-  CardActions,
   Button,
   InputAdornment,
   Autocomplete,
@@ -17,8 +16,13 @@ import {
   Paper,
   Chip,
   Stack,
-  Divider,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Rating
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
@@ -27,6 +31,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import EmojiNatureIcon from "@mui/icons-material/EmojiNature";
+import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
 import {
@@ -55,6 +60,12 @@ const BrowseListing = () => {
   const [snackbarMsg, setSnackbarMsg] = useState("");
   const { addToCart } = useCart();
 
+  // Add these states for See More functionality
+  const [seeMoreOpen, setSeeMoreOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [farmerInfo, setFarmerInfo] = useState(null);
+  const [loadingFarmer, setLoadingFarmer] = useState(false);
+
   const updateProductInList = useCallback((productId, updatedProduct) => {
     setFetchedProducts(prev => prev.map(p => (p._id === productId ? { ...p, ...updatedProduct } : p)));
   }, []);
@@ -62,12 +73,12 @@ const BrowseListing = () => {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({ page, limit: 9 });
+      const params = new URLSearchParams({ page, limit: 8, sort: 'desc', sortBy: 'listedDate' });
       if (searchQuery.trim()) params.append("search", searchQuery.trim());
       if (districtFilter !== "All Districts") params.append("district", districtFilter);
       if (maxPrice && maxPrice > 0) params.append("maxPrice", maxPrice);
 
-const res = await axios.get(`http://localhost:5000/api/products?${params}`);
+      const res = await axios.get(`http://localhost:5000/api/products?${params}`);
       if (res.data?.products) {
         setFetchedProducts(res.data.products);
         setTotalPages(res.data.totalPages || 1);
@@ -90,13 +101,12 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setPage(1);
-      fetchProducts();
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, districtFilter, maxPrice, fetchProducts]);
+  }, [searchQuery, districtFilter, maxPrice]);
 
   useEffect(() => {
-    if (page > 1) fetchProducts();
+    fetchProducts();
   }, [page, fetchProducts]);
 
   useEffect(() => {
@@ -119,176 +129,268 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
     setSnackbarOpen(true);
   };
 
+  // Add the handleSeeMore function
+  const handleSeeMore = async (product) => {
+    setSelectedProduct(product);
+    setSeeMoreOpen(true);
+    setLoadingFarmer(true);
+    try {
+      const res = await axios.get(`http://localhost:5000/api/users/${product.farmerID}`);
+      setFarmerInfo(res.data);
+    } catch (error) {
+      console.error("Failed to fetch farmer info:", error);
+      setFarmerInfo(null);
+    } finally {
+      setLoadingFarmer(false);
+    }
+  };
+
   const renderProductCard = (product, index) => (
-    <Grid item xs={12} sm={6} md={4} lg={3} key={index} sx={{ display: 'flex', justifyContent: 'center' }}>
+    <Grid item xs={12} sm={6} md={3} lg={3} xl={3} key={index} sx={{ display: 'flex', justifyContent: 'flex-start', p: 0 }}>
       <Card sx={{
         display: 'flex',
         flexDirection: 'column',
-        width: 300, // Fixed width for all cards
-        height: 420, // Fixed height for all cards
-        borderRadius: 2,
-        boxShadow: 3,
+        width: 220, // Reduced width for 4 cards per row
+        height: 320, // Reduced height proportionally
+        borderRadius: 3,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
         transition: 'all 0.3s ease',
+        overflow: 'hidden',
+        m: '0 auto',
         '&:hover': {
           transform: 'translateY(-4px)',
-          boxShadow: 6
+          boxShadow: '0 6px 20px rgba(0,0,0,0.15)'
         }
       }}>
+        {/* Product Image */}
         <CardMedia
           component="img"
           image={product.img || product.image || "/images/placeholder.png"}
           alt={product.name}
           sx={{
             width: '100%',
-            height: 200,
+          height: 120, // Reduced for smaller card
             objectFit: 'cover',
-            backgroundColor: '#f5f5f5'
+            backgroundColor: '#f8f9fa'
           }}
           onError={(e) => {
-            e.target.src = "/images/placeholder.png"; // Fallback image
+            e.target.src = "/images/placeholder.png";
           }}
         />
+        
+        {/* Card Content */}
         <CardContent sx={{ 
           flexGrow: 1, 
           display: "flex", 
           flexDirection: "column",
-          p: 1.5, // Reduced padding
-          height: 'calc(100% - 200px - 52px)' // Subtract image height and button height
+          p: 1, // Further reduced padding
+          pb: 0.5
         }}>
-          {/* Product name and Listed date in same row */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+          {/* Product Name and Listed Date Row */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.4 }}>
             <Typography 
               variant="h6" 
-              fontWeight="bold" 
+              fontWeight="600" 
               sx={{ 
+                fontSize: '0.9rem', // Further reduced font size
+                lineHeight: 1.1,
+                color: '#2c3e50',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 display: '-webkit-box',
-                WebkitLineClamp: 1, // Reduced to 1 line
+                WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical',
-                minHeight: '1.5em', // Reduced height for 1 line
-                lineHeight: '1.5em',
+                minHeight: '2em', // Reduced minHeight
                 flex: 1,
-                mr: 1,
-                textAlign: 'left' // Explicitly left align
+                pr: 1
               }}
             >
               {product.name}
             </Typography>
-            <Typography 
-              variant="caption" 
-              color="text.secondary" 
-              sx={{ 
-                minHeight: '1em', // Reduced height for date
-                flexShrink: 0,
-                fontSize: '0.7rem',
-                textAlign: 'right' // Explicitly right align
-              }}
-            >
-              Listed Date: {new Date(product.listedDate).toLocaleDateString()}
-            </Typography>
+            <Box sx={{ textAlign: 'right', flexShrink: 0, ml: 1 }}>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  fontSize: '0.5rem', // Further reduced font size
+                  fontWeight: 600,
+                  color: '#666',
+                  display: 'block',
+                  lineHeight: 1.1
+                }}
+              >
+                Listed On
+              </Typography>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  fontSize: '0.55rem', // Further reduced font size
+                  fontWeight: 500,
+                  color: '#888',
+                  display: 'block',
+                  lineHeight: 1.1
+                }}
+              >
+                {new Date(product.listedDate).toLocaleDateString()}
+              </Typography>
+            </Box>
           </Box>
-          
-          <Stack 
-            direction="row" 
-            spacing={1} 
-            sx={{ 
-              mb: 1, // Reduced margin
-              flexWrap: 'wrap', 
-              gap: 0.5,
-              minHeight: '28px' // Reduced height for chip container
-            }}
-          >
+
+          {/* Location Row */}
+          <Box sx={{ mb: 0.8 }}>
             {product.harvestDetails?.location && (
               <Chip 
-                icon={<LocationOnIcon />} 
+                icon={<LocationOnIcon sx={{ fontSize: '12px' }} />} 
                 label={product.harvestDetails.location} 
                 size="small" 
                 sx={{ 
-                  fontSize: '0.75rem',
-                  maxWidth: '130px',
+                  fontSize: '0.6rem', // Further reduced font size
+                  height: '18px', // Further reduced height
+                  maxWidth: '120px',
+                  backgroundColor: '#e8f5e8',
+                  color: '#2e7d32',
                   '& .MuiChip-label': {
                     overflow: 'hidden',
-                    textOverflow: 'ellipsis'
+                    textOverflow: 'ellipsis',
+                    px: 0.6
+                  },
+                  '& .MuiChip-icon': {
+                    color: '#2e7d32'
                   }
                 }}
               />
             )}
-          </Stack>
-          
-          {/* Available Stock - Bold and labeled */}
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              mb: 0.5,
-              minHeight: '1.2em',
-              fontWeight: 'bold',
-              color: product.quantity <= 0 ? "error.main" : product.quantity <= 10 ? "warning.main" : "success.main"
-            }}
-          >
-            Available Stock: {product.quantity} kg
-          </Typography>
-          
-          <Divider sx={{ my: 0.5 }} /> {/* Reduced margin */}
-          
-          <Box sx={{ mt: 'auto' }}>
+          </Box>
+
+          {/* Stock Information */}
+          <Box sx={{ mb: 0.8 }}>
             <Typography 
-              variant="h6" 
-              color="primary.main" 
-              fontWeight="bold"
-              sx={{ mb: 0.5 }}
+              variant="body2" 
+              sx={{ 
+                fontWeight: '600',
+                fontSize: '0.7rem', // Further reduced font size
+                lineHeight: 1.2,
+                color: product.quantity <= 0 ? "#d32f2f" : product.quantity <= 10 ? "#f57c00" : "#2e7d32"
+              }}
             >
-              Rs. {product.price} <span style={{ fontSize: '0.8rem' }}>per kg</span>
+              Stock: {product.quantity} kg
             </Typography>
-            
+            {product.quantity <= 10 && product.quantity > 0 && (
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: "#f57c00",
+                  fontSize: '0.55rem', // Further reduced font size
+                  fontWeight: 500,
+                  lineHeight: 1.1,
+                  display: 'block'
+                }}
+              >
+                Low Stock Warning
+              </Typography>
+            )}
             {product.quantity <= 0 && (
               <Typography 
-                variant="body2" 
-                color="error.main" 
-                fontWeight="bold"
-                sx={{ minHeight: '1.2em' }} // Reduced height
+                variant="caption" 
+                sx={{ 
+                  color: "#d32f2f",
+                  fontSize: '0.55rem', // Further reduced font size
+                  fontWeight: 500,
+                  lineHeight: 1.1,
+                  display: 'block'
+                }}
               >
-                Out of Stock
+                Currently Unavailable
               </Typography>
-            )}
-            {product.quantity > 0 && product.quantity <= 10 && (
-              <Typography 
-                variant="body2" 
-                color="warning.main" 
-                fontWeight="bold"
-                sx={{ minHeight: '1.2em' }} // Reduced height
-              >
-                Low Stock
-              </Typography>
-            )}
-            {product.quantity > 10 && (
-              <Box sx={{ minHeight: '1.2em' }} /> // Reduced height
             )}
           </Box>
+          
+          {/* Price Section */}
+          <Box sx={{ mt: 'auto', pt: 0.6, borderTop: '1px solid #f0f0f0' }}>
+            <Typography 
+              variant="h5" 
+              color="primary.main" 
+              fontWeight="700"
+              sx={{ 
+                fontSize: '1rem', // Further reduced font size
+                lineHeight: 1.1,
+                color: '#1976d2'
+              }}
+            >
+              Rs. {product.price}
+              <Typography 
+                component="span" 
+                sx={{ 
+                  fontSize: '0.6rem', // Further reduced font size
+                  fontWeight: 400,
+                  color: 'text.secondary',
+                  ml: 0.5
+                }}
+              >
+                per kg
+              </Typography>
+            </Typography>
+          </Box>
         </CardContent>
-        <CardActions sx={{ p: 1.5, height: 52 }}>
+
+        {/* Action Buttons - Using Box for better control */}
+        <Box sx={{ 
+          p: 1, 
+          pt: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0.5,
+          width: '100%'
+        }}>
           <Button
-            fullWidth
             variant="contained"
             disabled={product.quantity <= 0}
             onClick={() => handleAddToCart(product)}
             startIcon={<ShoppingCartIcon />}
             sx={{
+              width: '100%',
               borderRadius: 2,
-              fontWeight: "medium",
+              fontWeight: "600",
               textTransform: 'none',
-              height: 36,
-              backgroundColor: '#f9c80e', // Changed background color
-              color: '#222', // Optional: dark text for contrast
+              height: 30, // Further reduced button height
+              fontSize: '0.7rem', // Further reduced font size
+              backgroundColor: product.quantity <= 0 ? '#e0e0e0' : '#f9c80e',
+              color: product.quantity <= 0 ? '#9e9e9e' : '#333',
+              boxShadow: product.quantity <= 0 ? 'none' : '0 2px 8px rgba(249, 200, 14, 0.3)',
               '&:hover': {
-                backgroundColor: '#e6b800', // Slightly darker yellow on hover
-                color: '#222'
+                backgroundColor: product.quantity <= 0 ? '#e0e0e0' : '#e6b800',
+                color: product.quantity <= 0 ? '#9e9e9e' : '#333',
+                boxShadow: product.quantity <= 0 ? 'none' : '0 4px 12px rgba(249, 200, 14, 0.4)'
+              },
+              '&:disabled': {
+                backgroundColor: '#e0e0e0',
+                color: '#9e9e9e'
               }
             }}
           >
             {product.quantity <= 0 ? "Out of Stock" : "Add to Cart"}
           </Button>
-        </CardActions>
+
+          <Button
+            variant="outlined"
+            onClick={() => handleSeeMore(product)}
+            sx={{
+              width: '100%',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: '500',
+              color: '#1976d2',
+              borderColor: '#1976d2',
+              height: 26, // Further reduced button height
+              fontSize: '0.65rem', // Further reduced font size
+              '&:hover': {
+                backgroundColor: '#e3f2fd',
+                borderColor: '#1565c0'
+              }
+            }}
+          >
+            View Details
+          </Button>
+        </Box>
       </Card>
     </Grid>
   );
@@ -557,56 +659,73 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
       {loading ? (
         <Grid 
           container 
-          spacing={3} 
+          rowSpacing={5}
+          columnSpacing={7.9} // Match skeleton and card grid spacing
           sx={{ 
-            justifyContent: 'center',
-            mx: 0, // Remove horizontal margin
-            width: '100%'
+            width: '100%',
+            margin: 0,
+            padding: 0,
+            justifyContent: 'flex-start',
+            alignItems: 'stretch',
           }}
         >
-          {Array.from(new Array(9)).map((_, i) => (
-            <Grid item xs={12} sm={6} md={4} lg={4} key={i} sx={{ display: 'flex', justifyContent: 'center' }}>
+          {Array.from(new Array(8)).map((_, i) => (
+            <Grid item xs={12} sm={6} md={3} lg={3} xl={3} key={i} sx={{ display: 'flex', justifyContent: 'flex-start', p: 0 }}>
               <Card sx={{
-                width: 300,
-                height: 420,
-                borderRadius: 2,
-                boxShadow: 2,
+                width: 220, // Same as real cards
+                height: 320, // Same as real cards
+                borderRadius: 3,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                overflow: 'hidden',
+                m: '0 auto',
               }}>
-                <Skeleton variant="rectangular" height={200} />
-                <CardContent sx={{ flexGrow: 1, p: 1.5 }}>
-                  <Skeleton variant="text" width="80%" height={24} sx={{ mb: 0.5 }} />
-                  <Skeleton variant="text" width="60%" height={20} sx={{ mb: 1 }} />
-                  <Skeleton variant="text" width="40%" height={16} sx={{ mb: 0.5 }} />
-                  <Skeleton variant="text" width="50%" height={20} sx={{ mb: 0.5 }} />
-                  <Skeleton variant="text" width="70%" height={16} />
+                <Skeleton variant="rectangular" height={120} />
+                <CardContent sx={{ flexGrow: 1, p: 1, pb: 0.5 }}>
+                  {/* Product Name and Date Row Skeleton */}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.4 }}>
+                    <Skeleton variant="text" width="70%" height={18} />
+                    <Box sx={{ textAlign: 'right', ml: 1 }}>
+                      <Skeleton variant="text" width={24} height={7} sx={{ mb: 0.2 }} />
+                      <Skeleton variant="text" width={32} height={9} />
+                    </Box>
+                  </Box>
+                  {/* Location Skeleton */}
+                  <Box sx={{ mb: 0.8 }}>
+                    <Skeleton variant="rectangular" width={80} height={16} sx={{ borderRadius: 3 }} />
+                  </Box>
+                  <Skeleton variant="text" width="50%" height={12} sx={{ mb: 0.2 }} />
+                  <Skeleton variant="text" width="30%" height={9} sx={{ mb: 0.8 }} />
+                  <Box sx={{ mt: 'auto', pt: 0.6 }}>
+                    <Skeleton variant="text" width="70%" height={16} />
+                  </Box>
                 </CardContent>
-                <CardActions sx={{ p: 1.5, height: 52 }}>
-                  <Skeleton variant="rectangular" width="100%" height={36} />
-                </CardActions>
+                <Box sx={{ p: 1, pt: 0, display: 'flex', flexDirection: 'column', gap: 0.5, width: '100%' }}>
+                  <Skeleton variant="rectangular" width="100%" height={30} sx={{ borderRadius: 2 }} />
+                  <Skeleton variant="rectangular" width="100%" height={26} sx={{ borderRadius: 2 }} />
+                </Box>
               </Card>
             </Grid>
           ))}
         </Grid>
       ) : fetchedProducts.length > 0 ? (
         <Box sx={{ px: 0 }}>
-  <Grid 
-    container 
-    spacing={3}
-    columns={{ xs: 4, sm: 8, md: 12 }}
-    sx={{
-      paddingLeft: 0,
-      paddingRight: 0,
-      marginLeft: 0,
-      marginRight: 0,
-      width: '100%',
-      justifyContent: 'space-between', // Added to dynamically adjust horizontal spacing
-    }}
-  >
-    {fetchedProducts.slice().reverse().map(renderProductCard)}
-  </Grid>
-</Box>
+          <Grid 
+            container 
+            rowSpacing={5}
+            columnSpacing={7.9} // Match skeleton and card grid spacing
+            sx={{
+              width: '100%',
+              margin: 0,
+              padding: 0,
+              justifyContent: 'flex-start',
+              alignItems: 'stretch',
+            }}
+          >
+            {fetchedProducts.map(renderProductCard)}
+          </Grid>
+        </Box>
       ) : (
         <Box textAlign="center" py={8}>
           <Typography variant="h5" color="text.disabled" sx={{ mb: 1 }}>
@@ -644,6 +763,7 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
         </Stack>
       )}
 
+      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={2000}
@@ -658,6 +778,59 @@ const res = await axios.get(`http://localhost:5000/api/products?${params}`);
           {snackbarMsg}
         </Alert>
       </Snackbar>
+
+      {/* SEE MORE Dialog - Added this from your branch */}
+      <Dialog open={seeMoreOpen} onClose={() => setSeeMoreOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          Product Details
+          <IconButton
+            aria-label="close"
+            onClick={() => setSeeMoreOpen(false)}
+            sx={{ color: (theme) => theme.palette.grey[500] }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {selectedProduct && (
+            <>
+              <Typography variant="h6" fontWeight={600}>
+                {selectedProduct.name}
+              </Typography>
+              {selectedProduct.itemCode && (
+                <Typography variant="body2" sx={{ mt: 1, color: 'primary.main', fontWeight: 500 }}>
+                  <strong>Item Code:</strong> {selectedProduct.itemCode}
+                </Typography>
+              )}
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                <strong>Price:</strong> Rs. {selectedProduct.price}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Quantity:</strong> {selectedProduct.quantity}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Description:</strong> {selectedProduct.description || "No description available"}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Harvest Location:</strong> {selectedProduct.harvestDetails?.location || "N/A"}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Listed Date:</strong> {new Date(selectedProduct.listedDate).toLocaleDateString()}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                <strong>Farmer:</strong> {loadingFarmer ? "Loading..." : farmerInfo?.name || "Unknown"}
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                <Rating value={farmerInfo?.farmerRatings || 0} precision={0.1} readOnly size="large" />
+                <Typography variant="caption" sx={{ ml: 1 }}>
+                  {farmerInfo?.farmerRatings ? `${farmerInfo.farmerRatings.toFixed(1)} / 5` : "No ratings"}
+                </Typography>
+              </Box>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions />
+      </Dialog>
     </Container>
   );
 };

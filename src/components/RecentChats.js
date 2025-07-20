@@ -280,18 +280,34 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
 
   // Expose methods to parent component
   useEffect(() => {
-    if (window.recentChatsAPI) {
-      window.recentChatsAPI = {
-        addNewChat,
-        updateChatMessage,
-        clearUnreadCount
-      };
-    } else {
-      window.recentChatsAPI = {
-        addNewChat,
-        updateChatMessage,
-        clearUnreadCount
-      };
+    window.recentChatsAPI = {
+      addNewChat,
+      updateChatMessage,
+      clearUnreadCount
+    };
+
+    // Process any pending operations that were queued before the API was available
+    if (window.pendingChatOperations && window.pendingChatOperations.length > 0) {
+      console.log('⏳ Processing pending chat operations:', window.pendingChatOperations.length);
+      
+      window.pendingChatOperations.forEach(operation => {
+        switch (operation.type) {
+          case 'addNewChat':
+            addNewChat(operation.data);
+            break;
+          case 'updateChatMessage':
+            updateChatMessage(operation.data.userId, operation.data.message, operation.data.incrementUnread);
+            break;
+          case 'clearUnreadCount':
+            clearUnreadCount(operation.data.userId);
+            break;
+          default:
+            console.warn('Unknown pending operation type:', operation.type);
+        }
+      });
+      
+      // Clear the pending operations
+      window.pendingChatOperations = [];
     }
   }, [addNewChat, updateChatMessage, clearUnreadCount]);
 

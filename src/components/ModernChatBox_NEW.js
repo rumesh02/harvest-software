@@ -32,29 +32,14 @@ const ChatContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
 }));
 
-const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose }) => {
+const ModernChatBox = ({ targetUser, currentUserId, onClose }) => {
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'info'
   });
 
-  // Get the correct target user ID - prefer targetUserId prop, fallback to targetUser properties
-  const actualTargetUserId = targetUserId || targetUser?.auth0Id || targetUser?.id;
-
-  console.log('🔵 ModernChatBox - Props received:', {
-    currentUserId,
-    targetUserId,
-    actualTargetUserId,
-    targetUser: targetUser ? {
-      name: targetUser.name,
-      auth0Id: targetUser.auth0Id,
-      id: targetUser.id,
-      _id: targetUser._id
-    } : null
-  });
-
-  // Use custom hooks with the correct user ID
+  // Use custom hooks
   const {
     messages,
     loading,
@@ -65,7 +50,7 @@ const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose }) => 
     sendMessage,
     handleTyping,
     setMessages
-  } = useChat(currentUserId, actualTargetUserId, targetUser);
+  } = useChat(currentUserId, targetUser?.id, targetUser);
 
   const {
     uploadProgress,
@@ -79,7 +64,7 @@ const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose }) => 
     clearSelectedFiles,
     triggerFileSelect,
     formatFileSize
-  } = useFileUpload(currentUserId, actualTargetUserId, targetUser);
+  } = useFileUpload(currentUserId, targetUser?.id, targetUser);
 
   // Show snackbar message
   const showSnackbar = (message, severity = 'info') => {
@@ -105,7 +90,7 @@ const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose }) => 
     // Update RecentChats
     if (window.recentChatsMessageHandlers?.handleSentMessage) {
       window.recentChatsMessageHandlers.handleSentMessage({
-        receiverId: actualTargetUserId,
+        receiverId: targetUser?.id,
         message: messageData.message,
         receiverName: targetUser?.name,
         receiverPicture: targetUser?.picture,

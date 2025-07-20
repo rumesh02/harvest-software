@@ -1,8 +1,11 @@
 import React from 'react';
 import { Box, Container, Grid, Typography, Link, IconButton } from '@mui/material';
 import { Facebook, Twitter, WhatsApp } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 const Footer = () => {
+  const navigate = useNavigate();
+
   return (
     <Box component="footer" sx={{ 
       width: '100%', 
@@ -17,28 +20,67 @@ const Footer = () => {
             <Typography variant="h6" gutterBottom>Quick Links</Typography>
             <Box>
               <Typography variant="body2" sx={{ color: '#ccc', my: 1 }}>
-                <Link href="/terms" color="inherit" sx={{ 
-                  textDecoration: 'none',
-                  '&:hover': { color: 'white' }
-                }}>
+                <Link 
+                  component="button"
+                  variant="body2"
+                  color="inherit" 
+                  sx={{ 
+                    textDecoration: 'none',
+                    '&:hover': { color: 'white' },
+                    cursor: 'pointer',
+                    border: 'none',
+                    background: 'none',
+                    padding: 0,
+                    fontFamily: 'inherit',
+                    fontSize: 'inherit'
+                  }}
+                  onClick={() => navigate('/terms')}
+                >
                   Terms of Service
                 </Link>
               </Typography>
               
               <Typography variant="body2" sx={{ color: '#ccc', my: 1 }}>
-                <Link href="/privacy" color="inherit" sx={{ 
-                  textDecoration: 'none',
-                  '&:hover': { color: 'white' }
-                }}>
+                <Link 
+                  component="button"
+                  variant="body2"
+                  color="inherit" 
+                  sx={{ 
+                    textDecoration: 'none',
+                    '&:hover': { color: 'white' },
+                    cursor: 'pointer',
+                    border: 'none',
+                    background: 'none',
+                    padding: 0,
+                    fontFamily: 'inherit',
+                    fontSize: 'inherit'
+                  }}
+                  onClick={() => navigate('/privacy')}
+                >
                   Privacy Policy
                 </Link>
               </Typography>
               
               <Typography variant="body2" sx={{ color: '#ccc', my: 1 }}>
-                <Link href="/faqs" color="inherit" sx={{ 
-                  textDecoration: 'none',
-                  '&:hover': { color: 'white' }
-                }}>
+                <Link 
+                  href="#faq" 
+                  color="inherit" 
+                  sx={{ 
+                    textDecoration: 'none',
+                    '&:hover': { color: 'white' },
+                    cursor: 'pointer'
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const faqSection = document.getElementById('faq');
+                    if (faqSection) {
+                      faqSection.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }
+                  }}
+                >
                   FAQs
                 </Link>
               </Typography>
@@ -47,7 +89,7 @@ const Footer = () => {
           <Grid item xs={12} sm={4}>
             <Typography variant="h6" gutterBottom>Contact Us</Typography>
             <Typography variant="body2" sx={{ color: '#ccc', my: 1 }}>
-              Email: support@farmtomarket.com
+              Email: support@farmto-market.com
             </Typography>
             <Typography variant="body2" sx={{ color: '#ccc', my: 1 }}>
               Phone: +94 112 651 657

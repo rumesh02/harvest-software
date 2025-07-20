@@ -1,18 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Card, CardMedia, CardContent, Button, Grid, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Card,
+  CardMedia,
+  CardContent,
+  Button,
+  Grid,
+  CircularProgress,
+} from "@mui/material";
 import { useAuth0 } from "@auth0/auth0-react";
 import { fetchCompletedPayments } from "../../services/orderService";
 import { format } from 'date-fns';
+import ReviewDialog from "../../components/ReviewDialog"; // Make sure this path is correct
 
 const PurchaseHistory = () => {
   const { user } = useAuth0();
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [selectedFarmer, setSelectedFarmer] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
   useEffect(() => {
     const loadCompletedPayments = async () => {
       if (!user?.sub) return;
-      
+
       try {
         setLoading(true);
         const completedPayments = await fetchCompletedPayments(user.sub);
@@ -23,9 +37,24 @@ const PurchaseHistory = () => {
         setLoading(false);
       }
     };
-    
+
     loadCompletedPayments();
   }, [user]);
+
+  const handleRateClick = (order) => {
+    setSelectedOrder(order);
+    setSelectedFarmer(order.farmerName || "Unknown Farmer");
+    setReviewOpen(true);
+  };
+
+  const handleReviewClose = (success) => {
+    if (success) {
+      alert(`Review submitted successfully for ${selectedFarmer}!`);
+    }
+    setReviewOpen(false);
+    setSelectedOrder(null);
+    setSelectedFarmer("");
+  };
 
   if (loading) {
     return (
@@ -57,11 +86,11 @@ const PurchaseHistory = () => {
         {purchases.map((purchase) => (
           <Grid item xs={12} sm={6} md={4} key={purchase._id}>
             <Card sx={{ maxWidth: 345, boxShadow: 3 }}>
-              <CardMedia 
-                component="img" 
-                height="200" 
-                image={purchase.items[0]?.imageUrl || "https://via.placeholder.com/200?text=Farm+Product"} 
-                alt={purchase.items[0]?.name || "Farm Product"} 
+              <CardMedia
+                component="img"
+                height="200"
+                image={purchase.items[0]?.imageUrl || "https://via.placeholder.com/200?text=Farm+Product"}
+                alt={purchase.items[0]?.name || "Farm Product"}
               />
               <CardContent>
                 <Typography variant="h6">{purchase.items[0]?.name || "Farm Product"}</Typography>
@@ -89,12 +118,25 @@ const PurchaseHistory = () => {
               </CardContent>
               <Box sx={{ display: "flex", justifyContent: "space-between", p: 2 }}>
                 <Button variant="contained" color="warning">View Invoice</Button>
-                <Button variant="contained" color="success">Rate Farmer</Button>
+                <Button variant="contained" color="success" onClick={() => handleRateClick(purchase)}>
+                  Rate Farmer
+                </Button>
               </Box>
             </Card>
           </Grid>
         ))}
       </Grid>
+
+      {/* Review Dialog */}
+      <ReviewDialog
+        open={reviewOpen}
+        onClose={handleReviewClose}
+        farmerId={selectedOrder?.farmerId}
+        merchantId={user?.sub}
+        orderId={selectedOrder?._id}
+        farmerRatings={{}}
+        product={selectedOrder?.items?.[0]}
+      />
     </Box>
   );
 };

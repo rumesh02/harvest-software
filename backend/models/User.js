@@ -11,7 +11,20 @@ const userSchema = new mongoose.Schema({
   province: { type: String },
   district: { type: String },
   role: { type: String, required: true }, // farmer / merchant / transporter
-  picture: { type: String } // ✅ NEW field to store base64 image
+  picture: { type: String }, // ✅ Profile image (optional)
+
+  location: {
+    coordinates: {
+      lat: { type: Number },
+      lng: { type: Number }
+    },
+    address: { type: String },
+    lastUpdated: { type: Date, default: Date.now }
+  },
+
+  // Rating field for farmers
+  farmerRatings: { type: Number, default: 0 }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

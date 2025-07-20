@@ -3,10 +3,11 @@ import { Box, Typography, Button, Alert, Paper } from "@mui/material";
 import PaymentIcon from "@mui/icons-material/Payment";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { fetchConfirmedBidById, updatePaymentStatus } from "../../services/orderService";
+import { fetchConfirmedBidById } from "../../services/orderService";
 import { useAuth0 } from "@auth0/auth0-react";
 import PendingPayments from "./PendingPayments";
 import axios from "axios"; // Add this import
+import { updatePaymentStatus } from "../../services/orderService";
 
 // Helper functions for user-specific localStorage 
 const getUserKey = (userId, key) => `user_${userId}_${key}`;
@@ -261,10 +262,6 @@ const Payments = () => {
           removeUserStorageItem(user.sub, 'confirmed_bid_id');
           removeUserStorageItem(user.sub, 'order_id');
           
-          // Dispatch events to refresh collections and notify other components
-          window.dispatchEvent(new CustomEvent('paymentCompleted'));
-          window.dispatchEvent(new CustomEvent('refreshCollection'));
-          
           setPaymentStatus('success');
         } catch (error) {
           console.error("Error updating payment status:", error);
@@ -315,10 +312,6 @@ const Payments = () => {
           removeUserStorageItem(user.sub, 'payment_amount');
           removeUserStorageItem(user.sub, 'confirmed_bid_id');
           removeUserStorageItem(user.sub, 'order_id');
-          
-          // Dispatch events to refresh collections and notify other components
-          window.dispatchEvent(new CustomEvent('paymentCompleted'));
-          window.dispatchEvent(new CustomEvent('refreshCollection'));
         }
         
         setPaymentStatus('success');
@@ -456,7 +449,6 @@ const Payments = () => {
              paymentStatus === 'success' ? 'Payment Successful' : 
              `Pay Rs.${amount.toFixed(2)} with PayHere`}
           </Button>
-
         </>
       )}
     </Box>

@@ -20,6 +20,7 @@ import {
   Fade
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 import { 
   DarkMode, 
   LightMode, 
@@ -34,6 +35,7 @@ export const ColorModeContext = React.createContext({ toggleColorMode: () => {} 
 
 const Header = ({ language, setLanguage }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // State for mobile drawer
@@ -67,7 +69,7 @@ const Header = ({ language, setLanguage }) => {
   };
 
   const navigationLinks = [
-    { name: "Home", id: "top" },
+    { name: "Home", id: "hero-section" },
     { name: "About Us", id: "about" },
     { name: "Services", id: "service" },
     { name: "Contact Us", id: "contact" }
@@ -111,6 +113,12 @@ const Header = ({ language, setLanguage }) => {
                 height: { xs: 36, md: 40 }, 
                 mr: 1.5,
                 transition: 'transform 0.3s ease',
+                backgroundColor: theme.palette.mode === 'light' ? '#333' : 'transparent',
+                borderRadius: theme.palette.mode === 'light' ? '8px' : '0px',
+                padding: theme.palette.mode === 'light' ? '6px' : '0px',
+                boxShadow: theme.palette.mode === 'light' 
+                  ? '0 2px 8px rgba(0,0,0,0.15)' 
+                  : 'none',
                 '&:hover': { transform: 'scale(1.1)' } 
               }} 
             />
@@ -245,6 +253,7 @@ const Header = ({ language, setLanguage }) => {
               <Button
                 variant="contained"
                 startIcon={<AccountCircle />}
+                onClick={() => navigate('/login')}
                 sx={{
                   ml: 1,
                   px: 2,
@@ -343,6 +352,10 @@ const Header = ({ language, setLanguage }) => {
               fullWidth
               variant="contained"
               startIcon={<AccountCircle />}
+              onClick={() => {
+                navigate('/login');
+                setDrawerOpen(false);
+              }}
               sx={{
                 py: 1,
                 borderRadius: '8px',

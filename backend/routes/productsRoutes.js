@@ -5,8 +5,11 @@ const {
   createProduct, 
   deleteProduct, 
   updateProduct,
-  getProductsByFarmer
+  getProductsByFarmer,
+  getProductById
 } = require("../controllers/productController");
+// GET: Product by ID (for stock/status lookup)
+router.get("/:id", getProductById);
 
 // GET: Browse all products
 router.get("/", getProducts);

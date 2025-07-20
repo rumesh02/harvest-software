@@ -383,113 +383,121 @@ const Dashboard = () => {
             <Paper 
               elevation={0}
               sx={{ 
-                p: { xs: 2, md: 3 }, 
+                p: 4, 
                 height: '100%',
-                background: '#e8f5e9',
+                background: 'rgba(255,255,255,0.9)',
+                border: "1px solid #E5E7EB",
                 borderRadius: 3,
-                boxShadow: '0 1.5px 6px rgba(67, 160, 71, 0.07)'
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar 
-                  sx={{ 
-                    background: '#d4edda',
-                    color: '#155724',
-                    width: 38,
-                    height: 38,
-                    mr: 2,
-                    boxShadow: '0 1.5px 6px rgba(67, 160, 71, 0.10)'
-                  }}
-                >
-                  <PersonIcon fontSize="small" />
-                </Avatar>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#155724', fontSize: { xs: 15, md: 16 } }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#155724', mb: 0.5, fontSize: { xs: 15, md: 17 } }}>
                     Top Buyers
                   </Typography>
                   <Typography variant="body2" color="#155724" sx={{ fontSize: { xs: 12, md: 13 } }}>
                     Your most valuable customers
                   </Typography>
                 </Box>
+                <Avatar 
+                  sx={{ 
+                    background: '#43a047',
+                    width: 40,
+                    height: 40,
+                    boxShadow: '0 2px 8px rgba(67, 160, 71, 0.12)'
+                  }}
+                >
+                  <PersonIcon fontSize="small" />
+                </Avatar>
               </Box>
               {topBuyers && topBuyers.length > 0 ? (
-                <List sx={{ width: '100%' }}>
-                  {topBuyers.map((buyer, index) => (
-                    <React.Fragment key={index}>
-                      {index > 0 && <Divider component="li" sx={{ my: 1 }} />}
-                      <ListItem 
-                        sx={{ 
-                          px: 2, 
-                          py: 2, 
-                          borderRadius: 2, 
-                          transition: 'all 0.3s ease',
-                          '&:hover': { 
-                            bgcolor: '#c8e6c9',
-                            transform: 'translateX(4px)'
-                          } 
-                        }}
-                      >
-                        <ListItemAvatar>
-                          <Avatar 
-                            src={buyer.avatar || undefined}
-                            alt={buyer.name}
-                            sx={{ 
-                              width: 38, 
-                              height: 38, 
-                              bgcolor: !buyer.avatar ? '#a5d6a7' : undefined,
+                <Box sx={{ height: 240, mt: 1.5, overflowY: 'auto' }}>
+                  <List sx={{ width: '100%', p: 0 }}>
+                    {topBuyers.map((buyer, index) => (
+                      <React.Fragment key={index}>
+                        {index > 0 && <Divider component="li" sx={{ my: 1 }} />}
+                        <ListItem 
+                          sx={{ 
+                            px: 2, 
+                            py: 2, 
+                            borderRadius: 2, 
+                            transition: 'all 0.3s ease',
+                            '&:hover': { 
+                              bgcolor: '#c8e6c9',
+                              transform: 'translateX(4px)'
+                            } 
+                          }}
+                        >
+                          <ListItemAvatar>
+                            <Avatar 
+                              src={buyer.avatar || undefined}
+                              alt={buyer.name}
+                              sx={{ 
+                                width: 38, 
+                                height: 38, 
+                                bgcolor: !buyer.avatar ? '#a5d6a7' : undefined,
+                                color: '#155724',
+                                fontWeight: 700,
+                                fontSize: 18,
+                                border: '2px solid #c8e6c9',
+                                boxShadow: '0 1.5px 6px rgba(67, 160, 71, 0.07)'
+                              }}
+                            >
+                              {!buyer.avatar && buyer.name ? buyer.name[0].toUpperCase() : null}
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={
+                              <Typography variant="body2" sx={{ fontWeight: 600, color: '#155724', fontSize: { xs: 15, md: 16 } }}>
+                                {buyer.name}
+                              </Typography>
+                            }
+                            secondary={
+                              <>
+                                <Typography variant="caption" color="#388e3c" sx={{ mt: 0.5, display: 'block' }}>
+                                  {buyer.location || "Location not available"}
+                                </Typography>
+                                <Typography variant="caption" color="#155724" sx={{ display: 'block', fontWeight: 500 }}>
+                                  Orders: {buyer.orders || 0}
+                                </Typography>
+                              </>
+                            }
+                          />
+                          <Chip
+                            label={`Rs. ${buyer.totalSpent?.toLocaleString() || "0"}`}
+                            sx={{
+                              background: '#d4edda',
                               color: '#155724',
-                              fontWeight: 700,
-                              fontSize: 18,
-                              border: '2px solid #c8e6c9',
+                              fontWeight: 600,
+                              fontSize: 13,
                               boxShadow: '0 1.5px 6px rgba(67, 160, 71, 0.07)'
                             }}
-                          >
-                            {!buyer.avatar && buyer.name ? buyer.name[0].toUpperCase() : null}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#155724', fontSize: { xs: 15, md: 16 } }}>
-                              {buyer.name}
-                            </Typography>
-                          }
-                          secondary={
-                            <>
-                              <Typography variant="caption" color="#388e3c" sx={{ mt: 0.5, display: 'block' }}>
-                                {buyer.location || "Location not available"}
-                              </Typography>
-                              <Typography variant="caption" color="#155724" sx={{ display: 'block', fontWeight: 500 }}>
-                                Orders: {buyer.orders || 0}
-                              </Typography>
-                            </>
-                          }
-                        />
-                        <Chip
-                          label={`Rs. ${buyer.totalSpent?.toLocaleString() || "0"}`}
-                          sx={{
-                            background: '#d4edda',
-                            color: '#155724',
-                            fontWeight: 600,
-                            fontSize: 13,
-                            boxShadow: '0 1.5px 6px rgba(67, 160, 71, 0.07)'
-                          }}
-                        />
-                      </ListItem>
-                    </React.Fragment>
-                  ))}
-                </List>
+                          />
+                        </ListItem>
+                      </React.Fragment>
+                    ))}
+                  </List>
+                </Box>
               ) : (
                 <Box sx={{ 
-                  p: 3, 
+                  height: 240,
+                  mt: 1.5,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
                   textAlign: 'center',
-                  background: '#e8f5e9',
-                  borderRadius: 2
+                  background: '#f8fffe',
+                  borderRadius: 2,
+                  border: '1px dashed #d4edda'
                 }}>
-                  <PersonIcon sx={{ fontSize: 38, color: '#155724', mb: 1 }} />
-                  <Typography color="#155724" sx={{ fontWeight: 500, fontSize: 15 }}>
+                  <PersonIcon sx={{ fontSize: 48, color: '#155724', mb: 2, opacity: 0.6 }} />
+                  <Typography color="#155724" sx={{ fontWeight: 600, fontSize: 16, mb: 1 }}>
                     No top buyers found yet
                   </Typography>
-                  <Typography variant="caption" color="#388e3c" sx={{ mt: 1 }}>
+                  <Typography variant="body2" color="#388e3c" sx={{ maxWidth: 200 }}>
                     Start selling your harvests to build customer relationships
                   </Typography>
                 </Box>

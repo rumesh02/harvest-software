@@ -7,6 +7,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
 import axios from "axios";
+import Box from "@mui/material/Box"; // Add this import
 
 const menuItems = [
   { text: "Dashboard", icon: <Home />, path: "/merchant/dashboard" },
@@ -55,7 +56,21 @@ const MerchantSidebar = () => {
       <div>
         {/* Logo and Title */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-          <img src="/images/logo.png" alt="Logo" width={50} />
+          <Box
+            component="img"
+            src="/NewLogo.png"
+            alt="Farm-to-Market Logo"
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              background: "#fff",
+              objectFit: "cover",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              border: "1px solid #eee",
+              p: "2px",
+            }}
+          />
           <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>Farm-to-Market</h2>
         </div>
 
@@ -107,7 +122,7 @@ const MerchantSidebar = () => {
         </div>
 
         {/* Settings and Logout */}
-        <List>
+        <List sx={{ marginTop: "40px" }}>
           <ListItemButton component={Link} to="/merchant/settings" sx={{ borderRadius: "8px", marginTop: "10px" }}>
             <ListItemIcon><Settings /></ListItemIcon>
             <ListItemText primary="Settings" />

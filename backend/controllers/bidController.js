@@ -443,10 +443,52 @@ const updateBidStatus = async (req, res) => {
   }
 };
 
+// Delete a bid
+const deleteBid = async (req, res) => {
+  const { bidId } = req.params;
+
+  console.log("Deleting bid with ID:", bidId);
+
+  try {
+    const client = await MongoClient.connect(uri);
+    const db = client.db("harvest-sw");
+    const collection = db.collection("bids");
+
+    // Check if bid exists
+    const bid = await collection.findOne({ _id: new ObjectId(bidId) });
+    if (!bid) {
+      client.close();
+      return res.status(404).json({ message: "Bid not found" });
+    }
+
+    // Delete the bid
+    const result = await collection.deleteOne({ _id: new ObjectId(bidId) });
+
+    client.close();
+
+    if (result.deletedCount === 1) {
+      res.status(200).json({ 
+        message: "Bid deleted successfully",
+        deletedBidId: bidId 
+      });
+    } else {
+      res.status(404).json({ message: "Bid not found" });
+    }
+  } catch (error) {
+    console.error("Error deleting bid:", error);
+    res.status(500).json({
+      message: "Error deleting bid",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createBid,
   acceptBid,
   rejectBid,
   getBids,
-  updateBidStatus
+  updateBidStatus,
+  deleteBid
 };
+

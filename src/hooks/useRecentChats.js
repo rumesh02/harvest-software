@@ -5,26 +5,63 @@ import { useCallback, useEffect } from 'react';
  * Provides methods to update recent chats from other components
  */
 const useRecentChats = () => {
+  // Check if the RecentChats API is available
+  const isAPIAvailable = useCallback(() => {
+    return window.recentChatsAPI && 
+           typeof window.recentChatsAPI.addNewChat === 'function' &&
+           typeof window.recentChatsAPI.updateChatMessage === 'function' &&
+           typeof window.recentChatsAPI.clearUnreadCount === 'function';
+  }, []);
   // Add a new chat to recent chats list
   const addNewChat = useCallback((chatData) => {
-    if (window.recentChatsAPI && window.recentChatsAPI.addNewChat) {
+    if (isAPIAvailable()) {
       window.recentChatsAPI.addNewChat(chatData);
+    } else {
+      console.warn('⚠️ RecentChats API not available, storing for later use');
+      // Store the request for when the API becomes available
+      if (!window.pendingChatOperations) {
+        window.pendingChatOperations = [];
+      }
+      window.pendingChatOperations.push({
+        type: 'addNewChat',
+        data: chatData
+      });
     }
-  }, []);
+  }, [isAPIAvailable]);
 
   // Update a chat with new message
   const updateChatMessage = useCallback((userId, message, incrementUnread = false) => {
-    if (window.recentChatsAPI && window.recentChatsAPI.updateChatMessage) {
+    if (isAPIAvailable()) {
       window.recentChatsAPI.updateChatMessage(userId, message, incrementUnread);
+    } else {
+      console.warn('⚠️ RecentChats API not available for updateChatMessage');
+      // Store the request for when the API becomes available
+      if (!window.pendingChatOperations) {
+        window.pendingChatOperations = [];
+      }
+      window.pendingChatOperations.push({
+        type: 'updateChatMessage',
+        data: { userId, message, incrementUnread }
+      });
     }
-  }, []);
+  }, [isAPIAvailable]);
 
   // Clear unread count for a specific chat
   const clearUnreadCount = useCallback((userId) => {
-    if (window.recentChatsAPI && window.recentChatsAPI.clearUnreadCount) {
+    if (isAPIAvailable()) {
       window.recentChatsAPI.clearUnreadCount(userId);
+    } else {
+      console.warn('⚠️ RecentChats API not available for clearUnreadCount');
+      // Store the request for when the API becomes available
+      if (!window.pendingChatOperations) {
+        window.pendingChatOperations = [];
+      }
+      window.pendingChatOperations.push({
+        type: 'clearUnreadCount',
+        data: { userId }
+      });
     }
-  }, []);
+  }, [isAPIAvailable]);
 
   // Listen for new messages and update recent chats
   const handleNewMessage = useCallback((messageData) => {
@@ -89,7 +126,8 @@ const useRecentChats = () => {
     updateChatMessage,
     clearUnreadCount,
     handleNewMessage,
-    handleSentMessage
+    handleSentMessage,
+    isAPIAvailable
   };
 };
 

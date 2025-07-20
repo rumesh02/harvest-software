@@ -133,7 +133,7 @@ router.post('/upload/multiple', uploadMultiple, async (req, res) => {
 // Get file by ID
 router.get('/:fileId', async (req, res) => {
   try {
-    const file = await File.findById(req.params.fileId).populate('uploadedBy', 'name email');
+    const file = await File.findById(req.params.fileId);
     
     if (!file) {
       return res.status(404).json({
@@ -262,8 +262,7 @@ router.get('/user/:userId', async (req, res) => {
     const files = await File.find(query)
       .sort({ uploadedAt: -1 })
       .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .populate('uploadedBy', 'name email');
+      .skip((page - 1) * limit);
 
     const total = await File.countDocuments(query);
 

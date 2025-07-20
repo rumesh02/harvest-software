@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -12,7 +12,6 @@ import {
   DialogActions,
   TextField,
   Box,
-  Container,
 } from "@mui/material";
 import { useCart } from "../../context/CartContext";
 import axios from "axios";
@@ -137,7 +136,7 @@ const PlaceBids = () => {
       setBidAmount("");
       setOrderWeight("");
       setSelectedProduct(null);
-      alert("✅ Bid successfully submitted! The farmer has been notified and will review your bid. The product has been removed from your cart.");
+      alert("Bid successfully submitted! The product has been removed from your cart.");
     } catch (error) {
       console.error("Error submitting bid:", error);
       alert(`Bid submission failed: ${error.response?.data?.message || error.message}`);
@@ -145,7 +144,7 @@ const PlaceBids = () => {
   };
 
   // Refresh product in cart
-  const refreshCartProduct = async (productId) => {
+  const refreshCartProduct = useCallback(async (productId) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/products/${productId}`);
       const updatedProduct = response.data;
@@ -153,7 +152,7 @@ const PlaceBids = () => {
     } catch (error) {
       console.error("Failed to refresh product in cart:", error);
     }
-  };
+  }, [updateCartItem]);
 
   useEffect(() => {
     const refreshAllCartItems = async () => {
@@ -173,13 +172,21 @@ const PlaceBids = () => {
     }, 30000); // every 30 seconds
 
     return () => clearInterval(interval);
-  }, [cartItems]);
+  }, [cartItems, refreshCartProduct]);
 
   return (
-    <Container sx={{ mt: 4, px: 3 }}>
-      {/* Header */}
-      <Typography variant="h4" fontWeight={600} mb={3} sx={{ color: "#D97706", fontSize: "2.2rem" }}>
-        🛒 Selected Products
+    <div style={{ padding: { xs: "12px", sm: "16px", md: "20px" } }}>
+      <Typography 
+        variant="h5" 
+        gutterBottom 
+        sx={{
+          color: '#374151',
+          fontWeight: 'bold',
+          mb: { xs: 2, sm: 3 },
+          fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' }
+        }}
+      >
+        Selected Products
       </Typography>
       <Grid 
         container 
@@ -193,120 +200,186 @@ const PlaceBids = () => {
         }}
       >
         {cartItems.map((product, index) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-            <Card sx={{
-              borderRadius: "12px",
-              overflow: "hidden",
-              textAlign: "center",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              background: "#FFEDD5",
-              border: "2px solid #FFD29D",
-              minHeight: "420px",
-              maxHeight: "420px",
-              width: '320px',
-              minWidth: '320px',
-              maxWidth: '320px',
-              margin: '0 auto',
-              transition: "all 0.3s ease",
+          <Grid 
+            item 
+            xs={12}
+            sm={6}
+            md={4}
+            lg={3}
+            key={index}
+            sx={{
+              display: 'flex',
+              justifyContent: 'center'
+            }}
+          >
+            <Card sx={{ 
+              width: { xs: '100%', sm: '280px', md: '300px' },
+              minHeight: { xs: 'auto', sm: '400px' },
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              borderRadius: { xs: '6px', sm: '8px' },
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
               '&:hover': {
-                transform: "translateY(-4px)",
-                boxShadow: "0 8px 25px rgba(0,0,0,0.12)"
+                transform: { sm: 'translateY(-4px)' },
+                boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
               }
             }}>
-              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-                <CardMedia
-                  component="img"
-                  height="150"
-                  image={product.img || product.image}
+              <div style={{ 
+                width: '100%', 
+                position: 'relative',
+                paddingTop: '66.67%' // 3:2 aspect ratio
+              }}>
+                <CardMedia 
+                  component="img" 
+                  image={product.img || product.image} 
                   alt={product.name}
                   sx={{
-                    transition: "transform 0.3s ease",
-                    '&:hover': {
-                      transform: "scale(1.05)"
-                    }
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
                   }}
                 />
-                <Box sx={{ p: 2.5 }}>
-                  <Typography variant="h6" fontWeight={600} mt={1} sx={{ color: "#B45309", fontSize: "1.2rem" }}>
-                    {product.name}
-                  </Typography>
+              </div>
+              <CardContent sx={{ 
+                flexGrow: 1, 
+                padding: { xs: '12px', sm: '16px' }
+              }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                    fontWeight: 'bold',
+                    mb: { xs: 1, sm: 2 },
+                    color: '#374151',
+                    lineHeight: 1.2
+                  }}
+                >
+                  {product.name}
+                </Typography>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: { xs: '6px', sm: '8px' }
+                }}>
                   {product.location && (
-                    <Typography variant="caption" sx={{ color: '#388E3C', display: 'block', mb: 1, fontSize: '0.9rem' }}>
-                      <span role="img" aria-label="map">🗺️</span> Location: {product.location.lat.toFixed(4)}, {product.location.lng.toFixed(4)}
-                    </Typography>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      color: '#388E3C',
+                      fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                    }}>
+                      <span role="img" aria-label="map" style={{ marginRight: '4px' }}>🗺️</span>
+                      <span style={{ 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        Location: {product.location.lat.toFixed(4)}, {product.location.lng.toFixed(4)}
+                      </span>
+                    </Box>
                   )}
-                  {product.price && (
-                    <Typography variant="h6" sx={{ color: "#D97706", fontWeight: 600, fontSize: "1.3rem", mb: 1 }}>
-                      Rs. {product.price}
-                    </Typography>
-                  )}
-                  {product.quantity && (
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: product.quantity <= 0 ? 'error.main' :
-                          product.quantity <= 10 ? '#D97706' : '#374151',
-                        fontWeight: product.quantity <= 10 ? 'bold' : 'normal',
-                        fontSize: '1rem',
-                        mb: 1
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: { xs: '2px 0', sm: '4px 0' }
+                  }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontWeight: 500,
+                        fontSize: { xs: '0.813rem', sm: '0.875rem' }
                       }}
                     >
-                      Qty: {product.quantity} kg
-                      {product.quantity <= 0 && ' (Out of Stock)'}
-                      {product.quantity > 0 && product.quantity <= 10 && ' (Low Stock)'}
+                      Price:
                     </Typography>
-                  )}
-                  {product.listedDate && (
-                    <Typography variant="caption" sx={{ color: "#D97706", fontSize: '0.9rem' }}>
-                      Listed: {new Date(product.listedDate).toLocaleDateString()}
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#D97706',
+                        fontWeight: 'bold',
+                        fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                      }}
+                    >
+                      Rs. {product.price}
                     </Typography>
-                  )}
+                  </Box>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: { xs: '2px 0', sm: '4px 0' }
+                  }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontWeight: 500,
+                        fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                      }}
+                    >
+                      Quantity:
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#059669',
+                        fontWeight: 'bold',
+                        fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                      }}
+                    >
+                      {product.quantity} kg
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-              <Box sx={{ p: 2, display: 'flex', flexDirection: 'row', gap: 2, justifyContent: 'space-between', alignItems: 'center' }}>
+              </CardContent>
+              <Box sx={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                padding: { xs: '12px', sm: '16px' },
+                gap: { xs: '6px', sm: '8px' },
+                borderTop: '1px solid #E5E7EB'
+              }}>
                 <Button
                   variant="contained"
-                  size="large"
-                  disabled={product.quantity <= 0}
+                  size="small"
                   sx={{
-                    flex: 1,
-                    height: '48px',
-                    minHeight: '48px',
-                    maxHeight: '48px',
-                    backgroundColor: product.quantity <= 0 ? "#ccc" : "#D97706",
-                    color: "#fff",
-                    fontWeight: 600,
-                    fontSize: "1.1rem",
-                    borderRadius: "10px",
-                    p: 0,
+                    flex: 2,
+                    backgroundColor: product.quantity <= 0 ? '#9CA3AF' : '#D97706',
+                    color: 'white',
                     '&:hover': {
-                      backgroundColor: product.quantity <= 0 ? "#ccc" : "#B45309",
+                      backgroundColor: product.quantity <= 0 ? '#9CA3AF' : '#B45309'
                     },
+                    textTransform: 'none',
+                    fontWeight: 'bold',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    padding: { xs: '6px 12px', sm: '8px 16px' },
+                    minHeight: { xs: '32px', sm: '36px' }
                   }}
                   onClick={() => handlePlaceBidClick(product)}
+                  disabled={product.quantity <= 0}
                 >
                   {product.quantity <= 0 ? "Out of Stock" : "Place Bid"}
                 </Button>
                 <Button
-                  variant="contained"
+                  variant="outlined"
+                  size="small"
                   sx={{
                     flex: 1,
-                    height: '48px',
-                    minHeight: '48px',
-                    maxHeight: '48px',
-                    fontWeight: 600,
-                    fontSize: "1.1rem",
-                    borderRadius: "10px",
-                    backgroundColor: '#DC2626',
-                    color: '#fff',
-                    p: 0,
+                    color: '#DC2626',
+                    borderColor: '#DC2626',
                     '&:hover': {
-                      backgroundColor: '#B91C1C',
-                      color: '#fff',
+                      backgroundColor: '#FEE2E2',
+                      borderColor: '#DC2626'
                     },
+                    textTransform: 'none',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    padding: { xs: '6px 12px', sm: '8px 16px' },
+                    minHeight: { xs: '32px', sm: '36px' }
                   }}
                   onClick={() => removeFromCart(product.name)}
                 >
@@ -317,21 +390,33 @@ const PlaceBids = () => {
           </Grid>
         ))}
       </Grid>
-      
       {/* Dialog for entering bid details */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth
+      <Dialog 
+        open={open} 
+        onClose={handleClose} 
+        maxWidth="sm" 
+        fullWidth
         PaperProps={{
           sx: {
-            background: "#FFF8EC",
-            borderRadius: 3,
-            border: "2px solid #FFD29D"
+            width: { xs: '95%', sm: '80%', md: '600px' },
+            margin: { xs: '16px', sm: 'auto' },
+            borderRadius: { xs: '8px', sm: '10px' }
           }
         }}
       >
-        <DialogTitle sx={{ color: '#D97706', fontWeight: 700, fontSize: '1.5rem', pb: 0 }}>
+        <DialogTitle sx={{
+          color: '#374151',
+          fontWeight: 'bold',
+          fontSize: { xs: '1.25rem', sm: '1.5rem' },
+          borderBottom: '1px solid #E5E7EB',
+          padding: { xs: '16px', sm: '20px' }
+        }}>
           Enter Bid Details
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ 
+          padding: { xs: '16px', sm: '24px' },
+          mt: { xs: 1, sm: 2 }
+        }}>
           <Typography
             variant="h6"
             gutterBottom
@@ -344,8 +429,21 @@ const PlaceBids = () => {
           >
             Product: {selectedProduct?.name}
           </Typography>
-          <Box sx={{ mb: 2, p: 2, backgroundColor: '#FFF8EC', borderRadius: 1, border: '1.5px solid #FFD29D' }}>
-            <Typography variant="body2" sx={{ color: '#B45309' }}>
+          <Box sx={{ 
+            mb: { xs: 2, sm: 3 }, 
+            p: { xs: 1.5, sm: 2 }, 
+            backgroundColor: '#FFF8EC', 
+            borderRadius: '8px',
+            border: '1px solid #FDE68A'
+          }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#B45309',
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                mb: 1
+              }}
+            >
               <strong>Available Quantity:</strong> {selectedProduct?.quantity} kg
             </Typography>
             <Typography 
@@ -364,7 +462,16 @@ const PlaceBids = () => {
             fullWidth
             value={bidAmount}
             onChange={(e) => setBidAmount(e.target.value)}
-            sx={{ marginBottom: "15px", background: 'white', borderRadius: '10px' }}
+            sx={{ 
+              mb: { xs: 2, sm: 3 },
+              '& .MuiInputLabel-root': {
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                marginTop: 0 // Removed top margin
+              },
+              '& .MuiOutlinedInput-root': {
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              }
+            }}
             helperText={`Must be at least Rs. ${selectedProduct?.price}`}
             inputProps={{ min: selectedProduct?.price || 0 }}
             variant="outlined"
@@ -376,20 +483,42 @@ const PlaceBids = () => {
             fullWidth
             value={orderWeight}
             onChange={(e) => setOrderWeight(e.target.value)}
+            sx={{ 
+              '& .MuiInputLabel-root': {
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                marginTop: 0 // Removed top margin
+              },
+              '& .MuiOutlinedInput-root': {
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              }
+            }}
             helperText={`Maximum: ${selectedProduct?.quantity} kg`}
             inputProps={{
               min: 0.1,
               max: selectedProduct?.quantity || 0,
               step: 0.1
             }}
-            sx={{ background: 'white', borderRadius: '10px' }}
             variant="outlined"
             InputLabelProps={{ shrink: true }}
           />
           {orderWeight && selectedProduct && (
-            <Box sx={{ mt: 2, p: 2, backgroundColor: '#FEF3C7', borderRadius: 1, border: '1.5px solid #FFD29D' }}>
-              <Typography variant="body2" sx={{ color: '#92400E' }}>
-                <strong>Order Summary:</strong>
+            <Box sx={{ 
+              mt: { xs: 2, sm: 3 }, 
+              p: { xs: 1.5, sm: 2 }, 
+              backgroundColor: '#FEF3C7', 
+              borderRadius: '8px',
+              border: '1px solid #FDE68A'
+            }}>
+              <Typography 
+                variant="subtitle1" 
+                sx={{ 
+                  color: '#92400E',
+                  fontWeight: 'bold',
+                  mb: 1,
+                  fontSize: { xs: '0.875rem', sm: '1rem' }
+                }}
+              >
+                Order Summary
               </Typography>
               <Typography 
                 variant="body2" 
@@ -438,20 +567,22 @@ const PlaceBids = () => {
             size="small"
             disabled={!bidAmount || !orderWeight || Number(orderWeight) > Number(selectedProduct?.quantity)}
             sx={{
-              backgroundColor: "#D97706",
-              color: "#fff",
-              fontWeight: 600,
-              borderRadius: "10px",
+              backgroundColor: '#D97706',
+              fontSize: { xs: '0.875rem', sm: '1rem' },
+              padding: { xs: '6px 12px', sm: '8px 16px' },
               '&:hover': {
-                backgroundColor: "#B45309",
+                backgroundColor: '#B45309'
               },
+              '&.Mui-disabled': {
+                backgroundColor: '#9CA3AF'
+              }
             }}
           >
             Submit Bid
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </div>
   );
 };
 

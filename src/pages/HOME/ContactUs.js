@@ -1,9 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { 
   Box, 
-  Container, 
   Typography, 
-  Grid, 
   TextField, 
   Button, 
   Alert,
@@ -108,45 +106,77 @@ const ContactUs = () => {
       ref={contactUsRef}
       sx={{
         width: '100%',
-        py: 6,
-        mb: 3,
+        py: { xs: 4, sm: 5, md: 6, lg: 7 },
+        px: { xs: 1, sm: 2 },
+        mb: { xs: 2, sm: 3, md: 4 },
         background: 'linear-gradient(to right, #22333b, #0c1229)',
         color: 'white',
-        borderRadius: 2,
+        borderRadius: { xs: 1, sm: 2 },
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(50px)',
         transition: 'opacity 1s ease-out, transform 1s ease-out',
+        boxShadow: '0 20px 60px rgba(31, 41, 55, 0.4)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
-      <Container>
-        <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} md={6}
-            sx={{
-              opacity: isVisible ? 1 : 0,
-              transform: isVisible ? 'translateX(0)' : 'translateX(-50px)',
-              transition: 'opacity 1s ease-out, transform 1s ease-out',
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: 'flex-start',
+          justifyContent: 'flex-start',
+          width: { xs: '95%', md: '90%', lg: '85%' },
+          maxWidth: '1400px',
+          minHeight: { md: '500px' },
+          gap: { xs: 4, md: 8 },
+        }}
+      >
+        {/* Left Side: Text Content and Form */}
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: { xs: 'center', md: 'flex-start' },
+            justifyContent: 'center',
+            mt: { xs: 2, md: 0 },
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible ? 'translateX(0)' : 'translateX(-50px)',
+            transition: 'opacity 1s ease-out, transform 1s ease-out',
+          }}
+        >
+          <Typography variant="h2" 
+            sx={{ 
+              mb: { xs: 2, md: 3 }, 
+              fontWeight: '700',
+              fontSize: { xs: '2rem', sm: '2.4rem', md: '2.8rem', lg: '3.2rem' },
+              color: '#f8b400',
+              textShadow: '2px 2px 8px rgba(0, 0, 0, 0.5)',
+              textAlign: { xs: 'center', md: 'left' },
+              textTransform: 'uppercase',
+              letterSpacing: '2px'
             }}
           >
-            <Typography variant="h2" 
-              sx={{ 
-                mb: 2, 
-                fontWeight: 'bold',
-                color: '#f8b400',
-                textTransform: 'uppercase',
-                letterSpacing: '2px',
-                animation: isVisible ? 'glowText 2s infinite alternate ease-in-out' : 'none',
-                '@keyframes glowText': {
-                  from: { textShadow: '0 0 5px rgba(255, 215, 0, 0.5)' },
-                  to: { textShadow: '0 0 20px rgba(255, 215, 0, 0.8)' }
-                }
-              }}
-            >
-              Contact Us
-            </Typography>
-            <Typography variant="body1" paragraph sx={{ mb: 3 }}>
-              Have questions or suggestions? We'd love to hear from you. Fill out the form or reach us through our contact information.
-            </Typography>
-            
+            Contact Us
+          </Typography>
+          <Typography variant="body1" 
+            sx={{
+              mb: { xs: 3, md: 4 },
+              fontSize: { xs: '1.1rem', sm: '1.2rem', md: '1.25rem' },
+              lineHeight: '1.7',
+              color: 'rgba(229, 231, 235, 0.95)',
+              textShadow: '1px 1px 3px rgba(0, 0, 0, 0.3)',
+              textAlign: { xs: 'center', md: 'left' },
+              fontWeight: '400'
+            }}
+            paragraph
+          >
+            Have questions or suggestions? We'd love to hear from you. Fill out the form or reach us through our contact information.
+          </Typography>
+          
+          <Box sx={{ width: '100%', maxWidth: '800px' }}>
             <form onSubmit={handleSubmit}>
               <TextField
                 fullWidth
@@ -157,15 +187,25 @@ const ContactUs = () => {
                 margin="normal"
                 variant="outlined"
                 required
+                size="large"
                 sx={{
-                  mb: 2,
+                  mb: 3,
                   '& .MuiOutlinedInput-root': {
                     '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
                     '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
                     '&.Mui-focused fieldset': { borderColor: '#f8b400' },
+                    fontSize: '1.1rem',
+                    padding: '4px',
                   },
-                  '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' },
-                  '& .MuiInputBase-input': { color: 'white' },
+                  '& .MuiInputLabel-root': { 
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    fontSize: '1.1rem'
+                  },
+                  '& .MuiInputBase-input': { 
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    padding: '16px 14px'
+                  },
                 }}
               />
               <TextField
@@ -178,15 +218,25 @@ const ContactUs = () => {
                 margin="normal"
                 variant="outlined"
                 required
+                size="large"
                 sx={{
-                  mb: 2,
+                  mb: 3,
                   '& .MuiOutlinedInput-root': {
                     '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
                     '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
                     '&.Mui-focused fieldset': { borderColor: '#f8b400' },
+                    fontSize: '1.1rem',
+                    padding: '4px',
                   },
-                  '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' },
-                  '& .MuiInputBase-input': { color: 'white' },
+                  '& .MuiInputLabel-root': { 
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    fontSize: '1.1rem'
+                  },
+                  '& .MuiInputBase-input': { 
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    padding: '16px 14px'
+                  },
                 }}
               />
               <TextField
@@ -199,16 +249,25 @@ const ContactUs = () => {
                 variant="outlined"
                 required
                 multiline
-                rows={4}
+                rows={5}
                 sx={{
-                  mb: 2,
+                  mb: 3,
                   '& .MuiOutlinedInput-root': {
                     '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
                     '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
                     '&.Mui-focused fieldset': { borderColor: '#f8b400' },
+                    fontSize: '1.1rem',
+                    padding: '4px',
                   },
-                  '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' },
-                  '& .MuiInputBase-input': { color: 'white' },
+                  '& .MuiInputLabel-root': { 
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    fontSize: '1.1rem'
+                  },
+                  '& .MuiInputBase-input': { 
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    padding: '16px 14px'
+                  },
                 }}
               />
               <Button
@@ -216,9 +275,12 @@ const ContactUs = () => {
                 variant="contained"
                 size="large"
                 disabled={isSubmitting}
-                startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <Send />}
+                startIcon={isSubmitting ? <CircularProgress size={24} color="inherit" /> : <Send />}
                 sx={{
-                  mt: 2,
+                  mt: 3,
+                  py: 2,
+                  px: 4,
+                  fontSize: '1.2rem',
                   bgcolor: '#f8b400',
                   color: '#000',
                   '&:hover': {
@@ -237,58 +299,66 @@ const ContactUs = () => {
                 {isSubmitting ? 'Sending...' : 'Send Message'}
               </Button>
             </form>
-          </Grid>
-          <Grid item xs={12} md={6} 
+          </Box>
+        </Box>
+
+        {/* Right Side: Image */}
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            alignItems: { xs: 'center', md: 'center' },
+            justifyContent: 'center',
+            mt: { xs: 0, md: 20 },
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible ? 'translateX(0)' : 'translateX(50px)',
+            transition: 'opacity 1s ease-out, transform 1s ease-out',
+          }}
+        >
+          <Box
+            component="img"
+            src="/Images/home/contact-us.jpg"  
+            alt="Contact Us"
             sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              opacity: isVisible ? 1 : 0,
-              transform: isVisible ? 'translateX(0)' : 'translateX(50px)',
-              transition: 'opacity 1s ease-out, transform 1s ease-out',
-              animation: isVisible ? 'floatUpDown 4s infinite ease-in-out' : 'none',
-              '@keyframes floatUpDown': {
-                '0%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
-                '100%': { transform: 'translateY(0)' }
+              width: { xs: '90%', sm: '400px', md: '470px', lg: '520px' },
+              maxWidth: '99%',
+              height: 'auto',
+              borderRadius: { xs: '12px', md: '20px' },
+              boxShadow: '0 25px 60px rgba(75, 85, 99, 0.5)',
+              border: '3px solid rgba(248, 180, 0, 0.7)',
+              transition: 'all 0.4s ease',
+              objectFit: 'cover',
+              '&:hover': {
+                transform: 'scale(1.05) rotateY(5deg)',
+                boxShadow: '0 30px 80px rgba(107, 114, 128, 0.6)',
+                borderColor: 'rgba(248, 180, 0, 0.9)'
               }
             }}
-          >
-            <Box
-              component="img"
-              src="/Images/home/contact-us.jpg"
-              alt="Contact Us"
-              sx={{
-                width: '90%',
-                maxWidth: '450px',
-                borderRadius: '15px',
-                boxShadow: '0px 6px 15px rgba(255, 215, 0, 0.4)'
-              }}
-            />
-          </Grid>
-        </Grid>
+          />
+        </Box>
+      </Box>
         
-        {/* Success/Error Snackbar */}
-        <Snackbar
-          open={showSnackbar}
-          autoHideDuration={6000}
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={showSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
           onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          severity={submitStatus}
+          icon={submitStatus === 'success' ? <CheckCircle /> : <Error />}
+          sx={{
+            width: '100%',
+            '& .MuiAlert-message': {
+              fontWeight: 'bold',
+            },
+          }}
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={submitStatus}
-            icon={submitStatus === 'success' ? <CheckCircle /> : <Error />}
-            sx={{
-              width: '100%',
-              '& .MuiAlert-message': {
-                fontWeight: 'bold',
-              },
-            }}
-          >
-            {statusMessage}
-          </Alert>
-        </Snackbar>
-      </Container>
+          {statusMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -263,7 +263,7 @@ useEffect(() => {
 
   const handleSignUpClick = (role) => {
     localStorage.setItem('selectedRole', role);
-    navigate('/login');
+    navigate('/register');
   };
   
   const scrollToSection = (ref) => {
@@ -621,7 +621,7 @@ useEffect(() => {
                 display: 'flex', 
                 justifyContent: 'center',
                 mt: 'auto',
-                mb: 3,
+                mb: 'auto',
                 animation: 'bounce 2s infinite',
                 '@keyframes bounce': {
                   '0%, 100%': { transform: 'translateY(0)' },
@@ -799,7 +799,7 @@ useEffect(() => {
                     <CardMedia
                       component="img"
                       height={220}
-                      image="/Images/home/farmer home.jpg"
+                      image="/Images/home/farmer_home.jpg"
                       alt="Farmer"
                       sx={{
                         transition: 'transform 0.5s ease',
@@ -908,7 +908,7 @@ useEffect(() => {
                     <CardMedia
                       component="img"
                       height={220}
-                      image="/Images/home/merchant home.jpeg"
+                      image="/Images/home/merchant_home.jpg"
                       alt="Merchant"
                       sx={{
                         transition: 'transform 0.5s ease',
@@ -1018,7 +1018,7 @@ useEffect(() => {
                     <CardMedia
                       component="img"
                       height={220}
-                      image="/Images/home/transporter home.jpeg"
+                      image="/Images/home/transporter_home.jpeg"
                       alt="Transporter"
                       sx={{
                         transition: 'transform 0.5s ease',
@@ -1409,7 +1409,12 @@ useEffect(() => {
                     variant="outlined"
                     color="primary"
                     startIcon={<HelpOutline />}
-                    onClick={() => scrollToSection(document.getElementById('contact'))}
+                    onClick={() => {
+                      const contactSection = document.getElementById('contact');
+                      if (contactSection) {
+                        contactSection.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
                     sx={{
                       borderWidth: '2px',
                       '&:hover': {
@@ -1618,9 +1623,15 @@ useEffect(() => {
           </Container>
         </Box>
         
-        {/* Chat Button */}
+        {/* Support Button */}
         <IconButton
-          aria-label="Chat with us"
+          aria-label="Contact Support"
+          onClick={() => {
+            const contactSection = document.getElementById('contact');
+            if (contactSection) {
+              contactSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
           sx={{
             position: 'fixed',
             bottom: 20,
@@ -1638,7 +1649,7 @@ useEffect(() => {
           }}
         >
           <Chat />
-          <Tooltip title="Chat with support" placement="left">
+          <Tooltip title="Contact Support" placement="left">
             <span></span>
           </Tooltip>
         </IconButton>

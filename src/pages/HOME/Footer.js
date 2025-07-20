@@ -92,7 +92,7 @@ const Footer = () => {
               Email: support@farmto-market.com
             </Typography>
             <Typography variant="body2" sx={{ color: '#ccc', my: 1 }}>
-              Phone: +123 456 7890
+              Phone: +94 112 651 657
             </Typography>
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -148,7 +148,7 @@ const Footer = () => {
         </Grid>
 
         <Typography variant="body2" sx={{ mt: 5, opacity: 0.8, fontSize: '0.7rem' }}>
-          &copy; {new Date().getFullYear()} Farm-to-Market. All rights reserved.
+          &copy; {new Date().getFullYear()} Farm-To-Market. All rights reserved.
         </Typography>
       </Container>
     </Box>

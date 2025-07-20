@@ -67,7 +67,14 @@ const ChatContainer = ({ currentUserId }) => {
   const [usersLoading, setUsersLoading] = useState(false);
 
   // Initialize recent chats hook
-  const { addNewChat, updateChatMessage, clearUnreadCount } = useRecentChats();
+  const { addNewChat, updateChatMessage, clearUnreadCount, isAPIAvailable } = useRecentChats();
+  
+  // Debug the hook initialization
+  useEffect(() => {
+    console.log('🔵 ChatContainer: useRecentChats hook initialized');
+    console.log('🔵 addNewChat type:', typeof addNewChat);
+    console.log('🔵 API available:', isAPIAvailable());
+  }, [addNewChat, isAPIAvailable]);
 
   // Set up handler for message notification clicks
   useEffect(() => {
@@ -216,19 +223,27 @@ const ChatContainer = ({ currentUserId }) => {
   };
 
   const handleUserSearchSelect = (user) => {
+    console.log('🔵 User search select triggered:', user);
+    console.log('🔵 addNewChat function available:', typeof addNewChat);
+    
     setSelectedUser(user);
     
     // Add to recent chats using the hook
-    addNewChat({
-      userId: user.auth0Id,
-      name: user.name,
-      picture: user.picture,
-      role: user.role,
-      email: user.email,
-      lastMessage: '',
-      lastMessageTime: new Date().toISOString(),
-      unreadCount: 0
-    });
+    try {
+      addNewChat({
+        userId: user.auth0Id,
+        name: user.name,
+        picture: user.picture,
+        role: user.role,
+        email: user.email,
+        lastMessage: '',
+        lastMessageTime: new Date().toISOString(),
+        unreadCount: 0
+      });
+      console.log('✅ addNewChat called successfully');
+    } catch (error) {
+      console.error('🔴 Error calling addNewChat:', error);
+    }
     
     // Clear search filters to hide the dropdown
     setSearchTerm('');

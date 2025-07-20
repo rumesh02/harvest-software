@@ -1,3 +1,30 @@
+// Get product by ID (for stock/status lookup)
+const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: "Product ID is required" });
+    }
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    // Only return relevant fields for stock/status
+    res.json({
+      _id: product._id,
+      name: product.name,
+      quantity: product.quantity,
+      price: product.price,
+      listedDate: product.listedDate,
+      farmerID: product.farmerID,
+      image: product.image,
+      stock: product.quantity // Alias for clarity
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching product", error: err.message });
+  }
+};
 const Product = require("../models/Product");
 const mongoose = require("mongoose");
 
@@ -213,5 +240,6 @@ module.exports = {
   createProduct, 
   deleteProduct, 
   updateProduct,
-  getProductsByFarmer
+  getProductsByFarmer,
+  getProductById
 };

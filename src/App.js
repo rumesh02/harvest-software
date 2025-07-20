@@ -66,7 +66,7 @@ import PrivacyPolicy from "./pages/Legal/PrivacyPolicy";
 
 import FarmerSidebar from "./components/Sidebar";
 import TransporterSidebar from "./components/TransporterSidebar";
-import MerchantSidebar from "./components/Merchantsidebar";
+import MerchantSidebar from "./components/MerchantSidebar";
 
 const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";
 const clientId = "TteW47136eGLVWWVHIFxAiViqCnittRm";

@@ -63,7 +63,13 @@ const MerchantDashboard = () => {
       
       const response = await axios.get(url);
       
+      // Add detailed logging
+      console.log('Full dashboard response:', response.data);
+      console.log('Monthly data received:', response.data.monthlyData);
+      
       setDashboardData(response.data);
+      console.log('Dashboard data received:', response.data);
+      console.log('Monthly data:', response.data.monthlyData);
       
     } catch (error) {
       console.error('Error details:', error.response?.data || error.message);
@@ -81,8 +87,14 @@ const MerchantDashboard = () => {
   // Format the monthly data to ensure it has proper names and values
   const formattedMonthlyData = (dashboardData.monthlyData || []).map(item => ({
     name: item.name || item.month || '',
-    revenue: typeof item.revenue === 'number' ? item.revenue : 0,
+    // Try multiple property names that might contain the revenue data
+    revenue: typeof item.revenue === 'number' ? item.revenue : 
+             typeof item.amount === 'number' ? item.amount :
+             typeof item.value === 'number' ? item.value : 0,
   }));
+
+  // After formatting, add a log
+  console.log('Formatted monthly data for chart:', formattedMonthlyData);
 
   const { PendingPayments, PendingBids, totalOrders, topFarmers, monthlyData } = dashboardData;
 
@@ -366,6 +378,7 @@ const MerchantDashboard = () => {
                       tick={{ fill: '#92400e', fontSize: 11, fontWeight: 500 }}
                       tickFormatter={(value) => `Rs. ${value.toLocaleString()}`}
                       label={{ value: 'Purchase Cost (Rs.)', angle: -90, position: 'insideLeft', fill: '#d97706', fontSize: 11 }}
+                      ticks={[2500, 5000, 7500, 10000]}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar 

@@ -53,9 +53,13 @@ export const addVehicle = async (vehicleData) => {
   }
 };
 
-export const getVehicles = async () => {
+export const getVehicles = async (transporterId = null) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/vehicles`);
+    let url = `${API_BASE_URL}/vehicles`;
+    if (transporterId) {
+      url += `?transporterId=${transporterId}`;
+    }
+    const response = await axios.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching vehicles:", error);

@@ -1,10 +1,37 @@
+// Get product by ID (for stock/status lookup)
+const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: "Product ID is required" });
+    }
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    // Only return relevant fields for stock/status
+    res.json({
+      _id: product._id,
+      name: product.name,
+      quantity: product.quantity,
+      price: product.price,
+      listedDate: product.listedDate,
+      farmerID: product.farmerID,
+      image: product.image,
+      stock: product.quantity // Alias for clarity
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching product", error: err.message });
+  }
+};
 const Product = require("../models/Product");
 const mongoose = require("mongoose");
 
 // Fetch all products with backend filtering and pagination
 const getProducts = async (req, res) => {
   try {
-    const { search, district, maxPrice, page = 1, limit = 8 } = req.query;
+    const { search, district, maxPrice, page = 1, limit = 8, sort = 'desc', sortBy = 'listedDate', sortOrder } = req.query;
     let filter = {};
 
     if (search) {
@@ -17,11 +44,33 @@ const getProducts = async (req, res) => {
       filter.price = { $lte: Number(maxPrice) };
     }
 
+    // Determine sort order
+    let sortDirection = 1; // Default ascending
+    
+    // Handle different sorting parameter formats
+    if (sortOrder) {
+      sortDirection = sortOrder.toLowerCase() === 'desc' ? -1 : 1;
+    } else if (sort) {
+      sortDirection = sort.toLowerCase() === 'desc' ? -1 : 1;
+    }
+    
+    // Handle sortBy field with minus prefix (e.g., '-listedDate')
+    let sortField = sortBy || 'listedDate';
+    if (sortField.startsWith('-')) {
+      sortField = sortField.substring(1);
+      sortDirection = -1;
+    }
+
+    // Create sort object
+    const sortOptions = {};
+    sortOptions[sortField] = sortDirection;
+
     const skip = (Number(page) - 1) * Number(limit);
     const products = await Product.find(
       filter,
       "name price quantity image listedDate farmerID harvestDetails itemCode location productID"
     )
+      .sort(sortOptions)
       .skip(skip)
       .limit(Number(limit));
 
@@ -191,5 +240,6 @@ module.exports = {
   createProduct, 
   deleteProduct, 
   updateProduct,
-  getProductsByFarmer
+  getProductsByFarmer,
+  getProductById
 };

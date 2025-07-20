@@ -1,13 +1,18 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const crypto = require('crypto'); // For PayHere hash generation
+const crypto = require('crypto');
 const http = require('http');
 const { Server } = require('socket.io');
+const { MongoClient, ObjectId } = require('mongodb');
 
 const connectDB = require("./config/db");
 
-// Route imports
+// Models
+const Order = require('./models/Order');
+const ConfirmedBid = require('./models/ConfirmedBid');
+
+// Routes
 const userRoutes = require("./routes/userRoutes");
 const bidRoutes = require("./routes/bidRoutes");
 const productsRoutes = require("./routes/productsRoutes");
@@ -17,6 +22,10 @@ const merchantRoutes = require('./routes/merchantRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const farmerDashboardRoutes = require('./routes/farmerDashboardRoutes');
+const geolocationRoutes = require('./routes/geolocationRoutes');
+const locationRoutes = require('./routes/locationRoutes');
+const collectionRoutes = require("./routes/collectionRoutes");
+
 const transporterdashboardRoutes = require('./routes/transporterdashboardRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -25,14 +34,12 @@ const contactRoutes = require('./routes/contactRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const emojiRoutes = require('./routes/emojiRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 
-const Order = require('./models/Order');
+const socketHandler = require('./socket');
 
-// Initialize Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
-
-// Socket.IO setup
 const io = new Server(server, {
   cors: {
     origin: [
@@ -43,19 +50,9 @@ const io = new Server(server, {
   }
 });
 
-// Make io instance available to controllers
+// Make Socket.IO instance accessible in controllers
 app.set('io', io);
-
-// Import and initialize socket logic
-require('./socket')(io);
-
-// PayHere Hash Generator Function
-function generatePayHereHash({ merchant_id, order_id, amount, currency }, merchant_secret) {
-  const formattedAmount = Number(amount).toFixed(2);
-  const secretHash = crypto.createHash('md5').update(merchant_secret).digest('hex').toUpperCase();
-  const hashString = merchant_id + order_id + formattedAmount + currency + secretHash;
-  return crypto.createHash('md5').update(hashString).digest('hex').toUpperCase();
-}
+socketHandler(io);
 
 // Middleware
 app.use(cors({
@@ -78,6 +75,9 @@ app.use('/api/confirmedbids', confirmedBidRoutes);
 app.use('/api/merchant', merchantRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/geolocation', geolocationRoutes);
+app.use('/api', locationRoutes);
+app.use('/api/collections', collectionRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -87,31 +87,33 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/emojis', emojiRoutes);
+app.use('/api/reviews', reviewRoutes);
 
-// PayHere Notification Webhook
+// PayHere Hash Generator Function
+function generatePayHereHash({ merchant_id, order_id, amount, currency }, merchant_secret) {
+  const formattedAmount = Number(amount).toFixed(2);
+  const secretHash = crypto.createHash('md5').update(merchant_secret).digest('hex').toUpperCase();
+  const hashString = merchant_id + order_id + formattedAmount + currency + secretHash;
+  return crypto.createHash('md5').update(hashString).digest('hex').toUpperCase();
+}
+
+// PayHere Webhook
 app.post('/api/payments/payhere-notify', async (req, res) => {
   try {
     const paymentData = req.body;
     console.log('Received PayHere notification:', paymentData);
 
-    // 1. Verify merchant ID
     if (paymentData.merchant_id !== process.env.PAYHERE_MERCHANT_ID) {
       console.error('Invalid merchant ID:', paymentData.merchant_id);
       return res.status(400).send("Invalid merchant");
     }
 
-    // 2. Verify MD5 signature
-    const expectedHash = generatePayHereHash(
-      paymentData,
-      process.env.PAYHERE_MERCHANT_SECRET
-    );
-
+    const expectedHash = generatePayHereHash(paymentData, process.env.PAYHERE_MERCHANT_SECRET);
     if (paymentData.md5sig !== expectedHash) {
       console.error('Invalid hash received');
       return res.status(400).send("Invalid hash");
     }
 
-    // 3. Update database for successful payments (status_code === "2")
     if (paymentData.status_code === "2") {
       const updatedOrder = await Order.findOneAndUpdate(
         { orderId: paymentData.order_id },
@@ -125,22 +127,55 @@ app.post('/api/payments/payhere-notify', async (req, res) => {
         { new: true }
       );
 
-      if (!updatedOrder) {
-        console.error('Order not found:', paymentData.order_id);
+      const updatedConfirmedBid = await ConfirmedBid.findOneAndUpdate(
+        { orderId: paymentData.order_id },
+        {
+          status: "paid",
+          paymentMethod: "PayHere",
+          paymentId: paymentData.payment_id,
+          paymentAttempts: [{
+            date: new Date(),
+            status: "success",
+            method: "PayHere"
+          }]
+        },
+        { new: true }
+      );
+
+      if (updatedConfirmedBid?.bidId) {
+        try {
+          const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/harvest-sw";
+          const client = await MongoClient.connect(uri);
+          const db = client.db("harvest-sw");
+
+          await db.collection("bids").updateOne(
+            { _id: new ObjectId(updatedConfirmedBid.bidId) },
+            { $set: { status: "Paid", updatedAt: new Date() } }
+          );
+
+          client.close();
+          console.log(`Updated bid ${updatedConfirmedBid.bidId} status to Paid`);
+        } catch (bidUpdateError) {
+          console.error('Error updating bid:', bidUpdateError);
+        }
+      }
+
+      if (!updatedOrder && !updatedConfirmedBid) {
+        console.error('No order found with ID:', paymentData.order_id);
         return res.status(404).send("Order not found");
       }
 
-      console.log("Payment verified and order updated:", updatedOrder);
+      console.log("Payment processed:", { updatedOrder, updatedConfirmedBid });
     }
 
     res.status(200).send("Notification received");
   } catch (error) {
-    console.error('Payment processing error:', error);
-    res.status(500).send("Payment processing failed");
+    console.error('Payment webhook error:', error);
+    res.status(500).send("Processing failed");
   }
 });
 
-// Hash Generation Endpoint (for frontend to get hash)
+// Hash Generator
 app.get('/api/payments/generate-hash', (req, res) => {
   try {
     const { orderId, amount, currency = "LKR" } = req.query;
@@ -165,17 +200,16 @@ app.get('/api/payments/generate-hash', (req, res) => {
   }
 });
 
-// Default route
+// Default routes
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// Test route
 app.get("/api/test", (req, res) => {
   res.send("API is working!");
 });
 
-// Error handling middleware
+// Global error handler
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);
   res.status(500).json({
@@ -185,15 +219,15 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Start server
 const PORT = process.env.PORT || 5000;
-
-// Start server with DB connection
 const startServer = async () => {
   try {
     await connectDB();
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log('Database connection successful');
+      console.log('Socket.IO server initialized');
     });
   } catch (error) {
     console.error('Failed to start server:', error);

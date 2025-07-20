@@ -10,13 +10,13 @@ import {
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 
 import AuthWrapper from "./components/AuthWrapper";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { GoogleMapsProvider } from "./config/GoogleMapsProvider";
+import { CartProvider } from "./context/CartContext";
 
 // Layouts
 import FarmerLayout from "./layouts/FarmerLayout";
 import MerchantLayout from "./layouts/MerchantLayout";
 import TransporterLayout from "./layouts/TransporterLayout";
-import { CartProvider } from "./context/CartContext";
 
 // Farmer Pages
 import Dashboard from "./pages/Farmer/Dashboard";
@@ -24,6 +24,7 @@ import ListNewItem from "./pages/Farmer/ListNewItem";
 import ViewListedItems from "./pages/Farmer/ViewListedItems";
 import AcceptRejectBids from "./pages/Farmer/AcceptRejectBids";
 import Messages from "./pages/Farmer/Messages";
+// import PaymentApprove from "./pages/Farmer/PaymentApprove"; // File not found - commented out
 import OrderPage from "./pages/Farmer/Order";
 
 // Merchant Pages
@@ -34,7 +35,8 @@ import MerchantBids from "./pages/Merchant/MyBids";
 import MerchantPurchaseHistory from "./pages/Merchant/PurchaseHistory";
 import MerchantMessages from "./pages/Merchant/Messages";
 import MerchantPayments from "./pages/Merchant/Payments";
-import FindVehicles from "./pages/Merchant/FindVehicles";
+import FindVehicles from "./pages/Merchant/FindVehicles"; // or ./components/FindVehicles if that’s correct
+import Collection from "./pages/Merchant/Collection";
 
 // Transporter Pages
 import TransporterDashboard from "./pages/Transporter/TransporterDashboard";
@@ -42,6 +44,7 @@ import Bookings from "./pages/Transporter/Bookings";
 import AddVehicle from "./pages/Transporter/AddVehicle";
 import Inbox from "./pages/Transporter/Inbox";
 import EditListed from "./pages/Transporter/EditListed";
+// import PaymentApproves from "./pages/Transporter/PaymentApproves"; // File not found - commented out
 
 // Admin Pages
 import AdminLayout from "./pages/Admin/AdminLayout";
@@ -60,14 +63,35 @@ import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 
+// Sidebar Components
 import FarmerSidebar from "./components/Sidebar";
 import TransporterSidebar from "./components/TransporterSidebar";
 import MerchantSidebar from "./components/Merchantsidebar";
 
+// Auth0 Configuration
 const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";
 const clientId = "TteW47136eGLVWWVHIFxAiViqCnittRm";
 
+// ✅ Protected Route
+const ProtectedRoute = ({ children, allowedRole, requiredRole }) => {
+  const { isAuthenticated, isLoading } = useAuth0();
+  const userRole = localStorage.getItem("userRole");
 
+  if (isLoading) return <div>Loading...</div>;
+  if (!isAuthenticated) return <Navigate to="/login" />;
+
+  if (requiredRole && userRole !== requiredRole) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!allowedRole || userRole === allowedRole) return children;
+
+  if (userRole === "farmer") return <Navigate to="/" />;
+  if (userRole === "merchant") return <Navigate to="/merchant/dashboard" />;
+  if (userRole === "transporter") return <Navigate to="/transporter/dashboard" />;
+
+  return <Navigate to="/login" />;
+};
 
 // ✅ Auth0 Provider Wrapper
 const Auth0ProviderWithRedirect = ({ children }) => {
@@ -124,6 +148,7 @@ const AppRoutes = () => {
         <Route path="view-listed-items" element={<ViewListedItems />} />
         <Route path="accept-reject-bids" element={<AcceptRejectBids />} />
         <Route path="messages" element={<Messages />} />
+        {/* <Route path="payment-approve" element={<PaymentApprove />} /> */}
         <Route path="order" element={<OrderPage />} />
         <Route path="about" element={<About />} />
         <Route path="contact" element={<ContactUs />} />
@@ -147,6 +172,7 @@ const AppRoutes = () => {
         <Route path="messages" element={<MerchantMessages />} />
         <Route path="payments" element={<MerchantPayments />} />
         <Route path="find-vehicles" element={<FindVehicles />} />
+        <Route path="collection" element={<Collection />} />
       </Route>
 
       {/* Transporter */}
@@ -163,6 +189,7 @@ const AppRoutes = () => {
         <Route path="bookings" element={<Bookings />} />
         <Route path="editListed" element={<EditListed />} />
         <Route path="inbox" element={<Inbox />} />
+        {/* <Route path="payments" element={<PaymentApproves />} /> */}
       </Route>
 
       {/* Admin */}
@@ -218,17 +245,19 @@ const AppRoutes = () => {
   );
 };
 
-// ✅ Final App Component (with resolved merge)
+// ✅ Final App Component
 const App = () => {
   return (
     <Auth0ProviderWithRedirect>
-      <CartProvider>
-        <Router>
-          <AuthWrapper>
-            <AppRoutes />
-          </AuthWrapper>
-        </Router>
-      </CartProvider>
+      <GoogleMapsProvider>
+        <CartProvider>
+          <Router>
+            <AuthWrapper>
+              <AppRoutes />
+            </AuthWrapper>
+          </Router>
+        </CartProvider>
+      </GoogleMapsProvider>
     </Auth0ProviderWithRedirect>
   );
 };

@@ -1,13 +1,39 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
-import { GoogleMap, useLoadScript } from "@react-google-maps/api";
-
-const SRI_LANKA_CENTER = { lat: 7.8731, lng: 80.7718 };
-// IMPORTANT: Set your Google Maps API key in a .env.local file as REACT_APP_GOOGLE_MAPS_API_KEY=your_key_here
-const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-
-const mapContainerStyle = { width: "100%", height: "300px" };
+import LocateMe from "../../components/LocateMe";
+import {
+  Container,
+  Paper,
+  Typography,
+  TextField,
+  MenuItem,
+  Button,
+  Grid,
+  Box,
+  Alert,
+  Card,
+  CardContent,
+  InputAdornment,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  LinearProgress,
+  Divider
+} from "@mui/material";
+import {
+  CloudUpload as CloudUploadIcon,
+  AddCircle as AddCircleIcon,
+  LocationOn as LocationOnIcon,
+  Image as ImageIcon,
+  Refresh as RefreshIcon,
+  AttachMoney as MoneyIcon,
+  Scale as ScaleIcon,
+  Category as CategoryIcon,
+  DriveFileRenameOutline as NameIcon
+} from "@mui/icons-material";
 
 const ListNewItem = () => {
   const [formData, setFormData] = useState({
@@ -16,182 +42,42 @@ const ListNewItem = () => {
     minBidPrice: "",
     availableWeight: "",
     images: [],
-    location: null, // { lat, lng }
-    address: "",
-    manualLat: "",
-    manualLng: "",
-    manualAddress: "",
+    location: {
+      coordinates: null,
+      address: ""
+    }
   });
 
   const [dragActive, setDragActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
-  const [addressLoading, setAddressLoading] = useState(false);
   const { user } = useAuth0();
-  const mapRef = useRef(null);
-  const markerRef = useRef(null);
 
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-  });
-
-  // Helper: Get address from lat/lng using Google Geocoding API
-  const getAddressFromLatLng = useCallback((lat, lng) => {
-    if (!window.google) return;
-    setAddressLoading(true);
-    const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-      setAddressLoading(false);
-      if (status === "OK" && results[0]) {
-        setFormData((prev) => ({ ...prev, address: results[0].formatted_address }));
-      } else {
-        setFormData((prev) => ({ ...prev, address: "" }));
+  // Handle location selection from LocateMe component
+  const handleLocationSelect = (locationData) => {
+    console.log("Location selected:", locationData);
+    setFormData(prev => ({
+      ...prev,
+      location: {
+        coordinates: locationData.coordinates,
+        address: locationData.address
       }
-    });
-  }, []);
-
-  // Auto-detect user location on mount
-  useEffect(() => {
-    if (!formData.location && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        const coords = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-        setFormData((prev) => ({ ...prev, location: coords }));
-        getAddressFromLatLng(coords.lat, coords.lng);
-        
-        // Add marker after map loads
-        setTimeout(() => {
-          if (window.google && window.google.maps && window.google.maps.marker && mapRef.current) {
-            try {
-              const { AdvancedMarkerElement } = window.google.maps.marker;
-              markerRef.current = new AdvancedMarkerElement({
-                position: coords,
-                map: mapRef.current,
-                title: "Current Location"
-              });
-            } catch (error) {
-              console.warn("AdvancedMarkerElement not available, falling back to basic marker:", error);
-              // Fallback to basic marker if AdvancedMarkerElement is not available
-              if (window.google.maps.Marker) {
-                markerRef.current = new window.google.maps.Marker({
-                  position: coords,
-                  map: mapRef.current,
-                  title: "Current Location"
-                });
-              }
-            }
-          }
-        }, 1000);
-      });
-    }
-    // eslint-disable-next-line
-  }, []);
-
-  // Cleanup marker on unmount
-  useEffect(() => {
-    return () => {
-      if (markerRef.current) {
-        markerRef.current.map = null;
-      }
-    };
-  }, []);
-
-  // When map loads
-  const onMapLoad = useCallback((map) => {
-    mapRef.current = map;
-  }, []);
-
-  // When user clicks on map
-  const handleMapClick = (e) => {
-    const coords = {
-      lat: e.latLng.lat(),
-      lng: e.latLng.lng(),
-    };
-    console.log("Map clicked, coordinates:", coords);
-    setFormData((prev) => ({ 
-      ...prev, 
-      location: coords,
-      manualLat: coords.lat.toString(),
-      manualLng: coords.lng.toString(),
-      manualAddress: ""
     }));
-    getAddressFromLatLng(coords.lat, coords.lng);
-    
-    // Remove existing marker
-    if (markerRef.current) {
-      markerRef.current.map = null;
-    }
-    
-    // Create new AdvancedMarkerElement
-    if (window.google && window.google.maps && window.google.maps.marker) {
-      try {
-        const { AdvancedMarkerElement } = window.google.maps.marker;
-        markerRef.current = new AdvancedMarkerElement({
-          position: coords,
-          map: mapRef.current,
-          title: "Selected Location"
-        });
-      } catch (error) {
-        console.warn("AdvancedMarkerElement not available, falling back to basic marker:", error);
-        // Fallback to basic marker if AdvancedMarkerElement is not available
-        if (window.google.maps.Marker) {
-          markerRef.current = new window.google.maps.Marker({
-            position: coords,
-            map: mapRef.current,
-            title: "Selected Location"
-          });
-        }
-      }
-    }
   };
 
-  // Manual trigger for geolocation
-  const detectLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        const coords = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-        console.log("Geolocation detected, coordinates:", coords);
-        setFormData((prev) => ({ 
-          ...prev, 
-          location: coords,
-          manualLat: coords.lat.toString(),
-          manualLng: coords.lng.toString(),
-          manualAddress: ""
-        }));
-        getAddressFromLatLng(coords.lat, coords.lng);
-        
-        // Remove existing marker
-        if (markerRef.current) {
-          markerRef.current.map = null;
-        }
-        
-        // Create new AdvancedMarkerElement
-        if (window.google && window.google.maps && window.google.maps.marker && mapRef.current) {
-          try {
-            const { AdvancedMarkerElement } = window.google.maps.marker;
-            markerRef.current = new AdvancedMarkerElement({
-              position: coords,
-              map: mapRef.current,
-              title: "Current Location"
-            });
-          } catch (error) {
-            console.warn("AdvancedMarkerElement not available, falling back to basic marker:", error);
-            // Fallback to basic marker if AdvancedMarkerElement is not available
-            if (window.google.maps.Marker) {
-              markerRef.current = new window.google.maps.Marker({
-                position: coords,
-                map: mapRef.current,
-                title: "Current Location"
-              });
-            }
-          }
+  // Save user location for future use
+  const saveUserLocation = async (locationData) => {
+    try {
+      await axios.put(`http://localhost:5000/api/users/${user.sub}/location`, {
+        location: {
+          coordinates: locationData.coordinates,
+          address: locationData.address,
+          lastUpdated: new Date()
         }
       });
+      console.log("User location saved successfully");
+    } catch (error) {
+      console.error("Error saving user location:", error);
     }
   };
 
@@ -215,8 +101,9 @@ const ListNewItem = () => {
           !formData.minBidPrice || !formData.availableWeight) {
         throw new Error("Please fill in all required fields");
       }
-      if (!formData.location) {
-        throw new Error("Please select a location on the map");
+
+      if (!formData.location.coordinates) {
+        throw new Error("Please select a location for your harvest");
       }
 
       const productData = {
@@ -225,15 +112,19 @@ const ListNewItem = () => {
         price: Number(formData.minBidPrice),
         quantity: Number(formData.availableWeight),
         image: base64Image,
-        farmerID: user.sub, // Use the authenticated user's ID
-        location: formData.location, // <-- include location
-        address: formData.address, // <-- include address
+        farmerID: user.sub,
+        location: {
+          coordinates: formData.location.coordinates,
+          address: formData.location.address
+        }
       };
 
-      console.log("Form data state:", formData);
       console.log("Attempting to submit product:", productData);
 
-      // Add error handling and timeout
+      // Save location to user profile for future use
+      await saveUserLocation(formData.location);
+
+      // Submit product
       const response = await axios.post(
         "http://localhost:5000/api/products",
         productData,
@@ -241,7 +132,7 @@ const ListNewItem = () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          timeout: 60000, // 1 minute timeout
+          timeout: 60000,
         }
       );
 
@@ -250,25 +141,20 @@ const ListNewItem = () => {
       if (response.status === 201) {
         setSubmitStatus({
           type: "success",
-          message: "Product listed successfully!"
+          message: `🎉 Success! Your ${formData.harvestName} listing has been added to the marketplace. Buyers can now discover and bid on your harvest!`
         });
 
-        // Reset form
-        setFormData({
-          harvestType: "",
-          harvestName: "",
-          minBidPrice: "",
-          availableWeight: "",
-          images: [],
-          location: null,
-          address: "",
-          manualLat: "",
-          manualLng: "",
-          manualAddress: "",
-        });
+        // Scroll to top to show success message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Reset form after a short delay to let user see the success message
+        setTimeout(() => {
+          handleReset();
+        }, 3000);
       }
     } catch (error) {
       console.error("Submission error:", error);
+      
       let errorMessage = "Failed to list product. ";
       if (error.code === "ECONNREFUSED") {
         errorMessage += "Cannot connect to server. Please check if the server is running.";
@@ -279,6 +165,7 @@ const ListNewItem = () => {
       } else if (error.message) {
         errorMessage += error.message;
       }
+      
       setSubmitStatus({
         type: "error",
         message: errorMessage
@@ -334,282 +221,404 @@ const ListNewItem = () => {
       minBidPrice: "",
       availableWeight: "",
       images: [],
-      location: null,
-      address: "",
-      manualLat: "",
-      manualLng: "",
-      manualAddress: "",
+      location: {
+        coordinates: null,
+        address: ""
+      }
     });
     setSubmitStatus({ type: "", message: "" });
   };
 
   return (
-    <div className="bg-white p-4 rounded">
-      <h5 className="mb-4">List New Item</h5>
-      <p className="text-muted mb-4">Add Your Harvest Here</p>
-
-      {submitStatus.message && (
-        <div
-          className={`alert ${
-            submitStatus.type === "success" 
-              ? "alert-success" 
-              : "alert-danger"
-          } mb-4`}
-        >
-          {submitStatus.message}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        {/* Harvest Type & Name */}
-        <div className="row mb-3">
-          <div className="col-md-6">
-            <label className="form-label">Harvest Type</label>
-            <select
-              className="form-select"
-              value={formData.harvestType}
-              onChange={(e) =>
-                setFormData({ ...formData, harvestType: e.target.value })
-              }
-            >
-              <option value="">Select Harvest Type</option>
-              <option value="vegetables">Vegetables</option>
-              <option value="fruits">Fruits</option>
-              <option value="grains">Grains</option>
-            </select>
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Harvest Name</label>
-            <input
-              type="text"
-              className="form-control"
-              value={formData.harvestName}
-              onChange={(e) =>
-                setFormData({ ...formData, harvestName: e.target.value })
-              }
-            />
-          </div>
-        </div>
-
-        {/* Minimum Bid Price & Available Weight */}
-        <div className="row mb-4">
-          <div className="col-md-6">
-            <label className="form-label">Minimum Bid Price</label>
-            <div className="input-group">
-              <span className="input-group-text" style={{ fontSize: "14px", height: "38px" }}>
-                Rs.
-              </span>
-              <input
-                type="number"
-                className="form-control"
-                value={formData.minBidPrice}
-                onChange={(e) =>
-                  setFormData({ ...formData, minBidPrice: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Available Weight Of Stock</label>
-            <div className="input-group">
-              <input
-                type="number"
-                className="form-control"
-                value={formData.availableWeight}
-                onChange={(e) =>
-                  setFormData({ ...formData, availableWeight: e.target.value })
-                }
-              />
-              <span className="input-group-text" style={{ fontSize: "14px", height: "38px" }}>
-                Kg
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* File Upload Section */}
-        <div className="mb-4">
-          <label className="form-label">Upload Images Of Harvest</label>
-          <div
-            className={`border p-5 rounded text-center ${
-              dragActive ? "border-primary" : "border-secondary"
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+        {/* Header */}
+        <Box sx={{ mb: 4, textAlign: 'center' }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 600, 
+              color: '#2E7D32',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              mb: 2
+            }}
           >
-            <input
-              type="file"
-              id="fileUpload"
-              className="d-none"
-              multiple
-              accept="image/*"
-              onChange={handleFileChange}
-            />
-            <label
-              htmlFor="fileUpload"
-              style={{
-                color: "black",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: "bold",
-              }}
-            >
-              Click to Upload
-            </label>
-            <p className="mt-2 text-muted">or drag and drop your files here</p>
-          </div>
+            <AddCircleIcon fontSize="large" />
+            List New Item
+          </Typography>
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+            Add your harvest to the marketplace and connect with buyers
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Fill in the details below to list your harvest. Fields marked with * are required.
+          </Typography>
+        </Box>
 
-          {/* Show Selected Files */}
-          {formData.images.length > 0 && (
-            <ul className="list-group mt-3">
-              {formData.images.map((file, index) => (
-                <li key={index} className="list-group-item">
-                  {file.name}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {/* Status Messages */}
+        {submitStatus.message && (
+          <Alert 
+            severity={submitStatus.type === "success" ? "success" : "error"}
+            sx={{ 
+              mb: 3,
+              ...(submitStatus.type === "success" && {
+                backgroundColor: '#e8f5e8',
+                border: '2px solid #4CAF50',
+                '& .MuiAlert-icon': {
+                  fontSize: '2rem'
+                },
+                '& .MuiAlert-message': {
+                  fontSize: '1.1rem',
+                  fontWeight: 500
+                }
+              })
+            }}
+            onClose={() => setSubmitStatus({ type: "", message: "" })}
+          >
+            {submitStatus.message}
+          </Alert>
+        )}
 
-        {/* Google Maps Location Picker */}
-        <div className="mb-4">
-          <label className="form-label">Select Harvest Location</label>
-          <div style={{ height: "300px", width: "100%" }}>
-            {isLoaded ? (
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={formData.location || SRI_LANKA_CENTER}
-                zoom={12}
-                onClick={handleMapClick}
-                onLoad={onMapLoad}
-                options={{
-                  mapId: "DEMO_MAP_ID",
-                }}
-              />
-            ) : (
-              <div>Loading map...</div>
-            )}
-          </div>
-          {addressLoading && (
-            <div className="mt-2 text-muted">Fetching address…</div>
-          )}
-          {formData.location && (
-            <div className="mt-2 text-info">
-              <span role="img" aria-label="coordinates">📍</span> Coordinates: {formData.location.lat.toFixed(6)}, {formData.location.lng.toFixed(6)}
-            </div>
-          )}
-          {formData.address && !addressLoading && (
-            <div className="mt-2 text-success">
-              <span role="img" aria-label="map">🗺️</span> {formData.address}
-            </div>
-          )}
-          <button type="button" className="btn btn-outline-primary mt-2" onClick={detectLocation}>
-            Use My Current Location
-          </button>
-          {!formData.location && (
-            <div className="mt-2 text-warning">
-              <small>⚠️ Please select a location on the map, use your current location, or enter coordinates manually</small>
-            </div>
-          )}
-          
-          {/* Manual Address Input */}
-          <div className="mt-3">
-            <label className="form-label">Or Enter Your Address</label>
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter your full address (e.g., 123 Main St, Colombo, Sri Lanka)"
-                value={formData.manualAddress || ""}
-                onChange={(e) => {
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    manualAddress: e.target.value
-                  }));
-                }}
-              />
-              <button 
-                type="button" 
-                className="btn btn-outline-primary"
-                onClick={() => {
-                  if (formData.manualAddress && window.google) {
-                    const geocoder = new window.google.maps.Geocoder();
-                    geocoder.geocode({ address: formData.manualAddress }, (results, status) => {
-                      if (status === "OK" && results[0]) {
-                        const coords = {
-                          lat: results[0].geometry.location.lat(),
-                          lng: results[0].geometry.location.lng()
-                        };
-                        console.log("Address geocoded to coordinates:", coords);
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          location: coords,
-                          address: results[0].formatted_address,
-                          manualLat: coords.lat.toString(),
-                          manualLng: coords.lng.toString()
-                        }));
-                        
-                        // Update map marker
-                        if (markerRef.current) {
-                          markerRef.current.map = null;
-                        }
-                        
-                        if (window.google && window.google.maps && window.google.maps.marker && mapRef.current) {
-                          try {
-                            const { AdvancedMarkerElement } = window.google.maps.marker;
-                            markerRef.current = new AdvancedMarkerElement({
-                              position: coords,
-                              map: mapRef.current,
-                              title: "Address Location"
-                            });
-                          } catch (error) {
-                            console.warn("AdvancedMarkerElement not available, falling back to basic marker:", error);
-                            if (window.google.maps.Marker) {
-                              markerRef.current = new window.google.maps.Marker({
-                                position: coords,
-                                map: mapRef.current,
-                                title: "Address Location"
-                              });
-                            }
-                          }
-                        }
-                      } else {
-                        alert("Could not find the address. Please try a more specific address.");
-                      }
-                    });
+        {/* Loading Progress */}
+        {isSubmitting && (
+          <Box sx={{ width: '100%', mb: 3 }}>
+            <LinearProgress />
+          </Box>
+        )}
+
+        <Box component="form" onSubmit={handleSubmit}>
+          {/* Basic Information */}
+          <Box sx={{ mb: 6 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#2E7D32', mb: 4 }}>
+              Basic Information
+            </Typography>
+            <Grid container spacing={0} justifyContent="center">
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#555', mb: 2 }}>
+                  Harvest Type *
+                </Typography>
+                <TextField
+                  fullWidth
+                  select
+                  value={formData.harvestType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, harvestType: e.target.value })
                   }
-                }}
-                disabled={!formData.manualAddress}
-              >
-                Find Location
-              </button>
-            </div>
-            <small className="text-muted">
-              Enter your full address and click "Find Location" to automatically set coordinates
-            </small>
-          </div>
-        </div>
+                  required
+                  placeholder="Select Harvest Type"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <CategoryIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ 
+                    pr: 1,
+                    '& .MuiOutlinedInput-root': {
+                      height: '56px',
+                      borderRadius: 2,
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                    }
+                  }}
+                >
+                  <MenuItem value="">Select Harvest Type</MenuItem>
+                  <MenuItem value="vegetables">Vegetables</MenuItem>
+                  <MenuItem value="fruits">Fruits</MenuItem>
+                  <MenuItem value="grains">Grains</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#555', mb: 2 }}>
+                  Harvest Name *
+                </Typography>
+                <TextField
+                  fullWidth
+                  value={formData.harvestName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, harvestName: e.target.value })
+                  }
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <NameIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  placeholder="e.g., Organic Tomatoes"
+                  sx={{ 
+                    pl: 1,
+                    '& .MuiOutlinedInput-root': {
+                      height: '56px',
+                      borderRadius: 2,
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                    }
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Box>
 
-<div className="d-flex gap-2">
-  <button 
-    type="submit" 
-    className="btn btn-success flex-grow-1" 
-    disabled={isSubmitting}
-  >
-    {isSubmitting ? "Adding..." : "Add Listing"}
-  </button>
-  <button 
-    type="button" 
-    className="btn btn-secondary" 
-    onClick={handleReset}
-  >
-    Reset Form
-  </button>
-</div>
-      </form>
-    </div>
+          {/* Pricing & Stock Information */}
+          <Box sx={{ mb: 6 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#2E7D32', mb: 4 }}>
+              Pricing & Stock Information
+            </Typography>
+            <Grid container spacing={0} justifyContent="center">
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#555', mb: 2 }}>
+                  Minimum Bid Price (Rs.) *
+                </Typography>
+                <TextField
+                  fullWidth
+                  type="number"
+                  value={formData.minBidPrice}
+                  onChange={(e) =>
+                    setFormData({ ...formData, minBidPrice: e.target.value })
+                  }
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <MoneyIcon color="primary" />
+                        Rs.
+                      </InputAdornment>
+                    ),
+                  }}
+                  placeholder="Enter minimum price per kg"
+                  sx={{ 
+                    pr: 1,
+                    '& .MuiOutlinedInput-root': {
+                      height: '56px',
+                      borderRadius: 2,
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#555', mb: 2 }}>
+                  Available Weight Of Stock (Kg) *
+                </Typography>
+                <TextField
+                  fullWidth
+                  type="number"
+                  value={formData.availableWeight}
+                  onChange={(e) =>
+                    setFormData({ ...formData, availableWeight: e.target.value })
+                  }
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <ScaleIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        Kg
+                      </InputAdornment>
+                    ),
+                  }}
+                  placeholder="Enter available weight"
+                  sx={{ 
+                    pl: 1,
+                    '& .MuiOutlinedInput-root': {
+                      height: '56px',
+                      borderRadius: 2,
+                      '&:hover fieldset': {
+                        borderColor: '#4CAF50',
+                      },
+                    }
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* File Upload Section */}
+          <Box sx={{ mb: 5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#2E7D32', mb: 3 }}>
+              Product Images
+            </Typography>
+            <Card sx={{ 
+              border: dragActive ? '2px dashed #4CAF50' : '2px dashed #e0e0e0',
+              borderRadius: 3,
+              transition: 'all 0.3s ease'
+            }}>
+              <CardContent sx={{ p: 4 }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#555', display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <ImageIcon color="primary" />
+                  Upload Images Of Harvest *
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Upload clear images of your harvest to attract buyers (Maximum 5 files, 5MB each)
+                </Typography>
+                <Box
+                  sx={{
+                    p: 4,
+                    textAlign: 'center',
+                    backgroundColor: dragActive ? '#f0f9ff' : '#fafafa',
+                    borderRadius: 2,
+                    cursor: 'pointer',
+                    border: dragActive ? '2px dashed #4CAF50' : '2px dashed #ddd',
+                    '&:hover': {
+                      backgroundColor: '#f0f9ff',
+                      borderColor: '#4CAF50'
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => document.getElementById('fileUpload').click()}
+                >
+                  <input
+                    type="file"
+                    id="fileUpload"
+                    style={{ display: 'none' }}
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  <CloudUploadIcon sx={{ fontSize: 48, color: '#4CAF50', mb: 2 }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                    Click to Upload or Drag & Drop
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    Supported formats: JPG, PNG, GIF (Max 5MB each)
+                  </Typography>
+                </Box>
+
+                {/* Show Selected Files */}
+                {formData.images.length > 0 && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#555' }}>
+                      Selected Files ({formData.images.length})
+                    </Typography>
+                    <List dense>
+                      {formData.images.map((file, index) => (
+                        <ListItem key={index} sx={{ py: 0.5, px: 0 }}>
+                          <ListItemIcon>
+                            <ImageIcon color="primary" />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={file.name}
+                            secondary={`${(file.size / 1024 / 1024).toFixed(2)} MB`}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Location Selection */}
+          <Box sx={{ mb: 5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#2E7D32', mb: 3 }}>
+              Harvest Location
+            </Typography>
+            <Card sx={{ borderRadius: 3, border: '1px solid #e0e0e0' }}>
+              <CardContent sx={{ p: 4 }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#555', display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <LocationOnIcon color="primary" />
+                  Select Harvest Location *
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Choose the location where your harvest is available for pickup
+                </Typography>
+                <LocateMe 
+                  onLocationSelect={handleLocationSelect}
+                  buttonText="Select Location"
+                  className="w-100"
+                />
+                {formData.location.coordinates && (
+                  <Alert severity="success" sx={{ mt: 3, borderRadius: 2 }}>
+                    <Typography variant="body2">
+                      <strong>Selected Location:</strong> {formData.location.address || 
+                        `${formData.location.coordinates.lat.toFixed(6)}, ${formData.location.coordinates.lng.toFixed(6)}`}
+                    </Typography>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
+
+          <Divider sx={{ mb: 5 }} />
+
+          {/* Action Buttons */}
+          <Box sx={{ mt: 4, mb: 2 }}>
+            <Grid container spacing={3} justifyContent="center">
+              <Grid size={{ xs: 12, md: 8 }}>
+                <Button 
+                  type="submit" 
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  disabled={isSubmitting}
+                  startIcon={<AddCircleIcon />}
+                  sx={{
+                    py: 2.5,
+                    fontSize: '1.1rem',
+                    fontWeight: 600,
+                    backgroundColor: submitStatus.type === "success" ? '#2E7D32' : '#4CAF50',
+                    '&:hover': {
+                      backgroundColor: submitStatus.type === "success" ? '#1B5E20' : '#45a049'
+                    },
+                    transition: 'all 0.3s ease',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+                  }}
+                >
+                  {isSubmitting ? "Adding..." : 
+                   submitStatus.type === "success" ? "✓ Listed Successfully!" : 
+                   "Add Listing"}
+                </Button>
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Button 
+                  type="button" 
+                  variant="outlined"
+                  size="large"
+                  fullWidth
+                  onClick={handleReset}
+                  startIcon={<RefreshIcon />}
+                  sx={{
+                    py: 2.5,
+                    fontSize: '1.1rem',
+                    fontWeight: 600,
+                    borderColor: '#4CAF50',
+                    color: '#4CAF50',
+                    borderWidth: 2,
+                    '&:hover': {
+                      borderColor: '#45a049',
+                      backgroundColor: 'rgba(76, 175, 80, 0.04)',
+                      borderWidth: 2
+                    },
+                    borderRadius: 2
+                  }}
+                >
+                  Reset Form
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 

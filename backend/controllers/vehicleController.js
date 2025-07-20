@@ -37,8 +37,14 @@ const addVehicle = asyncHandler(async (req, res) => {
 // @route   GET /api/vehicles
 // @access  Public
 const getVehicles = asyncHandler(async (req, res) => {
-  // Get all vehicles instead of filtering by user
-  const vehicles = await Vehicle.find({});
+  let filter = {};
+  
+  // Filter by transporterId if provided in query params
+  if (req.query.transporterId) {
+    filter.transporterId = req.query.transporterId;
+  }
+  
+  const vehicles = await Vehicle.find(filter);
   res.json(vehicles);
 });
 

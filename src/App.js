@@ -24,7 +24,7 @@ import ListNewItem from "./pages/Farmer/ListNewItem";
 import ViewListedItems from "./pages/Farmer/ViewListedItems";
 import AcceptRejectBids from "./pages/Farmer/AcceptRejectBids";
 import Messages from "./pages/Farmer/Messages";
-// import PaymentApprove from "./pages/Farmer/PaymentApprove"; // File not found - commented out
+// import PaymentApprove from "./pages/Farmer/PaymentApprove";
 import OrderPage from "./pages/Farmer/Order";
 
 // Merchant Pages
@@ -35,7 +35,7 @@ import MerchantBids from "./pages/Merchant/MyBids";
 import MerchantPurchaseHistory from "./pages/Merchant/PurchaseHistory";
 import MerchantMessages from "./pages/Merchant/Messages";
 import MerchantPayments from "./pages/Merchant/Payments";
-import FindVehicles from "./pages/Merchant/FindVehicles"; // or ./components/FindVehicles if that’s correct
+import FindVehicles from "./pages/Merchant/FindVehicles";
 import Collection from "./pages/Merchant/Collection";
 
 // Transporter Pages
@@ -44,7 +44,7 @@ import Bookings from "./pages/Transporter/Bookings";
 import AddVehicle from "./pages/Transporter/AddVehicle";
 import Inbox from "./pages/Transporter/Inbox";
 import EditListed from "./pages/Transporter/EditListed";
-// import PaymentApproves from "./pages/Transporter/PaymentApproves"; // File not found - commented out
+// import PaymentApproves from "./pages/Transporter/PaymentApproves";
 
 // Admin Pages
 import AdminLayout from "./pages/Admin/AdminLayout";
@@ -62,6 +62,10 @@ import AboutUs from "./pages/HOME/AboutUs";
 import LoginPage from "./app/LoginPage";
 import RegisterPage from "./app/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
+
+// Legal Pages
+import TermsOfService from "./pages/Legal/TermsOfService";
+import PrivacyPolicy from "./pages/Legal/PrivacyPolicy";
 
 // Sidebar Components
 import FarmerSidebar from "./components/Sidebar";
@@ -133,6 +137,8 @@ const AppRoutes = () => {
       <Route path="/about" element={<AboutUs />} />
       <Route path="/contact" element={<ContactUs />} />
       <Route path="/help" element={<Help />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
 
       {/* Farmer */}
       <Route

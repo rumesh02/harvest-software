@@ -43,6 +43,7 @@ const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:3000",
+      "https://harvest-software-mx6t.vercel.app",
       "https://sandbox.payhere.lk"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"]
@@ -56,6 +57,7 @@ socketHandler(io);
 app.use(cors({
   origin: [
     "http://localhost:3000",
+    "https://harvest-software-mx6t.vercel.app",
     "https://sandbox.payhere.lk"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],

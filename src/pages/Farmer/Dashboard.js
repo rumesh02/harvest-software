@@ -65,12 +65,11 @@ const Dashboard = () => {
       try {
         const reviewsResponse = await axios.get(`http://localhost:5000/api/reviews/farmer/${user.sub}`);
         setReviews(reviewsResponse.data);
-
-        // We can use the farmerRating from the user data instead of separate avgRating
       } catch (error) {
         console.error("Error fetching reviews data:", error);
       }
     };
+
     if (user?.sub) {
       fetchRevenueData();
       fetchReviewsData();
@@ -80,7 +79,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (user?.sub) {
       axios.get(`http://localhost:5000/api/users/${user.sub}`)
-        .then(res => setFarmerRating(res.data.farmerRatings || 0)) // Fetch farmerRatings
+        .then(res => setFarmerRating(res.data.farmerRatings || 0))
         .catch(err => console.error("Error fetching farmer ratings:", err));
     }
   }, [user]);
@@ -117,13 +116,6 @@ const Dashboard = () => {
       value: totalOrders,
       icon: <OrdersIcon fontSize="small" />,
       bgColor: "#d4edda",
-      color: "#155724"
-    },
-    {
-      title: "Customer Reviews",
-      value: reviews.length,
-      icon: <ReviewsIcon fontSize="small" />,
-      bgColor: "#d4edda", 
       color: "#155724"
     }
   ];
@@ -536,101 +528,212 @@ const Dashboard = () => {
           </Grid>
         </Grid>
 
-        {/* Reviews Section */}
-        <Grid container spacing={3} sx={{ mt: 4 }}>
+        {/* Reviews Section - Positioned nicely under main dashboard */}
+        <Grid container spacing={3} sx={{ mt: 3 }}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper elevation={3} sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-                <ReviewsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Your Rating
-              </Typography>
-              <Box sx={{ textAlign: 'center', py: 2 }}>
-                <Rating value={farmerRating} precision={0.1} readOnly size="large" />
-                <Typography variant="h5" sx={{ mt: 1, fontWeight: 600 }}>
-                  {farmerRating ? `${farmerRating.toFixed(1)} / 5` : "No ratings yet"}
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 4, 
+                height: 400, // Fixed height to match the other card
+                background: 'rgba(255,255,255,0.9)',
+                border: "1px solid #E5E7EB",
+                borderRadius: 3,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 12px 40px rgba(0,0,0,0.15)"
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#155724', mb: 0.5, fontSize: { xs: 16, md: 18 } }}>
+                    Your Rating
+                  </Typography>
+                  <Typography variant="body2" color="#155724" sx={{ fontSize: { xs: 12, md: 13 } }}>
+                    Based on customer reviews
+                  </Typography>
+                </Box>
+                <Avatar 
+                  sx={{ 
+                    background: '#43a047',
+                    width: 40,
+                    height: 40,
+                    boxShadow: '0 2px 8px rgba(67, 160, 71, 0.12)'
+                  }}
+                >
+                  <ReviewsIcon fontSize="small" />
+                </Avatar>
+              </Box>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                height: 280, // Matching the content area height of the other card
+                textAlign: 'center'
+              }}>
+                <Rating value={farmerRating} precision={0.1} readOnly size="large" sx={{ mb: 3 }} />
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#155724', mb: 2 }}>
+                  {farmerRating ? `${farmerRating.toFixed(1)}` : "0.0"}
+                  <Typography component="span" variant="h6" sx={{ color: '#43a047', ml: 0.5 }}>
+                    / 5
+                  </Typography>
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Based on customer reviews
+                <Typography variant="body2" color="#43a047" sx={{ fontWeight: 500 }}>
+                  {reviews.length > 0 ? `Based on ${reviews.length} review${reviews.length !== 1 ? 's' : ''}` : "No ratings yet"}
                 </Typography>
               </Box>
             </Paper>
           </Grid>
+          
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper elevation={3} sx={{ p: 3, maxHeight: '400px', overflow: 'auto' }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-                <ReviewsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Recent Reviews
-              </Typography>
-              {reviews.length === 0 ? (
-                <Box sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  py: 4,
-                  color: 'text.secondary'
-                }}>
-                  <ReviewsIcon sx={{ fontSize: 60, mb: 2 }} />
-                  <Typography variant="body1">
-                    No reviews yet
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 4, 
+                height: 400, // Fixed height to match the other card
+                background: 'rgba(255,255,255,0.9)',
+                border: "1px solid #E5E7EB",
+                borderRadius: 3,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                overflow: 'hidden',
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 12px 40px rgba(0,0,0,0.15)"
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#155724', mb: 0.5, fontSize: { xs: 16, md: 18 } }}>
+                    Recent Reviews
                   </Typography>
-                  <Typography variant="body2">
-                    Reviews will appear here once customers rate your products
+                  <Typography variant="body2" color="#155724" sx={{ fontSize: { xs: 12, md: 13 } }}>
+                    What customers say about you
                   </Typography>
                 </Box>
-              ) : (
-                <List>
-                  {reviews.slice(0, 5).map((review, idx) => (
-                    <Box key={idx}>
-                      <ListItem alignItems="flex-start" sx={{ px: 0 }}>
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: '#4CAF50' }}>
-                            {review.merchantId?.name ? review.merchantId.name.charAt(0).toUpperCase() : 'M'}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Rating value={review.rating} readOnly size="small" />
-                                <Chip
-                                  label={`${review.rating}/5`}
-                                  size="small"
-                                  color="primary"
-                                  variant="outlined"
-                                />
+                <Avatar 
+                  sx={{ 
+                    background: '#43a047',
+                    width: 40,
+                    height: 40,
+                    boxShadow: '0 2px 8px rgba(67, 160, 71, 0.12)'
+                  }}
+                >
+                  <ReviewsIcon fontSize="small" />
+                </Avatar>
+              </Box>
+              
+              <Box sx={{ height: 280, overflowY: 'auto' }}>
+                {reviews.length === 0 ? (
+                  <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    background: '#f8fffe',
+                    borderRadius: 2,
+                    border: '1px dashed #d4edda'
+                  }}>
+                    <ReviewsIcon sx={{ fontSize: 48, color: '#155724', mb: 2, opacity: 0.6 }} />
+                    <Typography variant="body1" sx={{ fontWeight: 600, color: '#155724', mb: 1 }}>
+                      No reviews yet
+                    </Typography>
+                    <Typography variant="body2" color="#43a047" sx={{ textAlign: 'center', maxWidth: 200 }}>
+                      Reviews will appear here once customers rate your products
+                    </Typography>
+                  </Box>
+                ) : (
+                  <List sx={{ width: '100%', p: 0 }}>
+                    {reviews.slice(0, 3).map((review, idx) => (
+                      <React.Fragment key={idx}>
+                        {idx > 0 && <Divider sx={{ my: 1.5, bgcolor: '#e8f5e8' }} />}
+                        <ListItem 
+                          alignItems="flex-start" 
+                          sx={{ 
+                            px: 0, 
+                            py: 1.5,
+                            borderRadius: 2,
+                            transition: 'all 0.3s ease',
+                            '&:hover': { 
+                              bgcolor: '#f1f8e9',
+                              transform: 'translateX(4px)'
+                            }
+                          }}
+                        >
+                          <ListItemAvatar>
+                            <Avatar sx={{ 
+                              bgcolor: '#43a047', 
+                              width: 36, 
+                              height: 36,
+                              fontSize: 16,
+                              fontWeight: 600
+                            }}>
+                              {review.merchantId?.name ? review.merchantId.name.charAt(0).toUpperCase() : 'M'}
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={
+                              <Box sx={{ mb: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#155724' }}>
+                                    {review.merchantId?.name || 'Anonymous Merchant'}
+                                  </Typography>
+                                  <Typography variant="caption" color="#43a047" sx={{ fontWeight: 500 }}>
+                                    {new Date(review.createdAt).toLocaleDateString()}
+                                  </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Rating value={review.rating} readOnly size="small" />
+                                  <Chip
+                                    label={`${review.rating}/5`}
+                                    size="small"
+                                    sx={{ 
+                                      bgcolor: '#d4edda',
+                                      color: '#155724',
+                                      fontWeight: 600,
+                                      fontSize: 11
+                                    }}
+                                  />
+                                </Box>
                               </Box>
-                              <Typography variant="caption" color="text.secondary">
-                                {new Date(review.createdAt).toLocaleDateString()}
-                              </Typography>
-                            </Box>
-                          }
-                          secondary={
-                            <Box>
-                              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500, color: '#2e7d32' }}>
-                                {review.merchantId?.name || 'Anonymous Merchant'}
-                              </Typography>
-                              {review.comment && (
-                                <Typography variant="body2" sx={{ mb: 1, fontStyle: review.comment ? 'normal' : 'italic', color: review.comment ? 'text.primary' : 'text.secondary' }}>
-                                  {review.comment || 'No comment provided'}
+                            }
+                            secondary={
+                              review.comment && (
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    color: '#43a047',
+                                    fontStyle: 'italic',
+                                    mt: 0.5,
+                                    lineHeight: 1.4
+                                  }}
+                                >
+                                  "{review.comment}"
                                 </Typography>
-                              )}
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                      {idx < Math.min(reviews.length, 5) - 1 && <Divider />}
-                    </Box>
-                  ))}
-                  {reviews.length > 5 && (
-                    <Box sx={{ textAlign: 'center', mt: 2 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Showing 5 of {reviews.length} reviews
-                      </Typography>
-                    </Box>
-                  )}
-                </List>
-              )}
+                              )
+                            }
+                          />
+                        </ListItem>
+                      </React.Fragment>
+                    ))}
+                    {reviews.length > 3 && (
+                      <Box sx={{ textAlign: 'center', mt: 2, pt: 2, borderTop: '1px solid #e8f5e8' }}>
+                        <Typography variant="body2" color="#43a047" sx={{ fontWeight: 500 }}>
+                          Showing 3 of {reviews.length} reviews
+                        </Typography>
+                      </Box>
+                    )}
+                  </List>
+                )}
+              </Box>
             </Paper>
           </Grid>
         </Grid>

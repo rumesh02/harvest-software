@@ -73,29 +73,6 @@ export default function ReviewDialog({
           </div>
 
           <div className="modal-body">
-            {/* Average Rating */}
-            {product && (
-              <div className="d-flex align-items-center mb-3">
-                <div style={{ fontSize: "48px", color: "#fbc02d" }}>
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <i
-                      key={i}
-                      className={`fas fa-star ${
-                        i < (farmerRatings[product.farmerID] || 0)
-                          ? ""
-                          : "text-muted"
-                      }`}
-                    ></i>
-                  ))}
-                </div>
-                <span className="ms-2 text-muted">
-                  {farmerRatings[product.farmerID]
-                    ? `${farmerRatings[product.farmerID].toFixed(1)} / 5`
-                    : "No ratings"}
-                </span>
-              </div>
-            )}
-
             {/* User Input Rating */}
             <div className="text-center mb-2 mt-2">
               {Array.from({ length: 5 }, (_, i) => (

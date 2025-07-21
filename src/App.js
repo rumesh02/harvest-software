@@ -70,7 +70,7 @@ import PrivacyPolicy from "./pages/Legal/PrivacyPolicy";
 // Sidebar Components
 import FarmerSidebar from "./components/Sidebar";
 import TransporterSidebar from "./components/TransporterSidebar";
-import MerchantSidebar from "./components/MerchantSidebar";
+import MerchantSidebar from "./components/Merchantsidebar";
 
 // Auth0 Configuration
 const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";

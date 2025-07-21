@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Modal Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .farmer-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #fef3e2;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 0;
+        }
+        .farmer-item:hover {
+            background: #fed7aa;
+            transform: translateX(4px);
+        }
+        .farmer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #fed7aa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #92400e;
+            margin-right: 15px;
+        }
+        .farmer-info h3 {
+            margin: 0 0 5px 0;
+            color: #92400e;
+        }
+        .farmer-info p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .rating {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+        .api-test {
+            background: #e5f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .api-result {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        button {
+            background: #92400e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #7c2d12;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌾 Review Modal Functionality Test</h1>
+    
+    <div class="test-card">
+        <h2>✅ Implementation Status</h2>
+        <ul>
+            <li>✅ Backend API endpoint created: <code>/api/reviews/farmer/:farmerId</code></li>
+            <li>✅ Enhanced farmer reviews with reviewer information</li>
+            <li>✅ Added Dialog modal components to MerchantDashboard.js</li>
+            <li>✅ Added click handlers to farmer list items</li>
+            <li>✅ Added modal state management</li>
+            <li>✅ Added review fetching functionality</li>
+            <li>✅ Added styled review display with ratings and dates</li>
+        </ul>
+    </div>
+
+    <div class="test-card">
+        <h2>🎯 What Was Added</h2>
+        <h3>1. Frontend Changes (MerchantDashboard.js):</h3>
+        <ul>
+            <li>Added Dialog, DialogTitle, DialogContent, DialogActions imports</li>
+            <li>Added modal state: selectedFarmer, reviewModalOpen, farmerReviews, reviewsLoading</li>
+            <li>Added fetchFarmerReviews function</li>
+            <li>Added handleFarmerClick and handleCloseReviewModal functions</li>
+            <li>Added onClick handler to farmer ListItem components</li>
+            <li>Added complete review modal with user-friendly styling</li>
+        </ul>
+        
+        <h3>2. Backend Changes (reviewController.js):</h3>
+        <ul>
+            <li>Enhanced getFarmerReviews function to populate reviewer details</li>
+            <li>Added proper sorting by creation date (newest first)</li>
+            <li>Added formatted response structure</li>
+        </ul>
+    </div>
+
+    <div class="test-card">
+        <h2>🔍 API Testing</h2>
+        <div class="api-test">
+            <strong>Test 1: Get Top Farmers by Rating</strong>
+            <button onclick="testTopFarmers()">Test Top Farmers API</button>
+            <div id="topFarmersResult" class="api-result"></div>
+        </div>
+        
+        <div class="api-test">
+            <strong>Test 2: Get Farmer Reviews</strong>
+            <button onclick="testFarmerReviews()">Test Farmer Reviews API</button>
+            <div id="farmerReviewsResult" class="api-result"></div>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>👤 Sample Farmer (Click to Test Modal)</h2>
+        <div class="farmer-item" onclick="simulateFarmerClick()">
+            <div class="farmer-avatar">D</div>
+            <div class="farmer-info">
+                <h3>dulara mihiransd <span class="rating">★ 5.0</span></h3>
+                <p>Location not available</p>
+                <p>1 reviews</p>
+            </div>
+        </div>
+        <small><em>This farmer has actual review data in the database</em></small>
+    </div>
+
+    <div class="test-card">
+        <h2>🚀 How to Test in the App</h2>
+        <ol>
+            <li>Start the backend server: <code>cd backend && npm start</code></li>
+            <li>Start the frontend: <code>npm start</code></li>
+            <li>Navigate to the Merchant Dashboard</li>
+            <li>Look for the "Top Rated Farmers" card</li>
+            <li>Click on any farmer in the list</li>
+            <li>A modal should open showing their reviews</li>
+        </ol>
+    </div>
+
+    <script>
+        async function testTopFarmers() {
+            try {
+                const response = await fetch('http://localhost:5000/api/reviews/farmers/by-rating?limit=5');
+                const data = await response.json();
+                document.getElementById('topFarmersResult').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('topFarmersResult').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testFarmerReviews() {
+            try {
+                const response = await fetch('http://localhost:5000/api/reviews/farmer/6832c46c09bba3e843cafc55');
+                const data = await response.json();
+                document.getElementById('farmerReviewsResult').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('farmerReviewsResult').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        function simulateFarmerClick() {
+            alert('🎉 Farmer clicked!\n\nIn the actual app, this would:\n1. Open a modal dialog\n2. Show farmer details\n3. Display all reviews with ratings\n4. Show reviewer names and dates\n5. Allow closing the modal');
+        }
+    </script>
+</body>
+</html>

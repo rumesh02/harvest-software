@@ -25,6 +25,7 @@ const contactRoutes = require('./routes/contactRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const emojiRoutes = require('./routes/emojiRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 
 const Order = require('./models/Order');
 
@@ -84,6 +85,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use(farmerDashboardRoutes);
 app.use('/api/dashboard', transporterdashboardRoutes);
 app.use('/api/dashboard', dashboardRoutes);

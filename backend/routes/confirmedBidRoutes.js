@@ -44,7 +44,60 @@ router.get('/:id', async (req, res) => {
 router.get('/merchant/:merchantId', async (req, res) => {
   try {
     const confirmedBids = await ConfirmedBid.find({ merchantId: req.params.merchantId });
-    res.json(confirmedBids);
+    
+    // Populate farmer details for each confirmed bid
+    const User = require('../models/User');
+    const Product = require('../models/Product');
+    
+    const populatedBids = await Promise.all(
+      confirmedBids.map(async (bid) => {
+        try {
+          // Fetch farmer information
+          const farmer = await User.findOne({ auth0Id: bid.farmerId });
+          
+          // Fetch product information for location data
+          let productLocation = null;
+          if (bid.items && bid.items.length > 0) {
+            try {
+              const product = await Product.findById(bid.items[0].productId);
+              if (product && product.location) {
+                productLocation = product.location;
+              }
+            } catch (productError) {
+              console.log('Product not found for bid:', bid._id);
+            }
+          }
+          
+          // Create the response object with farmer details
+          const bidObject = bid.toObject();
+          
+          if (farmer) {
+            // Add farmer details
+            bidObject.farmerName = farmer.name;
+            bidObject.farmerPhone = farmer.phone;
+            bidObject.farmerEmail = farmer.email;
+            
+            // Add farmer registered address for fallback
+            bidObject.farmerRegisteredAddress = {
+              address: farmer.address,
+              district: farmer.district
+            };
+          }
+          
+          // Add product location if found
+          if (productLocation) {
+            bidObject.productLocation = productLocation;
+          }
+          
+          return bidObject;
+        } catch (error) {
+          console.error(`Error populating details for bid ${bid._id}:`, error);
+          return bid.toObject();
+        }
+      })
+    );
+    
+    res.json(populatedBids);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

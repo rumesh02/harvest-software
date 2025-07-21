@@ -2,6 +2,8 @@ const Order = require('../models/Order');
 const ConfirmedBid = require('../models/ConfirmedBid');
 const Bid = require('../models/Bid');
 const Payment = require('../models/Payment');
+const Review = require('../models/Review');
+const User = require('../models/User');
 
 const merchantController = {
   getMerchantDashboard: async (req, res) => {
@@ -63,8 +65,111 @@ const merchantController = {
       // Get total orders (confirmed bids count)
       const totalOrders = confirmedBids.length;
 
-      // TODO: Get top farmers data (for now returning empty array)
-      const topFarmers = [];
+      // Get top-rated farmers (limit to top 5 for dashboard)
+      let topFarmers = [];
+      try {
+        // First get farmers with ratings
+        const farmerRatings = await Review.aggregate([
+          // Group by farmerId and calculate average rating and review count
+          {
+            $group: {
+              _id: "$farmerId",
+              avgRating: { $avg: "$rating" },
+              reviewCount: { $sum: 1 }
+            }
+          },
+          // Filter farmers with at least 1 review
+          {
+            $match: {
+              reviewCount: { $gte: 1 }
+            }
+          },
+          // Sort by average rating in descending order
+          {
+            $sort: { avgRating: -1 }
+          },
+          // Limit to top 5 for dashboard
+          {
+            $limit: 5
+          },
+          // Lookup farmer details from User collection
+          {
+            $lookup: {
+              from: "users",
+              localField: "_id",
+              foreignField: "_id",
+              as: "farmerDetails"
+            }
+          },
+          // Unwind farmer details
+          {
+            $unwind: "$farmerDetails"
+          },
+          // Filter only farmers (role = 'farmer')
+          {
+            $match: {
+              "farmerDetails.role": "farmer"
+            }
+          },
+          // Project final structure for dashboard
+          {
+            $project: {
+              _id: 1,
+              avgRating: { $round: ["$avgRating", 1] },
+              reviewCount: 1,
+              name: "$farmerDetails.name",
+              email: "$farmerDetails.email",
+              phone: "$farmerDetails.phone",
+              address: "$farmerDetails.address",
+              province: "$farmerDetails.province",
+              district: "$farmerDetails.district",
+              picture: "$farmerDetails.picture"
+            }
+          }
+        ]);
+
+        // Format for dashboard display
+        topFarmers = farmerRatings.map(farmer => ({
+          name: farmer.name,
+          location: farmer.district && farmer.province ? `${farmer.district}, ${farmer.province}` : farmer.address || "Location not available",
+          orders: farmer.reviewCount, // Use review count as proxy for orders
+          rating: farmer.avgRating,
+          avatar: farmer.picture || null
+        }));
+
+        // If we have less than 5 rated farmers, fill with recent farmers (no rating)
+        if (topFarmers.length < 5) {
+          const ratedFarmerIds = farmerRatings.map(f => f._id);
+          const additionalFarmers = await User.find(
+            { 
+              role: "farmer",
+              _id: { $nin: ratedFarmerIds }
+            },
+            {
+              _id: 1,
+              name: 1,
+              address: 1,
+              province: 1,
+              district: 1,
+              picture: 1
+            }
+          ).limit(5 - topFarmers.length).sort({ createdAt: -1 });
+
+          const additionalFormatted = additionalFarmers.map(farmer => ({
+            name: farmer.name,
+            location: farmer.district && farmer.province ? `${farmer.district}, ${farmer.province}` : farmer.address || "Location not available",
+            orders: 0,
+            rating: 0,
+            avatar: farmer.picture || null
+          }));
+
+          topFarmers = [...topFarmers, ...additionalFormatted];
+        }
+
+      } catch (error) {
+        console.error('Error fetching top farmers:', error);
+        topFarmers = []; // Fallback to empty array if there's an error
+      }
 
       const dashboardData = {
         PendingPayments: `Rs. ${pendingPaymentsTotal.toLocaleString()}`,

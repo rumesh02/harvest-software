@@ -11,4 +11,7 @@ router.get('/farmer/:farmerId', reviewController.getFarmerReviews);
 // Get average rating for a farmer
 router.get('/farmer/:farmerId/average', reviewController.getFarmerAverageRating);
 
+// Get farmers sorted by average rating
+router.get('/farmers/by-rating', reviewController.getFarmersByRating);
+
 module.exports = router;

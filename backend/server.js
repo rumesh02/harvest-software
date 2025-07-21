@@ -80,6 +80,7 @@ app.use('/api/collections', collectionRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use(farmerDashboardRoutes);
 app.use('/api/dashboard', transporterdashboardRoutes);
 app.use('/api/dashboard', dashboardRoutes);

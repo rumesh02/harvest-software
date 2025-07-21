@@ -812,7 +812,14 @@ const BrowseListing = () => {
                 <strong>Description:</strong> {selectedProduct.description || "No description available"}
               </Typography>
               <Typography variant="body2">
-                <strong>Harvest Location:</strong> {selectedProduct.harvestDetails?.location || "N/A"}
+                <strong>Harvest Location:</strong> {
+                  selectedProduct.harvestDetails?.location || 
+                  (farmerInfo?.address && farmerInfo?.district ? 
+                    `${farmerInfo.address}, ${farmerInfo.district}` : 
+                    farmerInfo?.address || 
+                    farmerInfo?.district || 
+                    "Location not available")
+                }
               </Typography>
               <Typography variant="body2">
                 <strong>Listed Date:</strong> {new Date(selectedProduct.listedDate).toLocaleDateString()}

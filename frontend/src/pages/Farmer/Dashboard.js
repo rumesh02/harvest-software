@@ -64,9 +64,10 @@ const Dashboard = () => {
     const fetchReviewsData = async () => {
       try {
         const reviewsResponse = await axios.get(`http://localhost:5000/api/reviews/farmer/${user.sub}`);
-        setReviews(reviewsResponse.data);
+        setReviews(Array.isArray(reviewsResponse.data) ? reviewsResponse.data : []);
       } catch (error) {
         console.error("Error fetching reviews data:", error);
+        setReviews([]); // Set empty array on error
       }
     };
 
@@ -584,7 +585,7 @@ const Dashboard = () => {
                   </Typography>
                 </Typography>
                 <Typography variant="body2" color="#43a047" sx={{ fontWeight: 500 }}>
-                  {reviews.length > 0 ? `Based on ${reviews.length} review${reviews.length !== 1 ? 's' : ''}` : "No ratings yet"}
+                  {(Array.isArray(reviews) ? reviews : []).length > 0 ? `Based on ${(Array.isArray(reviews) ? reviews : []).length} review${(Array.isArray(reviews) ? reviews : []).length !== 1 ? 's' : ''}` : "No ratings yet"}
                 </Typography>
               </Box>
             </Paper>
@@ -631,7 +632,7 @@ const Dashboard = () => {
               </Box>
               
               <Box sx={{ height: 280, overflowY: 'auto' }}>
-                {reviews.length === 0 ? (
+                {!Array.isArray(reviews) || reviews.length === 0 ? (
                   <Box sx={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -652,7 +653,7 @@ const Dashboard = () => {
                   </Box>
                 ) : (
                   <List sx={{ width: '100%', p: 0 }}>
-                    {reviews.slice(0, 3).map((review, idx) => (
+                    {(Array.isArray(reviews) ? reviews : []).slice(0, 3).map((review, idx) => (
                       <React.Fragment key={idx}>
                         {idx > 0 && <Divider sx={{ my: 1.5, bgcolor: '#e8f5e8' }} />}
                         <ListItem 
@@ -724,10 +725,10 @@ const Dashboard = () => {
                         </ListItem>
                       </React.Fragment>
                     ))}
-                    {reviews.length > 3 && (
+                    {(Array.isArray(reviews) ? reviews : []).length > 3 && (
                       <Box sx={{ textAlign: 'center', mt: 2, pt: 2, borderTop: '1px solid #e8f5e8' }}>
                         <Typography variant="body2" color="#43a047" sx={{ fontWeight: 500 }}>
-                          Showing 3 of {reviews.length} reviews
+                          Showing 3 of {(Array.isArray(reviews) ? reviews : []).length} reviews
                         </Typography>
                       </Box>
                     )}

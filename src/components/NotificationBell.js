@@ -22,10 +22,10 @@ import {
   Info as InfoIcon,
   MarkEmailRead as MarkEmailReadIcon,
   LocalShipping as LocalShippingIcon,
+  Message as MessageIcon,
   Chat as ChatIcon
 } from '@mui/icons-material';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import io from 'socket.io-client';
 
@@ -33,7 +33,6 @@ const socket = io('http://localhost:5000');
 
 const NotificationBell = () => {
   const { user } = useAuth0();
-  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -284,28 +283,12 @@ const NotificationBell = () => {
 
     // Handle different notification types
     if (notification.type === 'message') {
-      // For message notifications, navigate to the appropriate messages page and set up chat
-      const userRole = localStorage.getItem('userRole');
-      
-      // Store the sender ID for the chat to open
-      sessionStorage.setItem('openChatWithUser', notification.metadata.senderId);
-      sessionStorage.setItem('shouldHighlightMessage', 'true');
-      
-      // Navigate to the correct messages page based on user role
-      let messagesRoute = '/messages'; // Default for farmers
-      if (userRole === 'merchant') {
-        messagesRoute = '/merchant/messages';
-      } else if (userRole === 'transporter') {
-        messagesRoute = '/transporter/inbox';
+      // For message notifications, we can trigger chat opening
+      if (window.handleMessageNotificationClick) {
+        window.handleMessageNotificationClick(notification.metadata.senderId);
       }
-      
-      navigate(messagesRoute);
-      
       // Close the notification popup
       handleClose();
-    } else {
-      // Handle other notification types if needed
-      console.log('Notification clicked:', notification);
     }
   };
 

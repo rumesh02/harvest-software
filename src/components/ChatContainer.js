@@ -10,7 +10,10 @@ import {
   Box, 
   Typography, 
   Paper, 
+  Divider,
   Badge,
+  IconButton,
+  Tooltip,
   Snackbar,
   Alert,
   Button,
@@ -19,19 +22,40 @@ import {
   Tab
 } from '@mui/material';
 import { 
+  Notifications as NotificationsIcon,
   Chat as ChatIcon,
+  Add as AddIcon,
+  Search as SearchIcon,
   People as PeopleIcon
 } from '@mui/icons-material';
 import io from 'socket.io-client';
 import './ChatContainer.css';
+import { styled } from '@mui/material/styles';
 
 const socket = io('http://localhost:5000');
 
+// Custom styled badge for WhatsApp-like notification
+const BlueBadge = styled(Badge)(({ theme }) => ({
+  '& .MuiBadge-badge': {
+    backgroundColor: '#3EC6FF', // WhatsApp blue
+    color: '#fff',
+    minWidth: 22,
+    height: 22,
+    fontWeight: 700,
+    fontSize: '0.95rem',
+    top: 2,
+    right: 2,
+    border: `2px solid ${theme.palette.background.paper}`,
+    boxShadow: '0 0 0 2px #222',
+    zIndex: 1,
+  },
+}));
+
 const ChatContainer = ({ currentUserId }) => {
-  const [, setChatUsers] = useState([]);
+  const [chatUsers, setChatUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [refreshChats, setRefreshChats] = useState(0);
@@ -43,7 +67,7 @@ const ChatContainer = ({ currentUserId }) => {
   const [usersLoading, setUsersLoading] = useState(false);
 
   // Initialize recent chats hook
-  const { addNewChat, clearUnreadCount, isAPIAvailable } = useRecentChats();
+  const { addNewChat, updateChatMessage, clearUnreadCount, isAPIAvailable } = useRecentChats();
   
   // Debug the hook initialization
   useEffect(() => {
@@ -80,53 +104,6 @@ const ChatContainer = ({ currentUserId }) => {
       }
     };
   }, [allUsers, addNewChat]);
-
-  // Handle navigation from notification clicks
-  useEffect(() => {
-    const openChatWithUser = sessionStorage.getItem('openChatWithUser');
-    const shouldHighlight = sessionStorage.getItem('shouldHighlightMessage');
-    
-    if (openChatWithUser && allUsers.length > 0) {
-      console.log('🔔 Opening chat from notification with user:', openChatWithUser);
-      
-      const user = allUsers.find(u => u.auth0Id === openChatWithUser);
-      if (user) {
-        console.log('✅ Found user for notification chat:', user.name);
-        
-        // Set the selected user
-        setSelectedUser(user);
-        setActiveTab(0); // Switch to Recent Chats tab
-        
-        // Add to recent chats using the hook
-        addNewChat({
-          userId: user.auth0Id,
-          name: user.name,
-          picture: user.picture,
-          role: user.role,
-          email: user.email,
-          lastMessage: '',
-          lastMessageTime: new Date().toISOString(),
-          unreadCount: 0
-        });
-        
-        // Clear unread count for this conversation
-        clearUnreadCount(user.auth0Id);
-        
-        // Clear the session storage flags
-        sessionStorage.removeItem('openChatWithUser');
-        if (shouldHighlight) {
-          sessionStorage.removeItem('shouldHighlightMessage');
-          // Set a flag for the chat component to highlight messages
-          sessionStorage.setItem('highlightLatestMessage', 'true');
-        }
-      } else {
-        console.log('❌ User not found for notification chat:', openChatWithUser);
-        // Clear the session storage if user not found
-        sessionStorage.removeItem('openChatWithUser');
-        sessionStorage.removeItem('shouldHighlightMessage');
-      }
-    }
-  }, [allUsers, addNewChat, clearUnreadCount]);
 
   // Fetch past chat users
   useEffect(() => {
@@ -191,6 +168,16 @@ const ChatContainer = ({ currentUserId }) => {
       socket.off('receiveMessage');
     };
   }, [currentUserId]);
+
+  const startNewChat = (e) => {
+    const selectedId = e.target.value;
+    const user = allUsers.find((u) => u.auth0Id === selectedId);
+    if (user) setSelectedUser(user);
+  };
+
+  const handleSelectUser = (user) => {
+    setSelectedUser(user);
+  };
 
   const handleChatSelect = (chat) => {
     console.log('📱 ChatContainer - handleChatSelect called:', {

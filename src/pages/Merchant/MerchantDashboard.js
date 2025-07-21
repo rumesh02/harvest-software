@@ -17,14 +17,24 @@ import {
   CircularProgress,
   Alert,
   Button,
-  Chip
+  Chip,
+  Rating,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Skeleton
 } from '@mui/material';
 import { 
   ShoppingCart as OrdersIcon, 
   Gavel as BidsIcon, 
   AccountBalance as PaymentsIcon,
   TrendingUp as TrendingIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  Star as StarIcon,
+  Close as CloseIcon,
+  CalendarToday as CalendarIcon
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -38,7 +48,38 @@ const MerchantDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedFarmer, setSelectedFarmer] = useState(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [farmerReviews, setFarmerReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const { user } = useAuth0();
+
+  // Helper function to render farmer rating
+  const renderFarmerRating = (rating) => {
+    if (!rating || rating === 0) {
+      return (
+        <Chip
+          label="New"
+          size="small"
+          sx={{
+            background: '#e5e7eb',
+            color: '#6b7280',
+            fontWeight: 500,
+            fontSize: 11
+          }}
+        />
+      );
+    }
+    
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <StarIcon sx={{ color: '#fbbf24', fontSize: 14 }} />
+        <Typography variant="caption" sx={{ color: '#92400e', fontWeight: 600, fontSize: 12 }}>
+          {rating.toFixed(1)}
+        </Typography>
+      </Box>
+    );
+  };
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -83,6 +124,34 @@ const MerchantDashboard = () => {
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  // Function to fetch reviews for a specific farmer
+  const fetchFarmerReviews = async (farmerId) => {
+    try {
+      setReviewsLoading(true);
+      const response = await axios.get(`http://localhost:5000/api/reviews/farmer/${farmerId}`);
+      setFarmerReviews(response.data.reviews || []);
+    } catch (error) {
+      console.error('Error fetching farmer reviews:', error);
+      setFarmerReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  // Handle farmer click to open review modal
+  const handleFarmerClick = (farmer) => {
+    setSelectedFarmer(farmer);
+    setReviewModalOpen(true);
+    fetchFarmerReviews(farmer._id);
+  };
+
+  // Handle closing review modal
+  const handleCloseReviewModal = () => {
+    setReviewModalOpen(false);
+    setSelectedFarmer(null);
+    setFarmerReviews([]);
+  };
 
   // Format the monthly data to ensure it has proper names and values
   const formattedMonthlyData = (dashboardData.monthlyData || []).map(item => ({
@@ -401,121 +470,333 @@ const MerchantDashboard = () => {
             <Paper 
               elevation={0}
               sx={{ 
-                p: { xs: 2, md: 3 }, 
+                p: 4, 
                 height: '100%',
-                background: '#fef8ec',
+                background: 'rgba(255,255,255,0.9)',
+                border: "1px solid #E5E7EB",
                 borderRadius: 3,
-                boxShadow: '0 1.5px 6px rgba(146, 64, 14, 0.07)'
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#92400e', mb: 0.5, fontSize: { xs: 15, md: 17 } }}>
+                    Top-Rated Farmers
+                  </Typography>
+                  <Typography variant="body2" color="#92400e" sx={{ fontSize: { xs: 12, md: 13 } }}>
+                    Highest rated suppliers on the platform
+                  </Typography>
+                </Box>
                 <Avatar 
                   sx={{ 
-                    background: '#fef3e2',
-                    color: '#92400e',
-                    width: 38,
-                    height: 38,
-                    mr: 2,
-                    boxShadow: '0 1.5px 6px rgba(146, 64, 14, 0.10)'
+                    background: '#d97706',
+                    width: 40,
+                    height: 40,
+                    boxShadow: '0 2px 8px rgba(217, 119, 6, 0.12)'
                   }}
                 >
                   <PersonIcon fontSize="small" />
                 </Avatar>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#92400e', fontSize: { xs: 15, md: 16 } }}>
-                    Top Farmers
-                  </Typography>
-                  <Typography variant="body2" color="#92400e" sx={{ fontSize: { xs: 12, md: 13 } }}>
-                    Your most reliable suppliers
-                  </Typography>
-                </Box>
               </Box>
-              {topFarmers && topFarmers.length > 0 ? (
-                <List sx={{ width: '100%' }}>
-                  {topFarmers.map((farmer, index) => (
-                    <React.Fragment key={index}>
-                      {index > 0 && <Divider component="li" sx={{ my: 1 }} />}
-                      <ListItem 
-                        sx={{ 
-                          px: 2, 
-                          py: 2, 
-                          borderRadius: 2, 
-                          transition: 'all 0.3s ease',
-                          '&:hover': { 
-                            bgcolor: '#fef3e2',
-                            transform: 'translateX(4px)'
-                          } 
-                        }}
-                      >
-                        <ListItemAvatar>
-                          <Avatar 
-                            src={farmer.avatar || undefined}
-                            alt={farmer.name}
-                            sx={{ 
-                              width: 38, 
-                              height: 38, 
-                              bgcolor: !farmer.avatar ? '#fed7aa' : undefined,
-                              color: '#92400e',
-                              fontWeight: 700,
-                              fontSize: 18,
-                              border: '2px solid #fef3e2',
-                              boxShadow: '0 1.5px 6px rgba(146, 64, 14, 0.07)'
-                            }}
-                          >
-                            {!farmer.avatar && farmer.name ? farmer.name[0].toUpperCase() : null}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#92400e', fontSize: { xs: 15, md: 16 } }}>
-                              {farmer.name}
-                            </Typography>
-                          }
-                          secondary={
-                            <>
-                              <Typography variant="caption" color="#d97706" sx={{ mt: 0.5, display: 'block' }}>
-                                {farmer.location || "Location not available"}
-                              </Typography>
-                              <Typography variant="caption" color="#92400e" sx={{ display: 'block', fontWeight: 500 }}>
-                                Orders: {farmer.orders || 0}
-                              </Typography>
-                            </>
-                          }
-                        />
-                        <Chip
-                          label={`${farmer.orders || "0"} orders`}
-                          sx={{
-                            background: '#fef3e2',
-                            color: '#92400e',
-                            fontWeight: 600,
-                            fontSize: 13,
-                            boxShadow: '0 1.5px 6px rgba(146, 64, 14, 0.07)'
+              <Box sx={{ height: 240, mt: 1.5, overflowY: 'auto' }}>
+                {topFarmers && topFarmers.length > 0 ? (
+                  <List sx={{ width: '100%', p: 0 }}>
+                    {topFarmers.map((farmer, index) => (
+                      <React.Fragment key={index}>
+                        {index > 0 && <Divider component="li" sx={{ my: 1, bgcolor: '#f3f4f6' }} />}
+                        <ListItem 
+                          onClick={() => handleFarmerClick(farmer)}
+                          sx={{ 
+                            px: 0, 
+                            py: 1.5, 
+                            borderRadius: 2, 
+                            transition: 'all 0.3s ease',
+                            cursor: 'pointer',
+                            '&:hover': { 
+                              bgcolor: '#fef3e2',
+                              transform: 'translateX(4px)'
+                            } 
                           }}
-                        />
-                      </ListItem>
-                    </React.Fragment>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ 
-                  p: 3, 
-                  textAlign: 'center',
-                  background: '#fef8ec',
-                  borderRadius: 2
-                }}>
-                  <PersonIcon sx={{ fontSize: 38, color: '#92400e', mb: 1 }} />
-                  <Typography color="#92400e" sx={{ fontWeight: 500, fontSize: 15 }}>
-                    No top farmers found yet
-                  </Typography>
-                  <Typography variant="caption" color="#d97706" sx={{ mt: 1 }}>
-                    Start placing bids to build relationships with farmers
-                  </Typography>
-                </Box>
-              )}
+                        >
+                          <ListItemAvatar sx={{ minWidth: 50 }}>
+                            <Avatar 
+                              src={farmer.avatar || undefined}
+                              alt={farmer.name}
+                              sx={{ 
+                                width: 42, 
+                                height: 42, 
+                                bgcolor: !farmer.avatar ? '#fed7aa' : undefined,
+                                color: '#92400e',
+                                fontWeight: 700,
+                                fontSize: 16,
+                                border: '2px solid #fef3e2',
+                                boxShadow: '0 2px 8px rgba(146, 64, 14, 0.1)'
+                              }}
+                            >
+                              {!farmer.avatar && farmer.name ? farmer.name[0].toUpperCase() : null}
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText
+                            sx={{ flex: 1 }}
+                            primary={
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#92400e', fontSize: 14 }}>
+                                  {farmer.name}
+                                </Typography>
+                                {farmer.rating > 0 && (
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <StarIcon sx={{ color: '#fbbf24', fontSize: 14 }} />
+                                    <Typography variant="caption" sx={{ color: '#92400e', fontWeight: 600, fontSize: 11 }}>
+                                      {farmer.rating.toFixed(1)}
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Box>
+                            }
+                            secondary={
+                              <Box>
+                                <Typography variant="caption" color="#6b7280" sx={{ display: 'block', fontSize: 11, mb: 0.5 }}>
+                                  {farmer.location || "Location not available"}
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                  <Typography variant="caption" color="#92400e" sx={{ fontWeight: 500, fontSize: 11 }}>
+                                    {farmer.rating > 0 ? `${farmer.orders} reviews` : 'New farmer'}
+                                  </Typography>
+                                  {farmer.rating > 0 ? (
+                                    <Chip
+                                      size="small"
+                                      label={`${farmer.rating.toFixed(1)} ★`}
+                                      sx={{
+                                        background: 'linear-gradient(45deg, #fbbf24, #f59e0b)',
+                                        color: 'white',
+                                        fontWeight: 600,
+                                        fontSize: 10,
+                                        height: 20,
+                                        boxShadow: '0 1px 4px rgba(251, 191, 36, 0.3)',
+                                        '& .MuiChip-label': { px: 1 }
+                                      }}
+                                    />
+                                  ) : (
+                                    <Chip
+                                      size="small"
+                                      label="New"
+                                      sx={{
+                                        background: '#e5e7eb',
+                                        color: '#6b7280',
+                                        fontWeight: 500,
+                                        fontSize: 10,
+                                        height: 20,
+                                        '& .MuiChip-label': { px: 1 }
+                                      }}
+                                    />
+                                  )}
+                                </Box>
+                              </Box>
+                            }
+                          />
+                        </ListItem>
+                      </React.Fragment>
+                    ))}
+                  </List>
+                ) : (
+                  <Box sx={{ 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    textAlign: 'center',
+                    py: 4
+                  }}>
+                    <PersonIcon sx={{ fontSize: 48, color: '#d1d5db', mb: 2 }} />
+                    <Typography color="#6b7280" sx={{ fontWeight: 500, fontSize: 14, mb: 1 }}>
+                      No top-rated farmers yet
+                    </Typography>
+                    <Typography variant="caption" color="#9ca3af" sx={{ fontSize: 12 }}>
+                      Farmers will appear here as they receive reviews and ratings
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+              {/* Footer info */}
+              <Box sx={{ mt: 1, textAlign: 'right' }}>
+                <Typography variant="caption" color="#d97706" sx={{ fontSize: 11 }}>● Top Rated Farmers</Typography>
+              </Box>
             </Paper>
           </Grid>
         </Grid>
       </Box>
+
+      {/* Review Modal */}
+      <Dialog 
+        open={reviewModalOpen} 
+        onClose={handleCloseReviewModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          p: 3, 
+          pb: 1,
+          background: 'linear-gradient(135deg, #fef3e2 0%, #fed7aa 100%)',
+          position: 'relative'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {selectedFarmer && (
+              <>
+                <Avatar 
+                  src={selectedFarmer.avatar || undefined}
+                  sx={{ 
+                    width: 56, 
+                    height: 56, 
+                    bgcolor: '#fed7aa',
+                    color: '#92400e',
+                    fontWeight: 700,
+                    fontSize: 20,
+                    border: '3px solid white',
+                    boxShadow: '0 4px 12px rgba(146, 64, 14, 0.2)'
+                  }}
+                >
+                  {!selectedFarmer.avatar && selectedFarmer.name ? selectedFarmer.name[0].toUpperCase() : null}
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" sx={{ color: '#92400e', fontWeight: 700, mb: 0.5 }}>
+                    {selectedFarmer.name}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Rating 
+                      value={selectedFarmer.rating || 0} 
+                      readOnly 
+                      size="small"
+                      sx={{ color: '#fbbf24' }}
+                    />
+                    <Typography variant="body2" sx={{ color: '#92400e', fontWeight: 600 }}>
+                      {selectedFarmer.rating ? selectedFarmer.rating.toFixed(1) : 'No rating'}
+                    </Typography>
+                  </Box>
+                </Box>
+              </>
+            )}
+          </Box>
+          <IconButton
+            onClick={handleCloseReviewModal}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: '#92400e',
+              bgcolor: 'rgba(255,255,255,0.8)',
+              '&:hover': { bgcolor: 'white' }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        
+        <DialogContent sx={{ p: 3, pt: 2 }}>
+          {reviewsLoading ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {[1,2,3].map((i) => (
+                <Box key={i} sx={{ display: 'flex', gap: 2, p: 2 }}>
+                  <Skeleton variant="circular" width={40} height={40} />
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton variant="text" width="60%" height={20} />
+                    <Skeleton variant="text" width="80%" height={16} />
+                    <Skeleton variant="text" width="40%" height={14} />
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          ) : farmerReviews.length > 0 ? (
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 2, color: '#92400e', fontWeight: 600 }}>
+                Reviews ({farmerReviews.length})
+              </Typography>
+              <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                {farmerReviews.map((review, index) => (
+                  <Box key={review._id || index} sx={{ 
+                    mb: 3, 
+                    p: 2, 
+                    bgcolor: '#fefbf3', 
+                    borderRadius: 2,
+                    border: '1px solid #fed7aa'
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                      <Avatar 
+                        src={review.reviewer?.avatar}
+                        sx={{ width: 36, height: 36, bgcolor: '#e5e7eb', color: '#6b7280' }}
+                      >
+                        {review.reviewer?.name ? review.reviewer.name[0].toUpperCase() : 'M'}
+                      </Avatar>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#374151' }}>
+                          {review.reviewer?.name || 'Anonymous Merchant'}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Rating 
+                            value={review.rating} 
+                            readOnly 
+                            size="small"
+                            sx={{ color: '#fbbf24' }}
+                          />
+                          <Typography variant="caption" color="#6b7280">
+                            <CalendarIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                    {review.comment && (
+                      <Typography variant="body2" sx={{ color: '#4b5563', mt: 1, ml: 6 }}>
+                        "{review.comment}"
+                      </Typography>
+                    )}
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={{ 
+              textAlign: 'center', 
+              py: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}>
+              <StarIcon sx={{ fontSize: 48, color: '#d1d5db', mb: 2 }} />
+              <Typography variant="h6" sx={{ color: '#6b7280', mb: 1 }}>
+                No Reviews Yet
+              </Typography>
+              <Typography variant="body2" color="#9ca3af">
+                This farmer hasn't received any reviews yet.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button 
+            onClick={handleCloseReviewModal}
+            variant="outlined"
+            sx={{
+              color: '#92400e',
+              borderColor: '#fed7aa',
+              '&:hover': {
+                borderColor: '#92400e',
+                bgcolor: '#fef3e2'
+              }
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

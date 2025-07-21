@@ -16,7 +16,7 @@ const Footer = () => {
     }}>
       <Container maxWidth="lg">
         <Grid container spacing={3} justifyContent="space-between">
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="h6" gutterBottom>Quick Links</Typography>
             <Box>
               <Typography variant="body2" sx={{ color: '#ccc', my: 1 }}>
@@ -86,7 +86,7 @@ const Footer = () => {
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="h6" gutterBottom>Contact Us</Typography>
             <Typography variant="body2" sx={{ color: '#ccc', my: 1 }}>
               Email: support@farmto-market.com
@@ -95,7 +95,7 @@ const Footer = () => {
               Phone: +94 112 651 657
             </Typography>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="h6" gutterBottom>Follow Us</Typography>
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
               <IconButton 

@@ -7,15 +7,19 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 const FarmerLayout = () => {
   return (
-    <Box sx={{ display: "flex", height: "100vh"}}>
-      {/* ✅ Farmer Sidebar (Only for Farmer Pages) */}
-      <Box sx={{ width: "18%" }}>
+    <Box sx={{ minHeight: "100vh" }}>
+      {/* ✅ Farmer Sidebar (Fixed Position) */}
       <Sidebar />
-      </Box>
-      
 
-      <Box sx={{ flexGrow: 1, ml: "25px", p: 3 }}>
-        <Navbar />
+      {/* Main Content Area */}
+      <Box sx={{ 
+        marginLeft: "250px", // Account for fixed sidebar width (adjusted to match standard width)
+        minHeight: "100vh",
+        background: "#ffffff"
+      }}>
+        <Box sx={{ p: 3 }}>
+          <Navbar />
+        </Box>
         <Outlet /> {/* ✅ Ensures sub-pages load inside layout */}
       </Box>
     </Box>

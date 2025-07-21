@@ -17,14 +17,16 @@ import {
   CircularProgress,
   Alert,
   Button,
-  Chip
+  Chip,
+  Rating
 } from '@mui/material';
 import { 
   TrendingUp as RevenueIcon, 
   ShoppingCart as OrdersIcon, 
   AccountBalance as YearlyIcon,
   Person as PersonIcon,
-  MonetizationOn as MoneyIcon
+  MonetizationOn as MoneyIcon,
+  Reviews as ReviewsIcon
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -39,6 +41,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth0();
+  const [reviews, setReviews] = useState([]);
+  const [farmerRating, setFarmerRating] = useState(0);
 
   useEffect(() => {
     const fetchRevenueData = async () => {
@@ -57,8 +61,26 @@ const Dashboard = () => {
       }
     };
 
+    const fetchReviewsData = async () => {
+      try {
+        const reviewsResponse = await axios.get(`http://localhost:5000/api/reviews/farmer/${user.sub}`);
+        setReviews(reviewsResponse.data);
+      } catch (error) {
+        console.error("Error fetching reviews data:", error);
+      }
+    };
+
     if (user?.sub) {
       fetchRevenueData();
+      fetchReviewsData();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.sub) {
+      axios.get(`http://localhost:5000/api/users/${user.sub}`)
+        .then(res => setFarmerRating(res.data.farmerRatings || 0))
+        .catch(err => console.error("Error fetching farmer ratings:", err));
     }
   }, [user]);
 
@@ -505,9 +527,218 @@ const Dashboard = () => {
             </Paper>
           </Grid>
         </Grid>
+
+        {/* Reviews Section - Positioned nicely under main dashboard */}
+        <Grid container spacing={3} sx={{ mt: 3 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 4, 
+                height: 400, // Fixed height to match the other card
+                background: 'rgba(255,255,255,0.9)',
+                border: "1px solid #E5E7EB",
+                borderRadius: 3,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 12px 40px rgba(0,0,0,0.15)"
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#155724', mb: 0.5, fontSize: { xs: 16, md: 18 } }}>
+                    Your Rating
+                  </Typography>
+                  <Typography variant="body2" color="#155724" sx={{ fontSize: { xs: 12, md: 13 } }}>
+                    Based on customer reviews
+                  </Typography>
+                </Box>
+                <Avatar 
+                  sx={{ 
+                    background: '#43a047',
+                    width: 40,
+                    height: 40,
+                    boxShadow: '0 2px 8px rgba(67, 160, 71, 0.12)'
+                  }}
+                >
+                  <ReviewsIcon fontSize="small" />
+                </Avatar>
+              </Box>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                height: 280, // Matching the content area height of the other card
+                textAlign: 'center'
+              }}>
+                <Rating value={farmerRating} precision={0.1} readOnly size="large" sx={{ mb: 3 }} />
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#155724', mb: 2 }}>
+                  {farmerRating ? `${farmerRating.toFixed(1)}` : "0.0"}
+                  <Typography component="span" variant="h6" sx={{ color: '#43a047', ml: 0.5 }}>
+                    / 5
+                  </Typography>
+                </Typography>
+                <Typography variant="body2" color="#43a047" sx={{ fontWeight: 500 }}>
+                  {reviews.length > 0 ? `Based on ${reviews.length} review${reviews.length !== 1 ? 's' : ''}` : "No ratings yet"}
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+          
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 4, 
+                height: 400, // Fixed height to match the other card
+                background: 'rgba(255,255,255,0.9)',
+                border: "1px solid #E5E7EB",
+                borderRadius: 3,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                overflow: 'hidden',
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 12px 40px rgba(0,0,0,0.15)"
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#155724', mb: 0.5, fontSize: { xs: 16, md: 18 } }}>
+                    Recent Reviews
+                  </Typography>
+                  <Typography variant="body2" color="#155724" sx={{ fontSize: { xs: 12, md: 13 } }}>
+                    What customers say about you
+                  </Typography>
+                </Box>
+                <Avatar 
+                  sx={{ 
+                    background: '#43a047',
+                    width: 40,
+                    height: 40,
+                    boxShadow: '0 2px 8px rgba(67, 160, 71, 0.12)'
+                  }}
+                >
+                  <ReviewsIcon fontSize="small" />
+                </Avatar>
+              </Box>
+              
+              <Box sx={{ height: 280, overflowY: 'auto' }}>
+                {reviews.length === 0 ? (
+                  <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    background: '#f8fffe',
+                    borderRadius: 2,
+                    border: '1px dashed #d4edda'
+                  }}>
+                    <ReviewsIcon sx={{ fontSize: 48, color: '#155724', mb: 2, opacity: 0.6 }} />
+                    <Typography variant="body1" sx={{ fontWeight: 600, color: '#155724', mb: 1 }}>
+                      No reviews yet
+                    </Typography>
+                    <Typography variant="body2" color="#43a047" sx={{ textAlign: 'center', maxWidth: 200 }}>
+                      Reviews will appear here once customers rate your products
+                    </Typography>
+                  </Box>
+                ) : (
+                  <List sx={{ width: '100%', p: 0 }}>
+                    {reviews.slice(0, 3).map((review, idx) => (
+                      <React.Fragment key={idx}>
+                        {idx > 0 && <Divider sx={{ my: 1.5, bgcolor: '#e8f5e8' }} />}
+                        <ListItem 
+                          alignItems="flex-start" 
+                          sx={{ 
+                            px: 0, 
+                            py: 1.5,
+                            borderRadius: 2,
+                            transition: 'all 0.3s ease',
+                            '&:hover': { 
+                              bgcolor: '#f1f8e9',
+                              transform: 'translateX(4px)'
+                            }
+                          }}
+                        >
+                          <ListItemAvatar>
+                            <Avatar sx={{ 
+                              bgcolor: '#43a047', 
+                              width: 36, 
+                              height: 36,
+                              fontSize: 16,
+                              fontWeight: 600
+                            }}>
+                              {review.merchantId?.name ? review.merchantId.name.charAt(0).toUpperCase() : 'M'}
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={
+                              <Box sx={{ mb: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#155724' }}>
+                                    {review.merchantId?.name || 'Anonymous Merchant'}
+                                  </Typography>
+                                  <Typography variant="caption" color="#43a047" sx={{ fontWeight: 500 }}>
+                                    {new Date(review.createdAt).toLocaleDateString()}
+                                  </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Rating value={review.rating} readOnly size="small" />
+                                  <Chip
+                                    label={`${review.rating}/5`}
+                                    size="small"
+                                    sx={{ 
+                                      bgcolor: '#d4edda',
+                                      color: '#155724',
+                                      fontWeight: 600,
+                                      fontSize: 11
+                                    }}
+                                  />
+                                </Box>
+                              </Box>
+                            }
+                            secondary={
+                              review.comment && (
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    color: '#43a047',
+                                    fontStyle: 'italic',
+                                    mt: 0.5,
+                                    lineHeight: 1.4
+                                  }}
+                                >
+                                  "{review.comment}"
+                                </Typography>
+                              )
+                            }
+                          />
+                        </ListItem>
+                      </React.Fragment>
+                    ))}
+                    {reviews.length > 3 && (
+                      <Box sx={{ textAlign: 'center', mt: 2, pt: 2, borderTop: '1px solid #e8f5e8' }}>
+                        <Typography variant="body2" color="#43a047" sx={{ fontWeight: 500 }}>
+                          Showing 3 of {reviews.length} reviews
+                        </Typography>
+                      </Box>
+                    )}
+                  </List>
+                )}
+              </Box>
+            </Paper>
+          </Grid>
+        </Grid>
       </Box>
     </Box>
   );
 };
-
 export default Dashboard;

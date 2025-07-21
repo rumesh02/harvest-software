@@ -3,16 +3,33 @@ import axios from "axios";
 import HarvestCard from "../../components/HarvestCard";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
+  Container,
+  Paper,
+  Typography,
+  Box,
+  Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
   TextField,
-
   CircularProgress,
   Alert,
+  Card,
+  CardContent,
+  InputAdornment,
+  IconButton
 } from "@mui/material";
+import {
+  Inventory as InventoryIcon,
+  Edit as EditIcon,
+  AttachMoney as MoneyIcon,
+  Scale as ScaleIcon,
+  DriveFileRenameOutline as NameIcon,
+  Add as AddIcon,
+  ArrowBack
+} from "@mui/icons-material";
 
 const ListedItems = () => {
   const [products, setProducts] = useState([]);
@@ -27,12 +44,10 @@ const ListedItems = () => {
   });
   const { user, isAuthenticated } = useAuth0();
 
-  // Fetch products from backend
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      // Use the dedicated endpoint for farmer's products
       const response = await axios.get(`http://localhost:5000/api/products/farmer/${user.sub}`);
       setProducts(response.data);
     } catch (error) {
@@ -73,7 +88,7 @@ const ListedItems = () => {
 
       if (response.status === 200) {
         setEditDialogOpen(false);
-        fetchProducts(); // Refresh the list
+        fetchProducts();
         setError(null);
       }
     } catch (error) {
@@ -90,7 +105,7 @@ const ListedItems = () => {
         );
 
         if (response.status === 200) {
-          fetchProducts(); // Refresh the list
+          fetchProducts();
           setError(null);
         }
       } catch (error) {
@@ -101,105 +116,230 @@ const ListedItems = () => {
   };
 
   if (!isAuthenticated) {
-    return <Alert severity="warning">Please log in to view your products</Alert>;
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Alert severity="warning">Please log in to view your products</Alert>
+      </Container>
+    );
   }
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center p-5">
-        <CircularProgress />
-      </div>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress size={60} />
+        </Box>
+      </Container>
     );
   }
 
   return (
-    <div className="containerCards">
-      <div className="p-1">
-        <h2 className="mb-4">My Listed Harvests</h2>
-        
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+        <Box sx={{ mb: 4 }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            gutterBottom
+            sx={{ fontWeight: 600, color: '#2E7D32', display: 'flex', alignItems: 'center', gap: 1 }}
+          >
+            <InventoryIcon fontSize="large" />
+            My Listed Harvests
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            View and manage your listed products
+          </Typography>
+        </Box>
+
         {error && (
-          <Alert severity="error" className="mb-3">
+          <Alert severity="error" sx={{ mb: 3 }}>
             {error}
           </Alert>
         )}
 
         {products.length === 0 ? (
-          <Alert severity="info">
-            You haven't listed any harvests yet.
-          </Alert>
+          <Card sx={{ textAlign: 'center', py: 8, bgcolor: '#f8f9fa' }}>
+            <CardContent>
+              <InventoryIcon sx={{ fontSize: 80, color: '#6c757d', mb: 2 }} />
+              <Typography variant="h5" gutterBottom color="text.secondary">
+                No Listed Harvests
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                You haven't listed any harvests yet. Start by adding your first harvest!
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                sx={{
+                  backgroundColor: '#4CAF50',
+                  '&:hover': {
+                    backgroundColor: '#45a049'
+                  }
+                }}
+                onClick={() => window.location.href = '/list-new-item'}
+              >
+                List New Item
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-            {products.map((product) => (
-              <div key={product._id} className="col">
-                <HarvestCard
-                  image={product.image}
-                  name={product.name}
-                  price={product.price}
-                  weight={product.quantity}
-                  type={product.type}
-                  listedDate={new Date(product.listedDate).toLocaleDateString()}
-                  onEdit={() => handleEdit(product)}
-                  onRemove={() => handleRemove(product._id)}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          <>
+            <Alert severity="info" sx={{ mb: 3 }}>
+              You have <strong>{products.length}</strong> listed harvest{products.length !== 1 ? 's' : ''}
+            </Alert>
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
-        <DialogTitle>Edit Product</DialogTitle>
-        <DialogContent>
+            <Grid container spacing={3}>
+              {products.map((product) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={product._id}>
+                  <HarvestCard
+                    image={product.image}
+                    name={product.name}
+                    price={product.price}
+                    weight={product.quantity}
+                    type={product.type}
+                    listedDate={new Date(product.listedDate).toLocaleDateString()}
+                    onEdit={() => handleEdit(product)}
+                    onRemove={() => handleRemove(product._id)}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </>
+        )}
+      </Paper>
+
+      <Dialog 
+        open={editDialogOpen} 
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            maxHeight: '95vh',
+            overflow: 'hidden',
+            background: "#f0f9ff"
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          pb: 2,
+          background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+          color: 'white',
+          position: 'relative'
+        }}>
+          <IconButton
+            onClick={() => setEditDialogOpen(false)}
+            sx={{
+              mr: 2,
+              color: 'white',
+              borderRadius: 2,
+              padding: '8px',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          >
+            <ArrowBack />
+          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <EditIcon sx={{ mr: 1, color: 'white' }} />
+            <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', fontSize: '20px' }}>
+              Edit Product
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2, p: 3 }}>
           <TextField
-            label="Name"
+            label="Product Name"
             fullWidth
             margin="normal"
             value={editForm.name}
             onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
             variant="outlined"
-            InputLabelProps={{
-              shrink: true,
-              style: { marginTop: 0, fontSize: '18px' }
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <NameIcon sx={{ color: '#2563eb' }} />
+                </InputAdornment>
+              ),
             }}
           />
           <TextField
-            label="Price"
+            label="Price per Kg"
             type="number"
             fullWidth
             margin="normal"
             value={editForm.price}
             onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
             variant="outlined"
-            InputLabelProps={{
-              shrink: true,
-              style: { marginTop: 0, fontSize: '18px' }
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <MoneyIcon sx={{ color: '#2563eb' }} />
+                  Rs.
+                </InputAdornment>
+              ),
             }}
           />
           <TextField
-            label="Quantity"
+            label="Available Quantity"
             type="number"
             fullWidth
             margin="normal"
             value={editForm.quantity}
             onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
             variant="outlined"
-            InputLabelProps={{
-              shrink: true,
-              style: { marginTop: 0, fontSize: '18px' }
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <ScaleIcon sx={{ color: '#2563eb' }} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  Kg
+                </InputAdornment>
+              ),
             }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)} color="secondary">
+        <DialogActions sx={{ p: 3, gap: 2 }}>
+          <Button 
+            onClick={() => setEditDialogOpen(false)} 
+            variant="outlined"
+            sx={{
+              borderColor: '#64748b',
+              color: '#64748b',
+              '&:hover': { 
+                borderColor: '#475569', 
+                backgroundColor: '#f8fafc'
+              },
+              textTransform: 'none',
+              fontWeight: 600
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleEditSubmit} color="primary">
+          <Button 
+            onClick={handleEditSubmit} 
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+              '&:hover': { 
+                background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)'
+              },
+              textTransform: 'none',
+              fontWeight: 600
+            }}
+          >
             Save Changes
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Container>
   );
 };
 

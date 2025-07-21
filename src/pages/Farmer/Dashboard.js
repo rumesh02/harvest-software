@@ -119,13 +119,7 @@ const Dashboard = () => {
       bgColor: "#d4edda",
       color: "#155724"
     },
-    {
-      title: "Customer Reviews",
-      value: reviews.length,
-      icon: <ReviewsIcon fontSize="small" />,
-      bgColor: "#d4edda", 
-      color: "#155724"
-    }
+
   ];
 
   // Custom tooltip component for the chart
@@ -341,7 +335,7 @@ const Dashboard = () => {
         )}
         
         <Grid container spacing={{ xs: 2.5, md: 4 }}>
-          <Grid size={{ xs: 12, lg: 7 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Paper 
               elevation={0}
               sx={{ 
@@ -409,7 +403,7 @@ const Dashboard = () => {
             </Paper>
           </Grid>
 
-          <Grid size={{ xs: 12, lg: 5 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Paper 
               elevation={0}
               sx={{ 
@@ -537,10 +531,21 @@ const Dashboard = () => {
         </Grid>
 
         {/* Reviews Section */}
-        <Grid container spacing={3} sx={{ mt: 4 }}>
+        <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mt: 4 }}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper elevation={3} sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 4, 
+                height: '100%',
+                background: 'rgba(255,255,255,0.9)',
+                border: "1px solid #E5E7EB",
+                borderRadius: 3,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+              }}
+            >
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, color: '#155724', mb: 3, fontSize: { xs: 15, md: 17 } }}>
                 <ReviewsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                 Your Rating
               </Typography>
@@ -556,8 +561,21 @@ const Dashboard = () => {
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper elevation={3} sx={{ p: 3, maxHeight: '400px', overflow: 'auto' }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 4, 
+                height: '100%',
+                background: 'rgba(255,255,255,0.9)',
+                border: "1px solid #E5E7EB",
+                borderRadius: 3,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                maxHeight: '400px', 
+                overflow: 'auto'
+              }}
+            >
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, color: '#155724', mb: 3, fontSize: { xs: 15, md: 17 } }}>
                 <ReviewsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                 Recent Reviews
               </Typography>

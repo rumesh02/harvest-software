@@ -14,11 +14,10 @@ const menuItems = [
   { text: "Browse Listing", icon: <ShoppingCart />, path: "/merchant/listings" },
   { text: "Place Bids", icon: <MonetizationOn />, path: "/merchant/buy" },
   { text: "My Bids", icon: <AssignmentTurnedIn />, path: "/merchant/bids" },
-  { text: "Purchases", icon: <History />, path: "/merchant/purchase-history" },
-  { text: "Messages/Chat", icon: <Chat />, path: "/merchant/messages" },
+  { text: "Messages", icon: <Chat />, path: "/merchant/messages" },
   { text: "Payments", icon: <AccountBalanceWallet />, path: "/merchant/payments" },
-  // Add this line for Find Vehicles
-  { text: "Find Vehicles", icon: <DirectionsCarIcon />, path: "/merchant/find-vehicles" }
+  { text: "Collection", icon: <DirectionsCarIcon />, path: "/merchant/collection" }, // from your branch
+  { text: "Purchase History", icon: <History />, path: "/merchant/purchase-history" },
 ];
 
 const MerchantSidebar = () => {

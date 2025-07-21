@@ -1,42 +1,100 @@
 const Review = require('../models/Review');
 const User = require('../models/User');
-const mongoose = require('mongoose');
 
 // Add a review
 exports.addReview = async (req, res) => {
   try {
     const { farmerId, merchantId, orderId, rating, comment } = req.body;
 
-    // Save the review
-    const review = new Review({ farmerId, merchantId, orderId, rating, comment });
-    await review.save();
+    console.log('Received review data:', { farmerId, merchantId, orderId, rating, comment });
 
-    // Calculate the new average rating for the farmer
+    // Validation
+    if (!farmerId || !merchantId || !orderId || !rating) {
+      return res.status(400).json({ message: 'Missing required fields: farmerId, merchantId, orderId, rating' });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    // Resolve farmer and merchant ObjectIds
+    const farmer = await User.findOne({ auth0Id: farmerId });
+    if (!farmer) {
+      console.error('Farmer not found for auth0Id:', farmerId);
+      return res.status(404).json({ message: 'Farmer not found' });
+    }
+
+    const merchant = await User.findOne({ auth0Id: merchantId });
+    if (!merchant) {
+      console.error('Merchant not found for auth0Id:', merchantId);
+      return res.status(404).json({ message: 'Merchant not found' });
+    }
+
+    console.log(`Found farmer: ${farmer.name} (${farmer._id}), merchant: ${merchant.name} (${merchant._id})`);
+
+    // Prevent duplicate review per order
+    const existingReview = await Review.findOne({
+      farmerId: farmer._id,
+      merchantId: merchant._id,
+      orderId
+    });
+
+    if (existingReview) {
+      return res.status(400).json({ message: 'Review already exists for this order' });
+    }
+
+    // Create and save review
+    const review = new Review({
+      farmerId: farmer._id,
+      merchantId: merchant._id,
+      orderId,
+      rating,
+      comment: comment || ''
+    });
+
+    await review.save();
+    console.log('Review saved successfully:', review._id);
+
+    // Update average rating
     const result = await Review.aggregate([
-      { $match: { farmerId: farmerId } },
-      { $group: { _id: null, avgRating: { $avg: "$rating" } } }
+      { $match: { farmerId: farmer._id } },
+      { $group: { _id: null, avgRating: { $avg: '$rating' } } }
     ]);
+
     const avgRating = result.length > 0 ? result[0].avgRating : 0;
 
-    // Update the farmer's `farmerRatings` field
-    await User.findByIdAndUpdate(farmerId, { farmerRatings: avgRating });
+    await User.findByIdAndUpdate(farmer._id, { farmerRating: avgRating });
+    console.log(`Updated farmer ${farmer.name} rating to ${avgRating.toFixed(2)}`);
 
-    res.status(201).json({ message: 'Review added successfully', avgRating });
+    res.status(201).json({
+      message: 'Review added successfully',
+      avgRating,
+      reviewId: review._id
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    console.error('Error adding review:', err);
+    res.status(500).json({ message: 'Server Error', error: err.message });
   }
 };
 
 // Get reviews for a farmer
 exports.getFarmerReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ farmerId: req.params.farmerId })
+    const auth0Id = req.params.farmerId;
+
+    console.log('Fetching reviews for farmer auth0Id:', auth0Id);
+
+    const farmer = await User.findOne({ auth0Id });
+    if (!farmer) {
+      console.log('Farmer not found for auth0Id:', auth0Id);
+      return res.status(404).json({ message: 'Farmer not found', reviews: [] });
+    }
+
+    const reviews = await Review.find({ farmerId: farmer._id })
       .populate('merchantId', 'name email avatar')
       .populate('farmerId', 'name email avatar')
       .sort({ createdAt: -1 });
-    
-    // Format the response to match frontend expectations
+
     const formattedReviews = reviews.map(review => ({
       _id: review._id,
       rating: review.rating,
@@ -55,25 +113,45 @@ exports.getFarmerReviews = async (req, res) => {
         avatar: review.farmerId?.avatar
       }
     }));
-    
+
     res.json({ reviews: formattedReviews });
   } catch (err) {
     console.error('Error fetching farmer reviews:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, reviews: [] });
   }
 };
 
 // Get average rating for a farmer
 exports.getFarmerAverageRating = async (req, res) => {
   try {
+    const auth0Id = req.params.farmerId;
+    console.log('Fetching average rating for farmer auth0Id:', auth0Id);
+
+    const farmer = await User.findOne({ auth0Id });
+    if (!farmer) {
+      console.log('Farmer not found for auth0Id:', auth0Id);
+      return res.status(404).json({ avgRating: 0, count: 0 });
+    }
+
     const result = await Review.aggregate([
-      { $match: { farmerId: new mongoose.Types.ObjectId(req.params.farmerId) } },
-      { $group: { _id: null, avgRating: { $avg: "$rating" }, count: { $sum: 1 } } }
+      { $match: { farmerId: farmer._id } },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: '$rating' },
+          count: { $sum: 1 }
+        }
+      }
     ]);
-    if (result.length === 0) return res.json({ avgRating: 0, count: 0 });
+
+    if (result.length === 0) {
+      return res.json({ avgRating: 0, count: 0 });
+    }
+
     res.json({ avgRating: result[0].avgRating, count: result[0].count });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error fetching farmer average rating:', err);
+    res.status(500).json({ error: err.message, avgRating: 0, count: 0 });
   }
 };
 
@@ -81,91 +159,62 @@ exports.getFarmerAverageRating = async (req, res) => {
 exports.getFarmersByRating = async (req, res) => {
   try {
     const { limit = 50, minReviews = 1 } = req.query;
-    
-    // Aggregate reviews to calculate average rating per farmer
+
     const farmerRatings = await Review.aggregate([
-      // Group by farmerId and calculate average rating and review count
       {
         $group: {
-          _id: "$farmerId",
-          avgRating: { $avg: "$rating" },
+          _id: '$farmerId',
+          avgRating: { $avg: '$rating' },
           reviewCount: { $sum: 1 },
-          totalRating: { $sum: "$rating" }
+          totalRating: { $sum: '$rating' }
         }
       },
-      // Filter farmers with minimum number of reviews
       {
         $match: {
           reviewCount: { $gte: parseInt(minReviews) }
         }
       },
-      // Sort by average rating in descending order
-      {
-        $sort: { avgRating: -1 }
-      },
-      // Limit results
-      {
-        $limit: parseInt(limit)
-      },
-      // Lookup farmer details from User collection
+      { $sort: { avgRating: -1 } },
+      { $limit: parseInt(limit) },
       {
         $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "farmerDetails"
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'farmerDetails'
         }
       },
-      // Unwind farmer details
-      {
-        $unwind: "$farmerDetails"
-      },
-      // Filter only farmers (role = 'farmer')
+      { $unwind: '$farmerDetails' },
       {
         $match: {
-          "farmerDetails.role": "farmer"
+          'farmerDetails.role': 'farmer'
         }
       },
-      // Project final structure
       {
         $project: {
           _id: 1,
-          avgRating: { $round: ["$avgRating", 2] },
+          avgRating: { $round: ['$avgRating', 2] },
           reviewCount: 1,
           totalRating: 1,
           farmer: {
-            _id: "$farmerDetails._id",
-            name: "$farmerDetails.name",
-            email: "$farmerDetails.email",
-            phone: "$farmerDetails.phone",
-            address: "$farmerDetails.address",
-            province: "$farmerDetails.province",
-            district: "$farmerDetails.district",
-            picture: "$farmerDetails.picture"
+            _id: '$farmerDetails._id',
+            name: '$farmerDetails.name',
+            email: '$farmerDetails.email',
+            phone: '$farmerDetails.phone',
+            address: '$farmerDetails.address',
+            province: '$farmerDetails.province',
+            district: '$farmerDetails.district',
+            picture: '$farmerDetails.picture'
           }
         }
       }
     ]);
 
-    // Also get farmers with no reviews (rating = 0)
-    const farmersWithoutReviews = await User.find(
-      { 
-        role: "farmer",
-        _id: { $nin: farmerRatings.map(f => f._id) }
-      },
-      {
-        _id: 1,
-        name: 1,
-        email: 1,
-        phone: 1,
-        address: 1,
-        province: 1,
-        district: 1,
-        picture: 1
-      }
-    ).limit(parseInt(limit) - farmerRatings.length);
+    const farmersWithoutReviews = await User.find({
+      role: 'farmer',
+      _id: { $nin: farmerRatings.map(f => f._id) }
+    }).limit(parseInt(limit) - farmerRatings.length);
 
-    // Format farmers without reviews
     const farmersWithoutReviewsFormatted = farmersWithoutReviews.map(farmer => ({
       _id: farmer._id,
       avgRating: 0,
@@ -183,7 +232,6 @@ exports.getFarmersByRating = async (req, res) => {
       }
     }));
 
-    // Combine and sort all farmers
     const allFarmers = [...farmerRatings, ...farmersWithoutReviewsFormatted]
       .sort((a, b) => b.avgRating - a.avgRating)
       .slice(0, parseInt(limit));
@@ -199,9 +247,9 @@ exports.getFarmersByRating = async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching farmers by rating:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: err.message 
+      error: err.message
     });
   }
 };

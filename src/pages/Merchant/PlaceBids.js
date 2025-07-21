@@ -12,6 +12,8 @@ import {
   DialogActions,
   TextField,
   Box,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import { useCart } from "../../context/CartContext";
 import axios from "axios";
@@ -22,6 +24,24 @@ const PlaceBids = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [bidAmount, setBidAmount] = useState("");
   const [orderWeight, setOrderWeight] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
+  // Function to show popup messages
+  const showPopupMessage = (message, severity = "success") => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  // Close snackbar
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
 
   // Open the dialog and set the selected product
   const handlePlaceBidClick = (product) => {
@@ -40,7 +60,7 @@ const PlaceBids = () => {
   // Handle submitting the bid
   const handleSubmitBid = async () => {
     if (!bidAmount || !orderWeight) {
-      alert("Please enter both bid amount and order weight.");
+      showPopupMessage("Please enter both bid amount and order weight.", "error");
       return;
     }
 
@@ -49,12 +69,12 @@ const PlaceBids = () => {
     const availableQuantity = Number(selectedProduct.quantity);
 
     if (orderWeightNum <= 0) {
-      alert("Order weight must be greater than 0.");
+      showPopupMessage("Order weight must be greater than 0.", "error");
       return;
     }
 
     if (orderWeightNum > availableQuantity) {
-      alert(`Order weight (${orderWeightNum} kg) cannot exceed available quantity (${availableQuantity} kg). Please reduce your order weight.`);
+      showPopupMessage(`Order weight (${orderWeightNum} kg) cannot exceed available quantity (${availableQuantity} kg). Please reduce your order weight.`, "error");
       return;
     }
 
@@ -63,7 +83,7 @@ const PlaceBids = () => {
     const productPrice = Number(selectedProduct.price);
 
     if (bidAmountNum < productPrice) {
-      alert(`Bid amount (Rs. ${bidAmountNum}) must be at least the farmer's listed price (Rs. ${productPrice}).`);
+      showPopupMessage(`Bid amount (Rs. ${bidAmountNum}) must be at least the farmer's listed price (Rs. ${productPrice}).`, "error");
       return;
     }
 
@@ -136,10 +156,13 @@ const PlaceBids = () => {
       setBidAmount("");
       setOrderWeight("");
       setSelectedProduct(null);
-      alert("Bid successfully submitted! The product has been removed from your cart.");
+      
+      // Show success popup message
+      showPopupMessage("🎉 Bid successfully submitted! The product has been removed from your cart.", "success");
     } catch (error) {
       console.error("Error submitting bid:", error);
-      alert(`Bid submission failed: ${error.response?.data?.message || error.message}`);
+      // Show error popup message
+      showPopupMessage(`❌ Bid submission failed: ${error.response?.data?.message || error.message}`, "error");
     }
   };
 
@@ -582,6 +605,30 @@ const PlaceBids = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Success/Error Popup Messages */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ 
+            width: '100%',
+            fontSize: '1rem',
+            fontWeight: 600,
+            '& .MuiAlert-icon': {
+              fontSize: '1.5rem'
+            }
+          }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

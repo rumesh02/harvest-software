@@ -17,20 +17,42 @@ export default function ReviewDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    if (rating === 0) {
+      alert("Please select a rating before submitting.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await axios.post("http://localhost:5000/api/reviews", {
+      console.log("Submitting review:", { farmerId, merchantId, orderId, rating, comment });
+      
+      const response = await axios.post("http://localhost:5000/api/reviews", {
         farmerId,
         merchantId,
         orderId,
         rating,
         comment,
       });
+
+      console.log("Review submitted successfully:", response.data);
+      alert(`Review submitted successfully! Farmer's new average rating: ${response.data.avgRating?.toFixed(1) || 'N/A'}`);
       onClose(true);
     } catch (err) {
-      alert("Error submitting review");
+      console.error("Error submitting review:", err);
+      let errorMessage = "Error submitting review. ";
+      
+      if (err.response?.data?.message) {
+        errorMessage += err.response.data.message;
+      } else if (err.message) {
+        errorMessage += err.message;
+      } else {
+        errorMessage += "Please try again.";
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   return (

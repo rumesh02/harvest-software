@@ -491,3 +491,4 @@ module.exports = {
   updateBidStatus,
   deleteBid
 };
+

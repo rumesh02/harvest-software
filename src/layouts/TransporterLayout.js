@@ -6,13 +6,24 @@ import { Outlet } from "react-router-dom";
 
 const TransporterLayout = () => {
   return (
-    <Box sx={{ display: "flex", height: "100vh" }}>
-      {/* ✅ Transporter Sidebar (Only for Transporter Pages) */}
+    <Box sx={{ minHeight: "100vh", width: "100%", overflow: "hidden" }}>
+      {/* ✅ Transporter Sidebar (Fixed Position) */}
       <TransporterSidebar />
 
-      <Box sx={{ flexGrow: 1, ml: "25px", p: 3 }}>
-        <Navbar />
-        <Outlet /> {/* ✅ Ensures sub-pages load inside layout */}
+      {/* Main Content Area */}
+      <Box sx={{ 
+        marginLeft: "250px", // Account for fixed sidebar width
+        minHeight: "100vh",
+        width: "calc(100% - 250px)",
+        background: "#ffffff",
+        overflow: "auto"
+      }}>
+        <Box sx={{ p: 3 }}>
+          <Navbar />
+        </Box>
+        <Box sx={{ p: 3 }}>
+          <Outlet /> {/* ✅ Ensures sub-pages load inside layout */}
+        </Box>
       </Box>
     </Box>
   );

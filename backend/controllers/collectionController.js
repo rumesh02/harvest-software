@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Collection = require('../models/collectionModel');
+const Collection = require('../models/CollectionModel');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const ConfirmedBid = require('../models/ConfirmedBid');

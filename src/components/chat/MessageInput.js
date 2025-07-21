@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { styled } from '@mui/material/styles';
 import {
   Box,
   TextField,
@@ -15,7 +16,6 @@ import {
   EmojiEmotions as EmojiIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
 
 const InputContainer = styled(Box)(({ theme }) => ({
   display: 'flex',

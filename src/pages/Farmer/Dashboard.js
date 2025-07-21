@@ -64,11 +64,20 @@ const Dashboard = () => {
     const fetchReviewsData = async () => {
       try {
         const reviewsResponse = await axios.get(`http://localhost:5000/api/reviews/farmer/${user.sub}`);
-        setReviews(reviewsResponse.data);
+        // Ensure the response data is an array before setting it
+        const reviewsData = Array.isArray(reviewsResponse.data) ? reviewsResponse.data : [];
+        
+        // Sort reviews by latest first (createdAt descending)
+        const sortedReviews = reviewsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        setReviews(sortedReviews);
+        console.log('Reviews fetched and sorted successfully:', sortedReviews);
 
         // We can use the farmerRating from the user data instead of separate avgRating
       } catch (error) {
         console.error("Error fetching reviews data:", error);
+        // Set reviews to empty array on error to prevent slice error
+        setReviews([]);
       }
     };
     if (user?.sub) {
@@ -121,7 +130,7 @@ const Dashboard = () => {
     },
     {
       title: "Customer Reviews",
-      value: reviews.length,
+      value: (reviews || []).length,
       icon: <ReviewsIcon fontSize="small" />,
       bgColor: "#d4edda", 
       color: "#155724"
@@ -561,7 +570,7 @@ const Dashboard = () => {
                 <ReviewsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                 Recent Reviews
               </Typography>
-              {reviews.length === 0 ? (
+              {(reviews || []).length === 0 ? (
                 <Box sx={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -579,49 +588,64 @@ const Dashboard = () => {
                   </Typography>
                 </Box>
               ) : (
-                <List>
-                  {reviews.slice(0, 5).map((review, idx) => (
-                    <Box key={idx}>
-                      <ListItem alignItems="flex-start" sx={{ px: 0 }}>
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: '#4CAF50' }}>
+                <Box sx={{ mt: 2 }}>
+                  {(reviews || []).slice(0, 5).map((review, idx) => (
+                    <Box 
+                      key={idx} 
+                      sx={{ 
+                        mb: 3, 
+                        p: 2, 
+                        bgcolor: '#f8f9fa', 
+                        borderRadius: 2,
+                        border: '1px solid #e9ecef'
+                      }}
+                    >
+                      {/* Header with reviewer info and date */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Avatar sx={{ bgcolor: '#4CAF50', width: 32, height: 32 }}>
                             {review.merchantId?.name ? review.merchantId.name.charAt(0).toUpperCase() : 'M'}
                           </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Rating value={review.rating} readOnly size="small" />
-                                <Chip
-                                  label={`${review.rating}/5`}
-                                  size="small"
-                                  color="primary"
-                                  variant="outlined"
-                                />
-                              </Box>
-                              <Typography variant="caption" color="text.secondary">
-                                {new Date(review.createdAt).toLocaleDateString()}
-                              </Typography>
-                            </Box>
-                          }
-                          secondary={
-                            <Box>
-                              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500, color: '#2e7d32' }}>
-                                {review.merchantId?.name || 'Anonymous Merchant'}
-                              </Typography>
-                              {review.comment && (
-                                <Typography variant="body2" sx={{ mb: 1, fontStyle: review.comment ? 'normal' : 'italic', color: review.comment ? 'text.primary' : 'text.secondary' }}>
-                                  {review.comment || 'No comment provided'}
-                                </Typography>
-                              )}
-                            </Box>
-                          }
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#2e7d32' }}>
+                            {review.merchantId?.name || 'Anonymous Merchant'}
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+
+                      {/* Star Rating */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                        <Rating 
+                          value={review.rating} 
+                          readOnly 
+                          size="small"
+                          sx={{ color: '#ffc107' }}
                         />
-                      </ListItem>
-                      {idx < Math.min(reviews.length, 5) - 1 && <Divider />}
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: '#666' }}>
+                          {review.rating} out of 5 stars
+                        </Typography>
+                      </Box>
+
+                      {/* Review Comment */}
+                      {review.comment && (
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: '#495057',
+                            fontStyle: 'italic',
+                            lineHeight: 1.6,
+                            pl: 1,
+                            borderLeft: '3px solid #4CAF50'
+                          }}
+                        >
+                          "{review.comment}"
+                        </Typography>
+                      )}
                     </Box>
                   ))}
+                  
                   {reviews.length > 5 && (
                     <Box sx={{ textAlign: 'center', mt: 2 }}>
                       <Typography variant="body2" color="text.secondary">
@@ -629,7 +653,7 @@ const Dashboard = () => {
                       </Typography>
                     </Box>
                   )}
-                </List>
+                </Box>
               )}
             </Paper>
           </Grid>

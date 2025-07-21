@@ -1,0 +1,13 @@
+.transporter-sidebar {
+  width: 100% !important;
+  height: 100% !important;
+  background: #ffffff !important;
+  padding: 20px !important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}

@@ -19,7 +19,6 @@ import {
   Person,
   CalendarToday,
   Payment,
-  Star,
   CheckCircle,
 } from "@mui/icons-material";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -285,7 +284,6 @@ const PurchaseHistory = () => {
                   variant="contained" 
                   color="success" 
                   onClick={() => handleRateClick(purchase)}
-                  startIcon={<Star />}
                   sx={{
                     borderRadius: 2,
                     py: 1.5,

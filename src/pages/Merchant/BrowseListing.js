@@ -146,7 +146,7 @@ const BrowseListing = () => {
   };
 
   const renderProductCard = (product, index) => (
-    <Grid item xs={12} sm={6} md={3} lg={3} xl={3} key={index} sx={{ display: 'flex', justifyContent: 'flex-start', p: 0 }}>
+    <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }} key={index} sx={{ display: 'flex', justifyContent: 'flex-start', p: 0 }}>
       <Card sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -670,7 +670,7 @@ const BrowseListing = () => {
           }}
         >
           {Array.from(new Array(8)).map((_, i) => (
-            <Grid item xs={12} sm={6} md={3} lg={3} xl={3} key={i} sx={{ display: 'flex', justifyContent: 'flex-start', p: 0 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }} key={i} sx={{ display: 'flex', justifyContent: 'flex-start', p: 0 }}>
               <Card sx={{
                 width: 220, // Same as real cards
                 height: 320, // Same as real cards

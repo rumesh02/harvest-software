@@ -7,6 +7,7 @@ import Badge from "@mui/material/Badge";
 import { PenFill, PlusCircleFill } from "react-bootstrap-icons";
 import { useAuth0 } from "@auth0/auth0-react";
 import axios from "axios";
+import "./TransporterSidebar.css";
 
 const menuItems = [
   { text: "Dashboard", icon: <Home />, path: "dashboard" },
@@ -42,16 +43,7 @@ const TransporterSidebar = () => {
       : "/placeholder.svg";
 
   return (
-    <div style={{
-      width: 240,
-      background: "#ffffff",
-      height: "100vh",
-      padding: "20px",
-      borderRadius: "0",
-      boxShadow: "0 0 10px rgba(0,0,0,0.05)",
-      display: "flex",
-      flexDirection: "column"
-    }}>
+    <div className="transporter-sidebar">
       {/* Logo and Title */}
       <div style={{
         display: "flex",

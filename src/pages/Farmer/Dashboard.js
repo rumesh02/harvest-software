@@ -64,11 +64,20 @@ const Dashboard = () => {
     const fetchReviewsData = async () => {
       try {
         const reviewsResponse = await axios.get(`http://localhost:5000/api/reviews/farmer/${user.sub}`);
-        setReviews(reviewsResponse.data);
+        // Ensure the response data is an array before setting it
+        const reviewsData = Array.isArray(reviewsResponse.data) ? reviewsResponse.data : [];
+        
+        // Sort reviews by latest first (createdAt descending)
+        const sortedReviews = reviewsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        setReviews(sortedReviews);
+        console.log('Reviews fetched and sorted successfully:', sortedReviews);
 
         // We can use the farmerRating from the user data instead of separate avgRating
       } catch (error) {
         console.error("Error fetching reviews data:", error);
+        // Set reviews to empty array on error to prevent slice error
+        setReviews([]);
       }
     };
     if (user?.sub) {
@@ -579,7 +588,7 @@ const Dashboard = () => {
                 <ReviewsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                 Recent Reviews
               </Typography>
-              {reviews.length === 0 ? (
+              {(reviews || []).length === 0 ? (
                 <Box sx={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -598,7 +607,7 @@ const Dashboard = () => {
                 </Box>
               ) : (
                 <List>
-                  {reviews.slice(0, 5).map((review, idx) => (
+                  {(reviews || []).slice(0, 5).map((review, idx) => (
                     <Box key={idx}>
                       <ListItem alignItems="flex-start" sx={{ px: 0 }}>
                         <ListItemAvatar>
@@ -637,13 +646,13 @@ const Dashboard = () => {
                           }
                         />
                       </ListItem>
-                      {idx < Math.min(reviews.length, 5) - 1 && <Divider />}
+                      {idx < Math.min((reviews || []).length, 5) - 1 && <Divider />}
                     </Box>
                   ))}
-                  {reviews.length > 5 && (
+                  {(reviews || []).length > 5 && (
                     <Box sx={{ textAlign: 'center', mt: 2 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Showing 5 of {reviews.length} reviews
+                        Showing 5 of {(reviews || []).length} reviews
                       </Typography>
                     </Box>
                   )}

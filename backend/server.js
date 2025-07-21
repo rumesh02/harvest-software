@@ -25,7 +25,7 @@ const farmerDashboardRoutes = require('./routes/farmerDashboardRoutes');
 const geolocationRoutes = require('./routes/geolocationRoutes');
 const locationRoutes = require('./routes/locationRoutes');
 const collectionRoutes = require("./routes/collectionRoutes");
-const transporterdashboardRoutes = require('./routes/transporterdashboardRoutes'); // ✅ Conflict resolved here
+const transporterdashboardRoutes = require('./routes/TransporterdashboardRoutes'); // ✅ Conflict resolved here
 const adminRoutes = require('./routes/adminRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const messageRoutes = require('./routes/messageRoutes');
@@ -80,6 +80,7 @@ app.use('/api/collections', collectionRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use(farmerDashboardRoutes);
 app.use('/api/dashboard', transporterdashboardRoutes);
 app.use('/api/dashboard', dashboardRoutes);

@@ -133,7 +133,7 @@ const MyBids = () => {
       console.log(`Attempting to fetch product with ID: ${bid.productId}`);
       
       try {
-        const productResponse = await axios.get(`http://localhost:5000/api/products/${bid.productId}`);
+        const productResponse = await api.get(`/products/${bid.productId}`);
         productLocation = productResponse.data.location;
         itemCode = productResponse.data.itemCode || productResponse.data.productID;
         console.log('Product location fetched successfully:', productLocation);
@@ -144,7 +144,7 @@ const MyBids = () => {
         
         // If product is not found, try to get location from farmer information
         try {
-          const farmerResponse = await axios.get(`http://localhost:5000/api/users/${bid.farmerId}`);
+          const farmerResponse = await api.get(`/users/${bid.farmerId}`);
           if (farmerResponse.data.location) {
             productLocation = {
               address: farmerResponse.data.location.address || `Farmer location: ${farmerResponse.data.location}`,
@@ -224,7 +224,7 @@ const MyBids = () => {
       
       // Also create a collection entry for the new collection system
       try {
-        await axios.post('http://localhost:5000/api/collections', {
+        await api.post('/collections', {
           confirmedBidId: response.data._id
         });
         console.log('Collection created successfully from confirmed bid');

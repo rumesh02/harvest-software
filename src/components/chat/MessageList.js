@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -37,16 +37,12 @@ const MessagesContainer = styled(Box)(({ theme }) => ({
   },
 }));
 
-const MessageBubble = styled(Box)(({ theme, isown, ishighlighted }) => ({
+const MessageBubble = styled(Box)(({ theme, isown }) => ({
   maxWidth: '70%',
   padding: '8px 12px',
   borderRadius: isown ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-  backgroundColor: ishighlighted 
-    ? (isown ? '#FFF9C4' : '#E8F5E8') // Yellow for own, green for others when highlighted
-    : (isown ? '#dcf8c6' : '#ffffff'),
-  boxShadow: ishighlighted 
-    ? '0 0 0 2px #FFD700, 0 1px 2px rgba(0,0,0,0.1)' // Gold outline when highlighted
-    : '0 1px 2px rgba(0,0,0,0.1)',
+  backgroundColor: isown ? '#dcf8c6' : '#ffffff',
+  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
   position: 'relative',
   wordWrap: 'break-word',
   marginBottom: '2px',
@@ -54,9 +50,7 @@ const MessageBubble = styled(Box)(({ theme, isown, ishighlighted }) => ({
   border: `1px solid ${isown ? '#c3e88d' : '#e5e7eb'}`,
   '&:hover': {
     transform: 'scale(1.02)',
-    boxShadow: ishighlighted 
-      ? '0 0 0 2px #FFD700, 0 2px 8px rgba(0,0,0,0.15)' 
-      : '0 2px 8px rgba(0,0,0,0.15)',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
   },
 }));
 
@@ -171,7 +165,6 @@ const MessageList = ({
   loading = false
 }) => {
   const messagesEndRef = useRef(null);
-  const [highlightedMessageId, setHighlightedMessageId] = useState(null);
   
   console.log('🔵 MessageList render:', { 
     messagesCount: messages.length,
@@ -185,30 +178,6 @@ const MessageList = ({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing]);
-
-  // Handle message highlighting from notifications
-  useEffect(() => {
-    const shouldHighlight = sessionStorage.getItem('highlightLatestMessage');
-    if (shouldHighlight === 'true' && messages.length > 0) {
-      // Find the latest message from the target user
-      const latestFromTargetUser = messages
-        .filter(msg => msg.senderId === targetUser?.auth0Id || msg.senderId === targetUser?.id)
-        .sort((a, b) => new Date(b.timestamp || b.createdAt) - new Date(a.timestamp || a.createdAt))[0];
-      
-      if (latestFromTargetUser) {
-        setHighlightedMessageId(latestFromTargetUser._id);
-        console.log('🔆 Highlighting message:', latestFromTargetUser._id);
-        
-        // Clear the highlight after 3 seconds
-        setTimeout(() => {
-          setHighlightedMessageId(null);
-        }, 3000);
-      }
-      
-      // Clear the session storage flag
-      sessionStorage.removeItem('highlightLatestMessage');
-    }
-  }, [messages, targetUser]);
 
   // Simple file message renderer
   const renderFileMessage = (message) => {
@@ -306,11 +275,10 @@ const MessageList = ({
           
           {msgs.map((message, index) => {
             const isOwn = message.senderId === currentUserId;
-            const isHighlighted = highlightedMessageId === message._id;
             return (
               <Fade in={true} timeout={300} key={message.id || index}>
                 <MessageWrapper isown={isOwn}>
-                  <MessageBubble isown={isOwn} ishighlighted={isHighlighted}>
+                  <MessageBubble isown={isOwn}>
                     <Typography 
                       variant="body2" 
                       sx={{ 

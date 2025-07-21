@@ -103,12 +103,7 @@ const MerchantDashboard = () => {
     try {
       setReviewsLoading(true);
       const response = await axios.get(`http://localhost:5000/api/reviews/farmer/${farmerId}`);
-      const reviewsData = response.data.reviews || [];
-      
-      // Sort reviews by latest first (createdAt descending)
-      const sortedReviews = reviewsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      
-      setFarmerReviews(sortedReviews);
+      setFarmerReviews(response.data.reviews || []);
     } catch (error) {
       console.error('Error fetching farmer reviews:', error);
       setFarmerReviews([]);
@@ -678,114 +673,60 @@ const MerchantDashboard = () => {
         </DialogTitle>
         
         <DialogContent sx={{ p: 3, pt: 2 }}>
-          {/* Overall Rating Section */}
-          <Box sx={{ 
-            textAlign: 'center', 
-            mb: 3,
-            p: 3,
-            bgcolor: '#fefbf3',
-            borderRadius: 2,
-            border: '1px solid #fed7aa'
-          }}>
-            <Typography variant="h6" sx={{ color: '#92400e', fontWeight: 700, mb: 1 }}>
-              Overall Rating
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, mb: 1 }}>
-              <Rating 
-                value={selectedFarmer?.rating || 0} 
-                readOnly 
-                size="large"
-                sx={{ color: '#fbbf24' }}
-              />
-              <Typography variant="h5" sx={{ color: '#92400e', fontWeight: 700, ml: 1 }}>
-                {selectedFarmer?.rating ? selectedFarmer.rating.toFixed(1) : '0.0'}
-              </Typography>
-            </Box>
-            <Typography variant="body2" color="#6b7280">
-              {selectedFarmer?.rating > 0 ? `Based on ${selectedFarmer?.orders || 0} reviews` : 'No ratings yet'}
-            </Typography>
-          </Box>
-
-          {/* Individual Reviews Section */}
           {reviewsLoading ? (
-            <Box>
-              <Typography variant="subtitle1" sx={{ mb: 2, color: '#92400e', fontWeight: 600 }}>
-                Individual Reviews
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {[1,2,3].map((i) => (
-                  <Box key={i} sx={{ display: 'flex', gap: 2, p: 2 }}>
-                    <Skeleton variant="circular" width={40} height={40} />
-                    <Box sx={{ flex: 1 }}>
-                      <Skeleton variant="text" width="60%" height={20} />
-                      <Skeleton variant="text" width="80%" height={16} />
-                      <Skeleton variant="text" width="40%" height={14} />
-                    </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {[1,2,3].map((i) => (
+                <Box key={i} sx={{ display: 'flex', gap: 2, p: 2 }}>
+                  <Skeleton variant="circular" width={40} height={40} />
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton variant="text" width="60%" height={20} />
+                    <Skeleton variant="text" width="80%" height={16} />
+                    <Skeleton variant="text" width="40%" height={14} />
                   </Box>
-                ))}
-              </Box>
+                </Box>
+              ))}
             </Box>
           ) : farmerReviews.length > 0 ? (
             <Box>
               <Typography variant="subtitle1" sx={{ mb: 2, color: '#92400e', fontWeight: 600 }}>
-                Individual Reviews ({farmerReviews.length})
+                Reviews ({farmerReviews.length})
               </Typography>
               <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
                 {farmerReviews.map((review, index) => (
                   <Box key={review._id || index} sx={{ 
                     mb: 3, 
-                    p: 3, 
+                    p: 2, 
                     bgcolor: '#fefbf3', 
                     borderRadius: 2,
                     border: '1px solid #fed7aa'
                   }}>
-                    {/* Header with reviewer info and date */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar 
-                          src={review.reviewer?.avatar}
-                          sx={{ width: 40, height: 40, bgcolor: '#e5e7eb', color: '#6b7280' }}
-                        >
-                          {review.reviewer?.name ? review.reviewer.name[0].toUpperCase() : 'M'}
-                        </Avatar>
-                        <Typography variant="body1" sx={{ fontWeight: 600, color: '#374151' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                      <Avatar 
+                        src={review.reviewer?.avatar}
+                        sx={{ width: 36, height: 36, bgcolor: '#e5e7eb', color: '#6b7280' }}
+                      >
+                        {review.reviewer?.name ? review.reviewer.name[0].toUpperCase() : 'M'}
+                      </Avatar>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#374151' }}>
                           {review.reviewer?.name || 'Anonymous Merchant'}
                         </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Rating 
+                            value={review.rating} 
+                            readOnly 
+                            size="small"
+                            sx={{ color: '#fbbf24' }}
+                          />
+                          <Typography variant="caption" color="#6b7280">
+                            <CalendarIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </Typography>
+                        </Box>
                       </Box>
-                      <Typography variant="caption" color="#6b7280" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <CalendarIcon sx={{ fontSize: 12 }} />
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </Typography>
                     </Box>
-
-                    {/* Star Rating */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                      <Rating 
-                        value={review.rating} 
-                        readOnly 
-                        size="medium"
-                        sx={{ color: '#fbbf24' }}
-                      />
-                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#6b7280' }}>
-                        {review.rating} out of 5 stars
-                      </Typography>
-                    </Box>
-
-                    {/* Review Comment */}
                     {review.comment && (
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          color: '#4b5563', 
-                          fontStyle: 'italic',
-                          lineHeight: 1.6,
-                          pl: 2,
-                          borderLeft: '3px solid #92400e',
-                          bgcolor: 'rgba(254, 215, 170, 0.3)',
-                          p: 2,
-                          borderRadius: 1
-                        }}
-                      >
+                      <Typography variant="body2" sx={{ color: '#4b5563', mt: 1, ml: 6 }}>
                         "{review.comment}"
                       </Typography>
                     )}
@@ -796,23 +737,17 @@ const MerchantDashboard = () => {
           ) : (
             <Box sx={{ 
               textAlign: 'center', 
-              py: 3,
+              py: 4,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center'
             }}>
-              <Typography variant="subtitle1" sx={{ mb: 2, color: '#92400e', fontWeight: 600 }}>
-                Individual Reviews
-              </Typography>
               <StarIcon sx={{ fontSize: 48, color: '#d1d5db', mb: 2 }} />
-              <Typography variant="body1" sx={{ color: '#6b7280', mb: 1 }}>
-                No Individual Reviews Available
+              <Typography variant="h6" sx={{ color: '#6b7280', mb: 1 }}>
+                No Reviews Yet
               </Typography>
               <Typography variant="body2" color="#9ca3af">
-                {selectedFarmer?.rating > 0 ? 
-                  'This farmer has ratings but detailed reviews are not available.' :
-                  'This farmer hasn\'t received any reviews yet.'
-                }
+                This farmer hasn't received any reviews yet.
               </Typography>
             </Box>
           )}

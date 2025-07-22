@@ -19,7 +19,6 @@ import {
   Person,
   CalendarToday,
   Payment,
-  Star,
   CheckCircle,
   Phone,
 } from "@mui/icons-material";
@@ -288,7 +287,6 @@ const PurchaseHistory = () => {
                   variant="contained" 
                   color="success" 
                   onClick={() => handleRateClick(purchase)}
-                  startIcon={<Star />}
                   sx={{
                     borderRadius: 1.5,
                     py: 1,

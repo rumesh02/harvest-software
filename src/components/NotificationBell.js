@@ -278,6 +278,8 @@ const NotificationBell = () => {
         return <CheckCircleIcon sx={{ color: '#4CAF50' }} />;
       case 'booking_rejected':
         return <CancelIcon sx={{ color: '#F44336' }} />;
+      case 'booking_completed':
+        return <CheckCircleIcon sx={{ color: '#2196F3' }} />;
       case 'payment_received':
         return <PaymentIcon sx={{ color: '#2196F3' }} />;
       case 'vehicle_booked':

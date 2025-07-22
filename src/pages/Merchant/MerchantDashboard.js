@@ -72,7 +72,7 @@ const MerchantDashboard = () => {
       // Encode the merchantId properly
       const encodedMerchantId = encodeURIComponent(user.sub);
       
-      const url = `http://localhost:5000/api/merchant/dashboard/${encodedMerchantId}`;
+      const url = http://localhost:5000/api/merchant/dashboard/${encodedMerchantId};
       console.log('Fetching dashboard data from:', url);
       
       const response = await axios.get(url);
@@ -102,7 +102,7 @@ const MerchantDashboard = () => {
   const fetchFarmerReviews = async (farmerId) => {
     try {
       setReviewsLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/reviews/farmer/${farmerId}`);
+      const response = await axios.get(http://localhost:5000/api/reviews/farmer/${farmerId});
       setFarmerReviews(response.data.reviews || []);
     } catch (error) {
       console.error('Error fetching farmer reviews:', error);
@@ -418,7 +418,7 @@ const MerchantDashboard = () => {
                       axisLine={false}
                       tickLine={false}
                       tick={{ fill: '#92400e', fontSize: 11, fontWeight: 500 }}
-                      tickFormatter={(value) => `Rs. ${value.toLocaleString()}`}
+                      tickFormatter={(value) => Rs. ${value.toLocaleString()}}
                       label={{ value: 'Purchase Cost (Rs.)', angle: -90, position: 'insideLeft', fill: '#d97706', fontSize: 11 }}
                       ticks={[2500, 5000, 7500, 10000]}
                     />
@@ -534,12 +534,12 @@ const MerchantDashboard = () => {
                                 </Typography>
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                   <Typography variant="caption" color="#92400e" sx={{ fontWeight: 500, fontSize: 11 }}>
-                                    {farmer.rating > 0 ? `${farmer.orders} reviews` : 'New farmer'}
+                                    {farmer.rating > 0 ? ${farmer.orders} reviews : 'New farmer'}
                                   </Typography>
                                   {farmer.rating > 0 ? (
                                     <Chip
                                       size="small"
-                                      label={`${farmer.rating.toFixed(1)} ★`}
+                                      label={${farmer.rating.toFixed(1)} ★}
                                       sx={{
                                         background: 'linear-gradient(45deg, #fbbf24, #f59e0b)',
                                         color: 'white',

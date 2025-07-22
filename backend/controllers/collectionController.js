@@ -10,7 +10,7 @@ const getMerchantCollections = async (req, res) => {
     const { merchantId } = req.params;
     
     const collections = await Collection.find({ merchantId })
-      .sort({ createdAt: -1 })
+      .sort({ status: 1, createdAt: -1 }) // Sort by status first, then by creation date descending
       .lean();
     
     // Populate farmer details for each collection if not already present

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Booking = require('../models/bookingModel'); // Adjust path if needed
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // Create a new booking
 router.post('/', async (req, res) => {
@@ -9,19 +10,33 @@ router.post('/', async (req, res) => {
     const {
       vehicleId,
       transporterId,
+      merchantId, // Add this field
       merchantPhone,
-      merchantName, // <-- add this
+      merchantName,
       startLocation,
       endLocation,
       items,
       weight,
     } = req.body;
 
+    console.log('📦 Booking request received:', {
+      vehicleId,
+      transporterId,
+      merchantId,
+      merchantName,
+      merchantPhone,
+      startLocation,
+      endLocation,
+      items,
+      weight
+    });
+
     if (
       !vehicleId ||
       !transporterId ||
+      !merchantId || // Add this validation
       !merchantPhone ||
-      !merchantName || // <-- add this
+      !merchantName ||
       !startLocation ||
       !endLocation ||
       !items ||
@@ -35,8 +50,9 @@ router.post('/', async (req, res) => {
     const booking = new Booking({
       vehicleId,
       transporterId,
+      merchantId, // Add this field
       merchantPhone,
-      merchantName, // <-- add this
+      merchantName,
       startLocation,
       endLocation,
       items,
@@ -111,8 +127,31 @@ router.post('/', async (req, res) => {
 router.get('/transporter/:transporterId', async (req, res) => {
   try {
     const bookings = await Booking.find({ transporterId: req.params.transporterId });
-    res.json(bookings);
+    
+    // Populate merchant details from User model for each booking
+    const bookingsWithMerchantDetails = await Promise.all(
+      bookings.map(async (booking) => {
+        try {
+          const merchant = await User.findOne({ auth0Id: booking.merchantId });
+          return {
+            ...booking.toObject(),
+            merchantDetails: merchant ? {
+              name: merchant.name,
+              phone: merchant.phone,
+              email: merchant.email,
+              address: merchant.address
+            } : null
+          };
+        } catch (error) {
+          console.error(`Error fetching merchant details for booking ${booking._id}:`, error);
+          return booking.toObject();
+        }
+      })
+    );
+    
+    res.json(bookingsWithMerchantDetails);
   } catch (err) {
+    console.error('Error fetching bookings:', err);
     res.status(500).json({ error: "Failed to fetch bookings" });
   }
 });

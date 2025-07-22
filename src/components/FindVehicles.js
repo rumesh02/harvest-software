@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getVehicles, createBooking } from "../services/api";
 import placeholderImage from "../assets/lorry.jpg";
 import axios from "axios";
+import { useAuth0 } from "@auth0/auth0-react";
 import {
   Box,
   Typography,
@@ -34,9 +35,13 @@ const allDistricts = [
   "Mullaitivu", "Nuwara Eliya", "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee"
 ];
 
-const FindVehicles = ({ selectedOrders, onBack }) => {
+const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
+  const { user: auth0User } = useAuth0();
+  const user = userProp || auth0User; // Use prop user or auth0 user
+  
   // Debug logging to see what's in selectedOrders
   console.log("FindVehicles - selectedOrders:", selectedOrders);
+  console.log("FindVehicles - user:", user);
   
   // selectedOrders contains confirmed bids from Collection page
   // Use the first selected order to get the confirmed bid details
@@ -347,6 +352,8 @@ const FindVehicles = ({ selectedOrders, onBack }) => {
     const bookingData = {
       vehicleId: selectedVehicle._id,
       transporterId: selectedVehicle.transporterId,
+      merchantId: user?.sub, // Add merchant Auth0 ID
+      merchantName: user?.name, // Add merchant name
       merchantPhone: bookingForm.phone,
       startLocation: bookingForm.startLocation,
       endLocation: bookingForm.endLocation,

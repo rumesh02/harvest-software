@@ -2,6 +2,8 @@ const Order = require('../models/Order');
 const ConfirmedBid = require('../models/ConfirmedBid');
 const Bid = require('../models/Bid');
 const Payment = require('../models/Payment');
+const Review = require('../models/Review');
+const User = require('../models/User');
 
 const merchantController = {
   getMerchantDashboard: async (req, res) => {
@@ -63,8 +65,8 @@ const merchantController = {
       // Get total orders (confirmed bids count)
       const totalOrders = confirmedBids.length;
 
-      // TODO: Get top farmers data (for now returning empty array)
-      const topFarmers = [];
+      // Get top farmers based on ratings from this merchant's reviews
+      const topFarmers = await getTopRatedFarmers(merchantId, 3);
 
       const dashboardData = {
         PendingPayments: `Rs. ${pendingPaymentsTotal.toLocaleString()}`,
@@ -84,7 +86,61 @@ const merchantController = {
         details: error.message 
       });
     }
+  },
+
+  // Helper function to get top rated farmers for a specific merchant
+  async getTopRatedFarmers(merchantId, limit = 3) {
+    try {
+      // Get all reviews from this merchant to farmers, grouped by farmer
+      const farmerRatings = await Review.aggregate([
+        { $match: { merchantId: merchantId } }, // Only reviews from this merchant
+        { 
+          $group: { 
+            _id: "$farmerId", 
+            averageRating: { $avg: "$rating" },
+            totalReviews: { $sum: 1 },
+            totalOrders: { $sum: 1 } // Count of orders with this farmer
+          } 
+        },
+        { $match: { totalReviews: { $gte: 1 } } }, // At least 1 review
+        { $sort: { averageRating: -1, totalReviews: -1 } }, // Sort by rating, then by review count
+        { $limit: limit }
+      ]);
+
+      // Get farmer details for the top rated farmers
+      const topFarmers = await Promise.all(
+        farmerRatings.map(async (rating) => {
+          try {
+            const farmer = await User.findOne({ auth0Id: rating._id });
+            if (farmer) {
+              return {
+                farmerId: rating._id,
+                name: farmer.name,
+                location: `${farmer.district || 'Unknown'}, ${farmer.province || 'Sri Lanka'}`,
+                averageRating: Math.round(rating.averageRating * 10) / 10, // Round to 1 decimal
+                totalReviews: rating.totalReviews,
+                orders: rating.totalOrders,
+                avatar: farmer.picture || null // Profile picture if available
+              };
+            }
+            return null;
+          } catch (error) {
+            console.error('Error fetching farmer details:', error);
+            return null;
+          }
+        })
+      );
+
+      // Filter out null results and return
+      return topFarmers.filter(farmer => farmer !== null);
+    } catch (error) {
+      console.error('Error getting top rated farmers:', error);
+      return [];
+    }
   }
 };
+
+// Export the helper function as well
+const getTopRatedFarmers = merchantController.getTopRatedFarmers;
 
 module.exports = merchantController;

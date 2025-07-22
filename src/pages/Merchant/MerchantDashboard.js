@@ -24,7 +24,8 @@ import {
   Gavel as BidsIcon, 
   AccountBalance as PaymentsIcon,
   TrendingUp as TrendingIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  Star as StarIcon
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -423,17 +424,17 @@ const MerchantDashboard = () => {
                 </Avatar>
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 700, color: '#92400e', fontSize: { xs: 15, md: 16 } }}>
-                    Top Farmers
+                    Top Rated Farmers
                   </Typography>
                   <Typography variant="body2" color="#92400e" sx={{ fontSize: { xs: 12, md: 13 } }}>
-                    Your most reliable suppliers
+                    Highest rated suppliers based on your reviews
                   </Typography>
                 </Box>
               </Box>
               {topFarmers && topFarmers.length > 0 ? (
                 <List sx={{ width: '100%' }}>
                   {topFarmers.map((farmer, index) => (
-                    <React.Fragment key={index}>
+                    <React.Fragment key={farmer.farmerId || index}>
                       {index > 0 && <Divider component="li" sx={{ my: 1 }} />}
                       <ListItem 
                         sx={{ 
@@ -467,9 +468,17 @@ const MerchantDashboard = () => {
                         </ListItemAvatar>
                         <ListItemText
                           primary={
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#92400e', fontSize: { xs: 15, md: 16 } }}>
-                              {farmer.name}
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="body2" sx={{ fontWeight: 600, color: '#92400e', fontSize: { xs: 15, md: 16 } }}>
+                                {farmer.name}
+                              </Typography>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <StarIcon sx={{ color: '#fbbf24', fontSize: 16 }} />
+                                <Typography variant="caption" sx={{ color: '#92400e', fontWeight: 600 }}>
+                                  {farmer.averageRating}
+                                </Typography>
+                              </Box>
+                            </Box>
                           }
                           secondary={
                             <>
@@ -477,13 +486,13 @@ const MerchantDashboard = () => {
                                 {farmer.location || "Location not available"}
                               </Typography>
                               <Typography variant="caption" color="#92400e" sx={{ display: 'block', fontWeight: 500 }}>
-                                Orders: {farmer.orders || 0}
+                                {farmer.orders || 0} orders • {farmer.totalReviews || 0} reviews
                               </Typography>
                             </>
                           }
                         />
                         <Chip
-                          label={`${farmer.orders || "0"} orders`}
+                          label={`${farmer.averageRating} ⭐`}
                           sx={{
                             background: '#fef3e2',
                             color: '#92400e',
@@ -505,10 +514,10 @@ const MerchantDashboard = () => {
                 }}>
                   <PersonIcon sx={{ fontSize: 38, color: '#92400e', mb: 1 }} />
                   <Typography color="#92400e" sx={{ fontWeight: 500, fontSize: 15 }}>
-                    No top farmers found yet
+                    No rated farmers yet
                   </Typography>
                   <Typography variant="caption" color="#d97706" sx={{ mt: 1 }}>
-                    Start placing bids to build relationships with farmers
+                    Start reviewing farmers after completing orders to see top-rated suppliers
                   </Typography>
                 </Box>
               )}

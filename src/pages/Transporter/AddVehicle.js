@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { UploadCloud, Truck, FileText, Scale, Camera } from "lucide-react";
 import { addVehicle } from "../../services/api";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./AddVehicle.css";
@@ -65,167 +66,138 @@ const AddVehicle = () => {
       setFile(null);
       setSuccess(true);
 
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
-
     } catch (err) {
       console.error("Failed to add vehicle:", err);
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Failed to add vehicle. Please try again.");
-      }
+      setError(err.response?.data?.message || "Failed to add vehicle. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="add-vehicle-container">
-      <div className="add-vehicle-content">
-        {/* Header Section */}
-        <div className="add-vehicle-header">
-          <h1 className="add-vehicle-title">
-            Add New Vehicle
-          </h1>
-          <p className="add-vehicle-subtitle">
-            Register your transport vehicle for booking requests
-          </p>
-        </div>
+    <div className="add-vehicle-page">
+      <div className="page-header">
+        <h1>Add New Vehicle</h1>
+        <p>Register your transport vehicle to start receiving booking requests from merchants</p>
+      </div>
 
-        <div className="add-vehicle-paper">
-          <div className="vehicle-info-header">
-            <div className="vehicle-info-avatar">
-              🚚
+      <div className="form-container">
+        <div className="form-section">
+          <h2>Vehicle Information</h2>
+          {error && <p className="error-message">{error}</p>}
+          {success && <p className="success-message">Vehicle added successfully!</p>}
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label><Truck className="label-icon" /> Vehicle Type</label>
+              <input
+                type="text"
+                value={vehicleType}
+                onChange={(e) => setVehicleType(e.target.value)}
+                placeholder="e.g., Pickup Truck, Van, Lorry"
+                required
+              />
             </div>
-            <h2 className="vehicle-info-title">
-              Vehicle Information
-            </h2>
-          </div>
 
-          {error && (
-            <div className="alert alert-error">
-              {error}
+            <div className="form-group">
+              <label><FileText className="label-icon" /> License Plate</label>
+              <input
+                type="text"
+                value={licensePlate}
+                onChange={(e) => setLicensePlate(e.target.value)}
+                placeholder="e.g., ABC-1234"
+                required
+              />
             </div>
-          )}
 
-          {success && (
-            <div className="alert alert-success">
-              Vehicle added successfully!
+            <div className="form-group">
+              <label><Scale className="label-icon" /> Load Capacity (kg)</label>
+              <input
+                type="number"
+                value={loadCapacity}
+                onChange={(e) => setLoadCapacity(e.target.value)}
+                placeholder="e.g., 1000"
+                required
+              />
             </div>
-          )}
 
-          <form className="add-vehicle-form" onSubmit={handleSubmit}>
-            <div className="form-grid">
-              {/* Row 1: Vehicle Type only */}
-              <div className="form-field">
-                <span className="field-label">Vehicle Type *</span>
+            <div className="form-group">
+              <label className="upload-label"><Camera className="label-icon" /> Vehicle Photo</label>
+              <div
+                className={`file-upload-box ${file ? 'has-file' : ''}`}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
                 <input
-                  className="text-field"
-                  type="text"
-                  value={vehicleType}
-                  onChange={(e) => setVehicleType(e.target.value)}
-                  required
-                  placeholder="Enter vehicle type"
+                  type="file"
+                  id="fileUpload"
+                  className="hidden-input"
+                  accept="image/png, image/jpeg, image/jpg"
+                  onChange={handleFileChange}
                 />
-              </div>
-
-              {/* Row 2: License Plate only */}
-              <div className="form-field">
-                <span className="field-label">License Plate *</span>
-                <input
-                  className="text-field"
-                  type="text"
-                  value={licensePlate}
-                  onChange={(e) => setLicensePlate(e.target.value)}
-                  required
-                  placeholder="Enter license plate"
-                />
-              </div>
-
-              {/* Row 3: Load Capacity only */}
-              <div className="form-field">
-                <span className="field-label">Load Capacity *</span>
-                <input
-                  className="text-field"
-                  type="text"
-                  value={loadCapacity}
-                  onChange={(e) => setLoadCapacity(e.target.value)}
-                  required
-                  placeholder="Enter load capacity"
-                />
-              </div>
-
-              {/* Row 4: Price per KM only */}
-              <div className="form-field">
-                <span className="field-label">Price per KM (LKR) *</span>
-                <input
-                  className="text-field"
-                  type="number"
-                  step="0.01"
-                  value={pricePerKm}
-                  onChange={(e) => setPricePerKm(e.target.value)}
-                  placeholder="Enter price per kilometer"
-                  required
-                />
-              </div>
-
-              <div className="form-field">
-                <h3 className="upload-section-title">
-                  Upload Vehicle Photo
-                </h3>
-                <div
-                  className="upload-area"
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onClick={() => document.getElementById('fileUpload').click()}
-                >
-                  <input
-                    type="file"
-                    id="fileUpload"
-                    className="hidden-input"
-                    accept="image/png, image/jpeg, image/jpg"
-                    onChange={handleFileChange}
-                  />
-                  <div className="upload-icon">📁</div>
+                <label htmlFor="fileUpload" className="upload-content">
+                  <UploadCloud className="upload-icon" />
                   {file ? (
-                    <div className="file-name">
-                      {file.name}
+                    <div>
+                      <p className="file-name">{file.name}</p>
+                      <p className="file-size">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   ) : (
                     <>
-                      <div className="upload-text">
-                        <span className="upload-text-bold">Click to upload</span> or{" "}
-                        <span className="upload-text-highlight">drag and drop</span>
-                      </div>
-                      <div className="upload-caption">
-                        JPG, JPEG, PNG less than 1MB
-                      </div>
+                      <p><span className="click-text">Click to upload</span> or <span className="drag-text">drag and drop</span></p>
+                      <p className="file-info">JPG, JPEG, PNG less than 1MB</p>
                     </>
                   )}
-                </div>
-              </div>
-
-              <div className="form-field">
-                <button
-                  type="submit"
-                  className="submit-button"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="loading-spinner"></div>
-                      Adding Vehicle...
-                    </>
-                  ) : (
-                    <>
-                      🚚 Add Vehicle
-                    </>
-                  )}
-                </button>
+                </label>
               </div>
             </div>
+
+            <div className="form-group">
+              <label>Price Per KM (LKR)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={pricePerKm}
+                onChange={(e) => setPricePerKm(e.target.value)}
+                placeholder="Enter price per kilometer"
+                required
+              />
+            </div>
+
+            <button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Adding Vehicle..." : "Add Vehicle"}
+            </button>
           </form>
+        </div>
+
+        <div className="preview-section">
+          <h3>Vehicle Preview</h3>
+          <div className="vehicle-preview">
+            {file ? (
+              <img src={URL.createObjectURL(file)} alt="Vehicle preview" />
+            ) : (
+              <div style={{
+                width: '100%',
+                height: '150px',
+                backgroundColor: '#f7fafc',
+                borderRadius: '8px',
+                marginBottom: '15px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px dashed #cbd5e0'
+              }}>
+                <Camera size={40} style={{ color: '#a0aec0' }} />
+              </div>
+            )}
+            <div className="vehicle-info">
+              <p><strong>Type:</strong> {vehicleType || "Not specified"}</p>
+              <p><strong>License:</strong> {licensePlate || "Not specified"}</p>
+              <p><strong>Capacity:</strong> {loadCapacity ? `${loadCapacity} kg` : "Not specified"}</p>
+              <p><strong>Price/KM:</strong> {pricePerKm ? `${pricePerKm} LKR` : "Not specified"}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

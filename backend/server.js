@@ -25,7 +25,7 @@ const farmerDashboardRoutes = require('./routes/farmerDashboardRoutes');
 const geolocationRoutes = require('./routes/geolocationRoutes');
 const locationRoutes = require('./routes/locationRoutes');
 const collectionRoutes = require("./routes/collectionRoutes");
-const transporterdashboardRoutes = require('./routes/transporterdashboardRoutes'); // ✅ Conflict resolved here
+const transporterdashboardRoutes = require('./routes/TransporterdashboardRoutes'); // ✅ Conflict resolved here
 const adminRoutes = require('./routes/adminRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const messageRoutes = require('./routes/messageRoutes');
@@ -34,6 +34,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const emojiRoutes = require('./routes/emojiRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const trendsRoutes = require('./routes/trendsRoutes');
 
 const socketHandler = require('./socket');
 
@@ -43,6 +44,7 @@ const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:3000",
+      "https://harvest-software-mx6t.vercel.app",
       "https://sandbox.payhere.lk"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"]
@@ -56,6 +58,7 @@ socketHandler(io);
 app.use(cors({
   origin: [
     "http://localhost:3000",
+    "https://harvest-software-mx6t.vercel.app",
     "https://sandbox.payhere.lk"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -80,6 +83,7 @@ app.use('/api/collections', collectionRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use(farmerDashboardRoutes);
 app.use('/api/dashboard', transporterdashboardRoutes);
 app.use('/api/dashboard', dashboardRoutes);
@@ -87,6 +91,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/emojis', emojiRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api', trendsRoutes);
 
 // PayHere Hash Generator Function
 function generatePayHereHash({ merchant_id, order_id, amount, currency }, merchant_secret) {

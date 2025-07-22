@@ -116,7 +116,6 @@ const MerchantDashboard = () => {
   const handleFarmerClick = (farmer) => {
     setSelectedFarmer(farmer);
     setReviewModalOpen(true);
-    fetchFarmerReviews(farmer._id);
   };
 
   // Handle closing review modal

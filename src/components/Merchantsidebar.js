@@ -51,7 +51,21 @@ const MerchantSidebar = () => {
   };
 
   return (
-    <div style={{ width: 250, background: "#f9f9f9", height: "100vh", padding: "20px", borderRadius: "10px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+    <div style={{ 
+      width: 250, 
+      background: "#f9f9f9", 
+      height: "100vh", 
+      padding: "20px", 
+      display: "flex", 
+      flexDirection: "column", 
+      justifyContent: "space-between",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      zIndex: 1000,
+      overflowY: "auto",
+      boxShadow: "2px 0 8px rgba(0,0,0,0.1)"
+    }}>
       {/* Top Section - Logo and Menu */}
       <div>
         {/* Logo and Title */}
@@ -123,7 +137,7 @@ const MerchantSidebar = () => {
 
         {/* Settings and Logout */}
         <List sx={{ marginTop: "40px" }}>
-          <ListItemButton component={Link} to="/merchant/settings" sx={{ borderRadius: "8px", marginTop: "10px" }}>
+          <ListItemButton component={Link} to="/merchant/profile" sx={{ borderRadius: "8px", marginTop: "10px" }}>
             <ListItemIcon><Settings /></ListItemIcon>
             <ListItemText primary="Settings" />
           </ListItemButton>

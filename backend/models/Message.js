@@ -67,7 +67,11 @@ const messageSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  deliveredAt: Date
+  deliveredAt: Date,
+  hiddenFor: [{
+    userId: String,
+    hiddenAt: { type: Date, default: Date.now }
+  }]
 });
 
 // Index for efficient queries

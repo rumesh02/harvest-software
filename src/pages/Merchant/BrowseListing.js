@@ -32,8 +32,10 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import EmojiNatureIcon from "@mui/icons-material/EmojiNature";
 import CloseIcon from "@mui/icons-material/Close";
+import ChatIcon from "@mui/icons-material/Chat";
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
+import { useNavigate } from "react-router-dom";
 import {
   setupProductUpdateListeners,
   joinUserRoom,
@@ -59,6 +61,7 @@ const BrowseListing = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   // Add these states for See More functionality
   const [seeMoreOpen, setSeeMoreOpen] = useState(false);
@@ -145,8 +148,19 @@ const BrowseListing = () => {
     }
   };
 
+  // Add the handleChatWithFarmer function
+  const handleChatWithFarmer = () => {
+    if (selectedProduct && selectedProduct.farmerID) {
+      // Close the product details dialog first
+      setSeeMoreOpen(false);
+      
+      // Navigate to merchant messages page with chatWith parameter
+      navigate(`/merchant/messages?chatWith=${selectedProduct.farmerID}`);
+    }
+  };
+
   const renderProductCard = (product, index) => (
-    <Grid item xs={12} sm={6} md={3} lg={3} xl={3} key={index} sx={{ display: 'flex', justifyContent: 'flex-start', p: 0 }}>
+    <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }} key={index} sx={{ display: 'flex', justifyContent: 'flex-start', p: 0 }}>
       <Card sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -670,7 +684,7 @@ const BrowseListing = () => {
           }}
         >
           {Array.from(new Array(8)).map((_, i) => (
-            <Grid item xs={12} sm={6} md={3} lg={3} xl={3} key={i} sx={{ display: 'flex', justifyContent: 'flex-start', p: 0 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 3 }} key={i} sx={{ display: 'flex', justifyContent: 'flex-start', p: 0 }}>
               <Card sx={{
                 width: 220, // Same as real cards
                 height: 320, // Same as real cards
@@ -836,7 +850,36 @@ const BrowseListing = () => {
             </>
           )}
         </DialogContent>
-        <DialogActions />
+        <DialogActions sx={{ p: 3, gap: 2 }}>
+          <Button
+            variant="contained"
+            onClick={handleChatWithFarmer}
+            startIcon={<ChatIcon />}
+            disabled={!selectedProduct?.farmerID}
+            sx={{
+              backgroundColor: '#2E7D32',
+              '&:hover': {
+                backgroundColor: '#1B5E20'
+              },
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3
+            }}
+          >
+            Chat with Farmer
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => setSeeMoreOpen(false)}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
       </Dialog>
     </Container>
   );

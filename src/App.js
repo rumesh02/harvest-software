@@ -156,6 +156,7 @@ const AppRoutes = () => {
         <Route path="messages" element={<Messages />} />
         {/* <Route path="payment-approve" element={<PaymentApprove />} /> */}
         <Route path="order" element={<OrderPage />} />
+        <Route path="profile" element={<ProfilePage />} />
         <Route path="about" element={<About />} />
         <Route path="contact" element={<ContactUs />} />
         <Route path="help" element={<Help />} />
@@ -179,6 +180,7 @@ const AppRoutes = () => {
         <Route path="payments" element={<MerchantPayments />} />
         <Route path="find-vehicles" element={<FindVehicles />} />
         <Route path="collection" element={<Collection />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
 
       {/* Transporter */}
@@ -195,6 +197,7 @@ const AppRoutes = () => {
         <Route path="bookings" element={<Bookings />} />
         <Route path="editListed" element={<EditListed />} />
         <Route path="inbox" element={<Inbox />} />
+        <Route path="profile" element={<ProfilePage />} />
         {/* <Route path="payments" element={<PaymentApproves />} /> */}
       </Route>
 
@@ -239,11 +242,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-
-      {/* Profile */}
-      <Route path="/profile" element={<ProfilePage SidebarComponent={FarmerSidebar} />} />
-      <Route path="/transporter/profile" element={<ProfilePage SidebarComponent={TransporterSidebar} />} />
-      <Route path="/merchant/profile" element={<ProfilePage SidebarComponent={MerchantSidebar} />} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/home" />} />

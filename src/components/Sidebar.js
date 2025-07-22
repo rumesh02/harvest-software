@@ -7,16 +7,10 @@ import {
   ListUl,
   CheckCircle,
   ChatLeftText,
-  CreditCard,
   Gear,
   BoxArrowRight,
   Cart3, // Import Cart3 icon for Orders
 } from "react-bootstrap-icons";
-import { 
-  Box, 
-  Snackbar, 
-  Alert 
-} from '@mui/material';
 import axios from "axios";
 
 const Sidebar = ({ userRole = "Farmer" }) => {
@@ -61,11 +55,23 @@ const Sidebar = ({ userRole = "Farmer" }) => {
       : "/placeholder.svg";
 
   return (
-    <div className="bg-white rounded-3 shadow-sm p-3 d-flex flex-column h-100">
+    <div 
+      className="bg-white shadow-sm p-3 d-flex flex-column h-100"
+      style={{
+        width: 250,
+        height: "100vh",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        zIndex: 1000,
+        overflowY: "auto",
+        boxShadow: "2px 0 8px rgba(0,0,0,0.1)"
+      }}
+    >
       {/* Logo and Brand */}
       <div className="d-flex align-items-center mb-4 ps-2">
         <img
-          src="./images/farmer.jpg"
+          src="/NewLogo.png"
           alt="Farm-to-Market Logo"
           className="me-2"
           style={{ width: "40px", height: "40px", borderRadius: "50%" }}
@@ -130,7 +136,7 @@ const Sidebar = ({ userRole = "Farmer" }) => {
       {/* Settings and Logout */}
       <ul className="list-unstyled">
         <li className="mb-2">
-          <Link to="/settings" className="d-flex align-items-center text-decoration-none text-dark py-2 px-3 justify-content-start">
+          <Link to="/profile" className="d-flex align-items-center text-decoration-none text-dark py-2 px-3 justify-content-start">
             <Gear size={18} className="me-2" />
             <span>Settings</span>
           </Link>

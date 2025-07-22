@@ -13,13 +13,7 @@ import {
   Grid,
   Chip,
   Divider,
-  Alert,
-  IconButton,
   Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   Fade,
   CircularProgress
 } from '@mui/material';
@@ -35,7 +29,6 @@ import {
   CheckCircle as CheckIcon,
   Schedule as ScheduleIcon,
   Assignment as BookingIcon,
-  Map as MapIcon,
   Cancel as RejectIcon,
   OpenInNew as OpenIcon
 } from '@mui/icons-material';
@@ -112,57 +105,6 @@ const Bookings = () => {
     if (user?.sub) fetchBookings();
   }, [user]);
 
-  // Function to open Google Maps with route
-  const openGoogleMaps = (startLocation, endLocation) => {
-    if (!startLocation || !endLocation) {
-      alert('Start or end location is missing');
-      return;
-    }
-
-    // Check if we have structured pickup location data
-    if (startLocation.includes('Multiple Pickup Locations:')) {
-      // Parse structured location data to get actual locations
-      const locationLines = startLocation
-        .replace('Multiple Pickup Locations:\n', '')
-        .split('\n')
-        .filter(line => line.trim());
-      
-      const actualLocations = [];
-      locationLines.forEach(line => {
-        if (line.includes(' - ') && !line.includes('Location not available')) {
-          const parts = line.split(' - ');
-          if (parts.length >= 2) {
-            const location = parts.slice(1).join(' - '); // Join remaining parts as location
-            if (location && location !== 'Location not available') {
-              actualLocations.push(location.trim());
-            }
-          }
-        }
-      });
-      
-      if (actualLocations.length === 0) {
-        alert('No valid pickup locations available');
-        return;
-      } else if (actualLocations.length === 1) {
-        // Single valid location - direct route
-        const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(actualLocations[0])}/${encodeURIComponent(endLocation)}`;
-        window.open(mapsUrl, '_blank');
-      } else {
-        // Multiple valid locations - create waypoint route
-        const origin = encodeURIComponent(actualLocations[0]);
-        const destination = encodeURIComponent(endLocation);
-        const waypoints = actualLocations.slice(1).map(loc => encodeURIComponent(loc)).join('|');
-        
-        const mapsUrl = `https://www.google.com/maps/dir/${origin}/${waypoints}/${destination}`;
-        window.open(mapsUrl, '_blank');
-      }
-    } else {
-      // Simple single location format
-      const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(startLocation)}/${encodeURIComponent(endLocation)}`;
-      window.open(mapsUrl, '_blank');
-    }
-  };
-
   // Function to open individual pickup location in Google Maps
   const openLocationInMaps = (location) => {
     if (!location || location === 'Location not available') {
@@ -173,6 +115,31 @@ const Bookings = () => {
     window.open(mapsUrl, '_blank');
   };
 
+  // Function to handle booking acceptance
+  const handleAcceptBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to accept this booking?')) {
+      return;
+    }
+    
+    try {
+      const response = await axios.put(`http://localhost:5000/api/bookings/${bookingId}/accept`);
+      if (response.data.success) {
+        // Update the booking status in the local state
+        setBookings(prevBookings => 
+          prevBookings.map(booking => 
+            booking._id === bookingId 
+              ? { ...booking, status: 'confirmed' }
+              : booking
+          )
+        );
+        alert('Booking accepted successfully!');
+      }
+    } catch (error) {
+      console.error('Error accepting booking:', error);
+      alert('Failed to accept booking. Please try again.');
+    }
+  };
+
   // Function to handle booking rejection
   const handleRejectBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to reject this booking?')) {
@@ -180,10 +147,18 @@ const Bookings = () => {
     }
     
     try {
-      // You can implement the API call to reject booking here
-      // await axios.put(`http://localhost:5000/api/bookings/${bookingId}/reject`);
-      alert('Booking rejection functionality will be implemented');
-      console.log('Rejecting booking:', bookingId);
+      const response = await axios.put(`http://localhost:5000/api/bookings/${bookingId}/reject`);
+      if (response.data.success) {
+        // Update the booking status in the local state
+        setBookings(prevBookings => 
+          prevBookings.map(booking => 
+            booking._id === bookingId 
+              ? { ...booking, status: 'cancelled' }
+              : booking
+          )
+        );
+        alert('Booking rejected successfully!');
+      }
     } catch (error) {
       console.error('Error rejecting booking:', error);
       alert('Failed to reject booking. Please try again.');
@@ -195,7 +170,7 @@ const Bookings = () => {
       'pending': { color: 'warning', label: 'Pending', icon: <ScheduleIcon /> },
       'confirmed': { color: 'success', label: 'Confirmed', icon: <CheckIcon /> },
       'completed': { color: 'primary', label: 'Completed', icon: <CheckIcon /> },
-      'cancelled': { color: 'error', label: 'Cancelled', icon: <ScheduleIcon /> }
+      'cancelled': { color: 'error', label: 'Rejected', icon: <RejectIcon /> }
     };
     
     const config = statusConfig[status] || statusConfig['pending'];
@@ -255,7 +230,7 @@ const Bookings = () => {
           
           {/* Stats */}
           <Grid container spacing={4} sx={{ mt: 2 }}>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <Box sx={{ 
                 textAlign: 'center',
                 p: 2,
@@ -271,7 +246,7 @@ const Bookings = () => {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <Box sx={{ 
                 textAlign: 'center',
                 p: 2,
@@ -287,7 +262,7 @@ const Bookings = () => {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <Box sx={{ 
                 textAlign: 'center',
                 p: 2,
@@ -300,6 +275,22 @@ const Bookings = () => {
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Pending
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Box sx={{ 
+                textAlign: 'center',
+                p: 2,
+                borderRadius: 2,
+                bgcolor: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(5px)'
+              }}>
+                <Typography variant="h3" fontWeight={700}>
+                  {bookings.filter(b => b.status === 'cancelled').length}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Rejected
                 </Typography>
               </Box>
             </Grid>
@@ -548,32 +539,51 @@ const Bookings = () => {
 
                         {/* Actions */}
                         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
-                          <Button 
-                            variant="outlined"
-                            color="primary"
-                            startIcon={<MapIcon />}
-                            onClick={() => openGoogleMaps(booking.startLocation, booking.endLocation)}
-                            sx={{ minWidth: 160 }}
-                          >
-                            Open in Maps
-                          </Button>
-                          <Button 
-                            variant="outlined"
-                            color="error"
-                            startIcon={<RejectIcon />}
-                            onClick={() => handleRejectBooking(booking._id)}
-                            sx={{ minWidth: 160 }}
-                          >
-                            Reject Booking
-                          </Button>
-                          <Button 
-                            variant="contained" 
-                            color="success"
-                            startIcon={<CheckIcon />}
-                            sx={{ minWidth: 160 }}
-                          >
-                            Accept Booking
-                          </Button>
+                          {booking.status === 'pending' ? (
+                            <>
+                              <Button 
+                                variant="outlined"
+                                color="error"
+                                startIcon={<RejectIcon />}
+                                onClick={() => handleRejectBooking(booking._id)}
+                                sx={{ minWidth: 160 }}
+                              >
+                                Reject Booking
+                              </Button>
+                              <Button 
+                                variant="contained" 
+                                color="success"
+                                startIcon={<CheckIcon />}
+                                onClick={() => handleAcceptBooking(booking._id)}
+                                sx={{ minWidth: 160 }}
+                              >
+                                Accept Booking
+                              </Button>
+                            </>
+                          ) : (
+                            <Chip 
+                              label={
+                                booking.status === 'confirmed' ? 'Booking Confirmed' :
+                                booking.status === 'cancelled' ? 'Booking Rejected' :
+                                booking.status === 'completed' ? 'Booking Completed' : 
+                                'Status Unknown'
+                              }
+                              color={
+                                booking.status === 'confirmed' ? 'success' :
+                                booking.status === 'cancelled' ? 'error' :
+                                booking.status === 'completed' ? 'primary' : 
+                                'default'
+                              }
+                              variant="filled"
+                              sx={{ 
+                                fontSize: '1rem', 
+                                px: 3, 
+                                py: 1,
+                                color: 'white',
+                                fontWeight: 600
+                              }}
+                            />
+                          )}
                         </Box>
                       </CardContent>
                     </Card>

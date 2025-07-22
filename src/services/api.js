@@ -106,6 +106,11 @@ export const getBookingsForTransporter = async (transporterId) => {
   return res.data;
 };
 
+export const getBookingsForMerchant = async (merchantId) => {
+  const res = await axios.get(`/api/bookings/merchant/${merchantId}`);
+  return res.data;
+};
+
 export const createBooking = async (bookingData) => {
   const response = await axios.post('http://localhost:5000/api/bookings', bookingData);
   return response.data;

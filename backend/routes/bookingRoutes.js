@@ -156,4 +156,148 @@ router.get('/transporter/:transporterId', async (req, res) => {
   }
 });
 
+// Get all bookings for a merchant
+router.get('/merchant/:merchantId', async (req, res) => {
+  try {
+    const bookings = await Booking.find({ merchantId: req.params.merchantId });
+    
+    // Populate transporter details from User model for each booking
+    const bookingsWithTransporterDetails = await Promise.all(
+      bookings.map(async (booking) => {
+        try {
+          const transporter = await User.findOne({ auth0Id: booking.transporterId });
+          return {
+            ...booking.toObject(),
+            transporterDetails: transporter ? {
+              name: transporter.name,
+              phone: transporter.phone,
+              email: transporter.email,
+              address: transporter.address
+            } : null
+          };
+        } catch (error) {
+          console.error(`Error fetching transporter details for booking ${booking._id}:`, error);
+          return booking.toObject();
+        }
+      })
+    );
+    
+    res.json(bookingsWithTransporterDetails);
+  } catch (err) {
+    console.error('Error fetching merchant bookings:', err);
+    res.status(500).json({ error: "Failed to fetch bookings" });
+  }
+});
+
+// Accept a booking
+router.put('/:id/accept', async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+    
+    // Update booking status to confirmed
+    booking.status = 'confirmed';
+    await booking.save();
+    
+    // Create notification for merchant about booking acceptance
+    try {
+      const merchantNotification = new Notification({
+        userId: booking.merchantId,
+        title: '✅ Booking Confirmed!',
+        message: `Your vehicle booking has been confirmed by the transporter. Booking ID: ${booking._id}`,
+        type: 'booking_confirmed',
+        relatedId: booking._id.toString(),
+        metadata: {
+          bookingId: booking._id.toString(),
+          transporterId: booking.transporterId,
+          vehicleId: booking.vehicleId,
+          status: 'confirmed'
+        }
+      });
+      
+      await merchantNotification.save();
+      
+      // Emit socket event for real-time notification
+      if (req.app.get('io')) {
+        const io = req.app.get('io');
+        io.emit('newNotification', {
+          userId: booking.merchantId,
+          notification: merchantNotification
+        });
+      }
+    } catch (notificationError) {
+      console.error('Error creating merchant notification for booking acceptance:', notificationError);
+    }
+    
+    res.json({ success: true, booking });
+  } catch (err) {
+    console.error('Error accepting booking:', err);
+    res.status(500).json({ error: "Failed to accept booking" });
+  }
+});
+
+// Reject a booking
+router.put('/:id/reject', async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    console.log('🔴 Rejecting booking with ID:', bookingId);
+    
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      console.log('❌ Booking not found:', bookingId);
+      return res.status(404).json({ error: "Booking not found" });
+    }
+    
+    console.log('📋 Found booking:', booking);
+    
+    // Update booking status to cancelled
+    booking.status = 'cancelled';
+    await booking.save();
+    
+    console.log('✅ Booking status updated to cancelled');
+    
+    // Create notification for merchant about booking rejection
+    try {
+      const merchantNotification = new Notification({
+        userId: booking.merchantId,
+        title: '❌ Booking Rejected',
+        message: `Your vehicle booking has been rejected by the transporter. Booking ID: ${booking._id}`,
+        type: 'booking_rejected',
+        relatedId: booking._id.toString(),
+        metadata: {
+          bookingId: booking._id.toString(),
+          transporterId: booking.transporterId,
+          vehicleId: booking.vehicleId,
+          status: 'cancelled'
+        }
+      });
+      
+      await merchantNotification.save();
+      console.log('📧 Merchant notification created');
+      
+      // Emit socket event for real-time notification
+      if (req.app.get('io')) {
+        const io = req.app.get('io');
+        io.emit('newNotification', {
+          userId: booking.merchantId,
+          notification: merchantNotification
+        });
+        console.log('🔔 Socket notification sent');
+      }
+    } catch (notificationError) {
+      console.error('❌ Error creating merchant notification for booking rejection:', notificationError);
+    }
+    
+    console.log('✅ Booking rejection completed successfully');
+    res.json({ success: true, booking });
+  } catch (err) {
+    console.error('❌ Error rejecting booking:', err);
+    res.status(500).json({ error: "Failed to reject booking", details: err.message });
+  }
+});
+
 module.exports = router;

@@ -1,4 +1,54 @@
-// Get product by ID (for stock/status lookup)
+// Get unique districts from farmers who have products
+const getAvailableDistricts = async (req, res) => {
+  try {
+    const districts = await Product.aggregate([
+      // Lookup farmer details
+      {
+        $lookup: {
+          from: "users",
+          localField: "farmerID",
+          foreignField: "auth0Id",
+          as: "farmer"
+        }
+      },
+      
+      // Unwind farmer array
+      { $unwind: { path: "$farmer", preserveNullAndEmptyArrays: true } },
+      
+      // Group by district to get unique values
+      {
+        $group: {
+          _id: "$farmer.district"
+        }
+      },
+      
+      // Filter out null/empty districts
+      {
+        $match: {
+          _id: { $ne: null, $ne: "" }
+        }
+      },
+      
+      // Sort alphabetically
+      { $sort: { _id: 1 } },
+      
+      // Project to rename _id to district
+      {
+        $project: {
+          district: "$_id",
+          _id: 0
+        }
+      }
+    ]);
+
+    const districtNames = districts.map(d => d.district);
+    res.json(districtNames);
+  } catch (err) {
+    console.error("Error fetching districts:", err);
+    res.status(500).json({ message: "Server Error", details: err.message });
+  }
+};
+
 const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -26,28 +76,26 @@ const getProductById = async (req, res) => {
   }
 };
 const Product = require("../models/Product");
+const User = require("../models/User");
 const mongoose = require("mongoose");
 
-// Fetch all products with backend filtering and pagination
+// Fetch all products with backend filtering and pagination using efficient aggregation
 const getProducts = async (req, res) => {
   try {
     const { search, district, maxPrice, page = 1, limit = 8, sort = 'desc', sortBy = 'listedDate', sortOrder } = req.query;
-    let filter = {};
-
+    
+    // Build match stage for MongoDB aggregation
+    let matchStage = {};
+    
     if (search) {
-      filter.name = { $regex: search, $options: "i" };
-    }
-    if (district && district !== "All Districts") {
-      filter["harvestDetails.location"] = { $regex: district, $options: "i" };
+      matchStage.name = { $regex: search, $options: "i" };
     }
     if (maxPrice) {
-      filter.price = { $lte: Number(maxPrice) };
+      matchStage.price = { $lte: Number(maxPrice) };
     }
 
     // Determine sort order
     let sortDirection = 1; // Default ascending
-    
-    // Handle different sorting parameter formats
     if (sortOrder) {
       sortDirection = sortOrder.toLowerCase() === 'desc' ? -1 : 1;
     } else if (sort) {
@@ -66,15 +114,74 @@ const getProducts = async (req, res) => {
     sortOptions[sortField] = sortDirection;
 
     const skip = (Number(page) - 1) * Number(limit);
-    const products = await Product.find(
-      filter,
-      "name price quantity image listedDate farmerID harvestDetails itemCode location productID type"
-    )
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(Number(limit));
 
-    const total = await Product.countDocuments(filter);
+    // Build aggregation pipeline
+    const pipeline = [
+      // Match basic product filters first
+      { $match: matchStage },
+      
+      // Lookup farmer details to get district information
+      {
+        $lookup: {
+          from: "users",
+          localField: "farmerID",
+          foreignField: "auth0Id",
+          as: "farmer"
+        }
+      },
+      
+      // Unwind farmer array (should be single farmer)
+      { $unwind: { path: "$farmer", preserveNullAndEmptyArrays: true } },
+      
+      // Add district filtering if specified
+      ...(district && district !== "All Districts" ? [{
+        $match: {
+          "farmer.district": { $regex: district, $options: "i" }
+        }
+      }] : []),
+      
+      // Project only needed fields
+      {
+        $project: {
+          name: 1,
+          price: 1,
+          quantity: 1,
+          image: 1,
+          listedDate: 1,
+          farmerID: 1,
+          harvestDetails: 1,
+          itemCode: 1,
+          location: 1,
+          productID: 1,
+          type: 1,
+          description: 1,
+          // Add farmer district for frontend use
+          farmerDistrict: "$farmer.district",
+          farmerName: "$farmer.name"
+        }
+      },
+      
+      // Sort
+      { $sort: sortOptions },
+      
+      // Facet for pagination and count
+      {
+        $facet: {
+          products: [
+            { $skip: skip },
+            { $limit: Number(limit) }
+          ],
+          totalCount: [
+            { $count: "count" }
+          ]
+        }
+      }
+    ];
+
+    const result = await Product.aggregate(pipeline);
+    
+    const products = result[0].products || [];
+    const total = result[0].totalCount[0]?.count || 0;
 
     res.json({
       products,
@@ -83,7 +190,7 @@ const getProducts = async (req, res) => {
       totalPages: Math.ceil(total / Number(limit))
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error in getProducts:", err);
     res.status(500).json({ message: "Server Error", details: err.message });
   }
 };
@@ -241,5 +348,6 @@ module.exports = {
   deleteProduct, 
   updateProduct,
   getProductsByFarmer,
-  getProductById
+  getProductById,
+  getAvailableDistricts
 };

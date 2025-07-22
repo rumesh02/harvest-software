@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { chatService } from '../services/chatService';
 
 const socket = io('http://localhost:5000');
 
@@ -19,7 +20,7 @@ export const useChat = (currentUserId, targetUserId, targetUser) => {
     try {
       console.log('🔄 Loading conversation between:', { user1, user2 });
       
-      const response = await axios.get(`http://localhost:5000/api/messages/${user1}/${user2}`);
+      const response = await axios.get(`http://localhost:5000/api/messages/${user1}/${user2}?requestingUserId=${user1}`);
       console.log('📥 API Response:', response.data);
       
       // Handle both possible response formats
@@ -291,6 +292,32 @@ export const useChat = (currentUserId, targetUserId, targetUser) => {
     }
   }, [targetUserId]);
 
+  // Clear chat history function
+  const clearChatHistory = async () => {
+    try {
+      const result = await chatService.clearChatHistory(currentUserId, targetUserId, currentUserId);
+      
+      // Clear local messages
+      setMessages([]);
+      
+      // Update RecentChats to remove this chat since all messages are now hidden
+      if (window.recentChatsMessageHandlers?.refreshChats) {
+        window.recentChatsMessageHandlers.refreshChats();
+      }
+      
+      return { 
+        success: true, 
+        message: result.message || 'Chat history cleared successfully for your account' 
+      };
+    } catch (error) {
+      console.error('Error clearing chat history:', error);
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to clear chat history' 
+      };
+    }
+  };
+
   return {
     messages,
     loading,
@@ -300,6 +327,7 @@ export const useChat = (currentUserId, targetUserId, targetUser) => {
     lastSeen,
     sendMessage,
     handleTyping,
-    setMessages
+    setMessages,
+    clearChatHistory
   };
 };

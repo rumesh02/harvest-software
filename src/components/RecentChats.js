@@ -84,19 +84,35 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
       
       if (!mountedRef.current) return;
 
-      let apiChats = response.data || [];
-      console.log('📋 API Response - Recent chats:', apiChats);
-      
-      // Validate that each chat has correct userId
-      apiChats.forEach((chat, index) => {
-        if (chat.userId === userId) {
-          console.warn(`⚠️ WARNING: Chat ${index} has same userId as current user. This might cause message mixing!`, {
-            chatUserId: chat.userId,
-            currentUserId: userId,
-            chatName: chat.name
-          });
+      // Safely extract array from response - handle both array and object responses
+      let apiChats = [];
+      if (response.data) {
+        if (Array.isArray(response.data)) {
+          apiChats = response.data;
+        } else if (response.data.chats && Array.isArray(response.data.chats)) {
+          apiChats = response.data.chats;
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+          apiChats = response.data.data;
+        } else {
+          console.warn('⚠️ Unexpected API response structure:', response.data);
+          apiChats = [];
         }
-      });
+      }
+      
+      console.log('📋 API Response - Recent chats:', apiChats, 'Type:', typeof apiChats, 'IsArray:', Array.isArray(apiChats));
+      
+      // Validate that each chat has correct userId (only if apiChats is an array)
+      if (Array.isArray(apiChats)) {
+        apiChats.forEach((chat, index) => {
+          if (chat.userId === userId) {
+            console.warn(`⚠️ WARNING: Chat ${index} has same userId as current user. This might cause message mixing!`, {
+              chatUserId: chat.userId,
+              currentUserId: userId,
+              chatName: chat.name
+            });
+          }
+        });
+      }
       
       // Merge with localStorage data
       const localChats = loadFromLocalStorage();
@@ -110,7 +126,12 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
       console.error('❌ Error fetching recent chats:', error);
       if (!mountedRef.current) return;
       
-      setError(error.message);
+      // Provide more detailed error message
+      const errorMessage = error.response?.status === 500 
+        ? 'Server error loading chats' 
+        : error.message || 'Failed to load recent chats';
+      
+      setError(errorMessage);
       // Fall back to localStorage data on API error
       const fallbackChats = loadFromLocalStorage();
       setRecentChats(fallbackChats);
@@ -125,16 +146,20 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
   const mergeChats = useCallback((apiChats, localChats) => {
     const chatMap = new Map();
     
+    // Ensure inputs are arrays
+    const safeLocalChats = Array.isArray(localChats) ? localChats : [];
+    const safeApiChats = Array.isArray(apiChats) ? apiChats : [];
+    
     // Add local chats first (fallback data)
-    localChats.forEach(chat => {
-      if (chat.userId) {
+    safeLocalChats.forEach(chat => {
+      if (chat && chat.userId) {
         chatMap.set(chat.userId, { ...chat, source: 'local' });
       }
     });
     
     // Override with API chats (more recent data)
-    apiChats.forEach(chat => {
-      if (chat.userId) {
+    safeApiChats.forEach(chat => {
+      if (chat && chat.userId) {
         chatMap.set(chat.userId, { ...chat, source: 'api' });
       }
     });
@@ -223,6 +248,13 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
     });
   }, [saveToLocalStorage]);
 
+  // Refresh chats function (for clearing chat history)
+  const refreshChats = useCallback(() => {
+    if (!mountedRef.current) return;
+    console.log('🔄 Refreshing recent chats...');
+    fetchRecentChats();
+  }, [fetchRecentChats]);
+
   // Initialize component
   useEffect(() => {
     mountedRef.current = true;
@@ -283,7 +315,8 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
     window.recentChatsAPI = {
       addNewChat,
       updateChatMessage,
-      clearUnreadCount
+      clearUnreadCount,
+      refreshChats
     };
 
     // Process any pending operations that were queued before the API was available
@@ -309,7 +342,7 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
       // Clear the pending operations
       window.pendingChatOperations = [];
     }
-  }, [addNewChat, updateChatMessage, clearUnreadCount]);
+  }, [addNewChat, updateChatMessage, clearUnreadCount, refreshChats]);
 
   const handleChatClick = (chat) => {
     console.log('🖱️ Chat clicked:', {
@@ -438,7 +471,7 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
                   }}
                 >
                   <Avatar 
-                    src={chat.picture || "/placeholder.svg"}
+                    src={chat.picture && chat.picture !== "/placeholder.svg" ? chat.picture : undefined}
                     alt={chat.name}
                     sx={{ 
                       width: 44, 
@@ -447,6 +480,9 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
                       border: `2px solid ${getRoleColor(chat.role)}`,
                       fontSize: '16px',
                       fontWeight: 600
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
                     }}
                   >
                     {chat.name?.charAt(0).toUpperCase()}

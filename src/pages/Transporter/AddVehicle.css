@@ -1,129 +1,283 @@
-.form-container {
-  background: white;
-  max-width: 600px; /* Increase this value */
+/* AddVehicle.css */
+
+.add-vehicle-container {
+  background: #f9f9f9;
+  min-height: 100vh;
+  padding: 24px 0;
+}
+
+.add-vehicle-content {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);   
+  padding: 0 24px;
 }
 
-h1{
+/* Header Section */
+.add-vehicle-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.add-vehicle-title {
+  font-weight: 700;
+  color: #1565c0;
+  margin-bottom: 8px;
+  font-size: 24px;
+}
+
+.add-vehicle-subtitle {
+  color: #1565c0;
+  font-weight: 400;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Paper/Card Container */
+.add-vehicle-paper {
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Vehicle Information Header */
+.vehicle-info-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.vehicle-info-avatar {
+  background: #1976d2;
+  width: 40px;
+  height: 40px;
+  margin-right: 16px;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.12);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.vehicle-info-title {
+  font-weight: 600;
+  color: #1565c0;
   font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  text-align: left;
+  margin: 0;
 }
 
-h2 {
-  font-size: 20px;
-  color: #1a1a3d;
-  margin-bottom: 20px;
+/* Alert Messages */
+.alert {
+  padding: 16px;
+  margin-bottom: 24px;
+  border-radius: 4px;
+  border: 1px solid transparent;
 }
 
-form {
+.alert-error {
+  background-color: #ffebee;
+  color: #c62828;
+  border-color: #ef5350;
+}
+
+.alert-success {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+  border-color: #4caf50;
+}
+
+/* Form Styles */
+.add-vehicle-form {
+  width: 100%;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.form-field {
   display: flex;
   flex-direction: column;
-}
-
-label {
-  font-size: 14px;
-  font-weight: bold;
-  margin-top: 20px;
-}
-
-input {
-  padding: 10px;
-  margin-top: 5px;
-  margin-bottom: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
-  }
-
-  input:hover {
-    border-color: #1a1a3d;
-}
-
-.upload-label {
-  display: block;
-  font-weight: 600;
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.file-upload-box {
   width: 100%;
-  max-width: 600px;
-  height: 150px;
+  position: relative;
+}
+
+/* Text Field Styles */
+.text-field {
+  width: 100%;
+  height: 56px;
+  padding: 16px 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+  outline: none;
+  background: white;
+  box-sizing: border-box;
+}
+
+.text-field:hover {
+  border-color: #1565c0;
+}
+
+.text-field:focus {
+  border-color: #1565c0;
+  box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.1);
+}
+
+.text-field::placeholder {
+  color: #999;
+}
+
+/* Field Labels */
+.field-label {
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  background: white;
+  padding: 0 4px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Upload Section */
+.upload-section-title {
+  font-weight: 600;
+  color: #1565c0;
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.upload-area {
+  width: 100%;
+  height: 250px;
   border: 2px dashed #ccc;
-  border-radius: 10px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  background-color: #fafafa;
+  background: #fafafa;
   cursor: pointer;
   transition: border-color 0.3s ease-in-out;
 }
 
-.file-upload-box:hover {
-  border-color: #1a1a3d;
+.upload-area:hover {
+  border-color: #1565c0;
+}
+
+.upload-icon {
+  font-size: 40px;
+  color: #777;
+  margin-bottom: 8px;
+}
+
+.upload-text {
+  margin-bottom: 4px;
+  font-size: 16px;
+}
+
+.upload-text-bold {
+  font-weight: 600;
+  color: #555;
+}
+
+.upload-text-highlight {
+  font-weight: 600;
+  color: #1565c0;
+}
+
+.upload-caption {
+  font-size: 12px;
+  color: #777;
+}
+
+.file-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 16px;
 }
 
 .hidden-input {
   display: none;
 }
 
-.upload-content {
+/* Button Styles */
+.submit-button {
+  width: 100%;
+  background-color: #1565c0;
+  color: white;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  text-transform: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  gap: 8px;
+  height: 48px;
 }
 
-.upload-icon {
-  width: 40px;
-  height: 40px;
-  color: #777;
-  margin-bottom: 5px;
+.submit-button:hover {
+  background-color: #1976d2;
 }
 
-.file-name {
-  font-weight: bold;
-  color: #333;
+.submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
-.click-text {
-  font-weight: 600;
-  color: #555;
+.button-icon {
+  width: 20px;
+  height: 20px;
 }
 
-.drag-text {
-  font-weight: 600;
-  color: #1a1a3d;
+/* Loading Spinner */
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-.file-info {
-  font-size: 12px;
-  color: #777;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-
-button {
-  background-color: #1a1a3d;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 5px;
-  font-size: 16px;
-  margin-top: 20px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-button:hover {
-  background-color: #333366;
+/* Responsive Design */
+@media (max-width: 768px) {
+  .add-vehicle-content {
+    padding: 0 16px;
+  }
+  
+  .add-vehicle-paper {
+    padding: 24px;
+  }
+  
+  .add-vehicle-title {
+    font-size: 22px;
+  }
+  
+  .add-vehicle-subtitle {
+    font-size: 15px;
+  }
+  
+  .form-grid {
+    gap: 20px;
+  }
 }

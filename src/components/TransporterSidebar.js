@@ -51,7 +51,7 @@ const TransporterSidebar = () => {
         gap: "10px",
         marginBottom: "30px"
       }}>
-        <img src="/images/logo.png" alt="Logo" width={30} height={30} />
+        <img src="/NewLogo.png" alt="Logo" width={30} height={30} />
         <h2 style={{
           fontSize: "16px",
           fontWeight: "bold",

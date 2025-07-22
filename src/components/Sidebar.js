@@ -71,7 +71,7 @@ const Sidebar = ({ userRole = "Farmer" }) => {
       {/* Logo and Brand */}
       <div className="d-flex align-items-center mb-4 ps-2">
         <img
-          src="./images/farmer.jpg"
+          src="/NewLogo.png"
           alt="Farm-to-Market Logo"
           className="me-2"
           style={{ width: "40px", height: "40px", borderRadius: "50%" }}

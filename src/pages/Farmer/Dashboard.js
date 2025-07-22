@@ -64,8 +64,10 @@ const Dashboard = () => {
     const fetchReviewsData = async () => {
       try {
         const reviewsResponse = await axios.get(`http://localhost:5000/api/reviews/farmer/${user.sub}`);
-        // Ensure the response data is an array before setting it
-        const reviewsData = Array.isArray(reviewsResponse.data) ? reviewsResponse.data : [];
+        console.log('Reviews API response:', reviewsResponse.data);
+        
+        // The API returns { reviews: [...] }, so extract the reviews array
+        const reviewsData = reviewsResponse.data.reviews || [];
         
         // Sort reviews by latest first (createdAt descending)
         const sortedReviews = reviewsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -89,7 +91,10 @@ const Dashboard = () => {
   useEffect(() => {
     if (user?.sub) {
       axios.get(`http://localhost:5000/api/users/${user.sub}`)
-        .then(res => setFarmerRating(res.data.farmerRatings || 0)) // Fetch farmerRatings
+        .then(res => {
+          console.log('User data received:', res.data);
+          setFarmerRating(res.data.farmerRating || 0);
+        }) // Fetch farmerRating
         .catch(err => console.error("Error fetching farmer ratings:", err));
     }
   }, [user]);
@@ -612,7 +617,7 @@ const Dashboard = () => {
                       <ListItem alignItems="flex-start" sx={{ px: 0 }}>
                         <ListItemAvatar>
                           <Avatar sx={{ bgcolor: '#4CAF50' }}>
-                            {review.merchantId?.name ? review.merchantId.name.charAt(0).toUpperCase() : 'M'}
+                            {review.reviewer?.name ? review.reviewer.name.charAt(0).toUpperCase() : 'M'}
                           </Avatar>
                         </ListItemAvatar>
                         <ListItemText
@@ -635,11 +640,16 @@ const Dashboard = () => {
                           secondary={
                             <Box>
                               <Typography variant="body2" sx={{ mb: 1, fontWeight: 500, color: '#2e7d32' }}>
-                                {review.merchantId?.name || 'Anonymous Merchant'}
+                                {review.reviewer?.name || 'Anonymous Merchant'}
                               </Typography>
                               {review.comment && (
                                 <Typography variant="body2" sx={{ mb: 1, fontStyle: review.comment ? 'normal' : 'italic', color: review.comment ? 'text.primary' : 'text.secondary' }}>
-                                  {review.comment || 'No comment provided'}
+                                  "{review.comment}"
+                                </Typography>
+                              )}
+                              {!review.comment && (
+                                <Typography variant="body2" sx={{ mb: 1, fontStyle: 'italic', color: 'text.secondary' }}>
+                                  No comment provided
                                 </Typography>
                               )}
                             </Box>

@@ -13,7 +13,6 @@ const merchantController = {
 
       // Get current year for filtering
       const currentYear = new Date().getFullYear();
-      const currentMonth = new Date().getMonth();
 
       // Get all merchant's confirmed bids (purchases) for current year
       const confirmedBids = await ConfirmedBid.find({
@@ -34,7 +33,7 @@ const merchantController = {
       // Get pending payments (ConfirmedBids that are not yet paid)
       const pendingPayments = await ConfirmedBid.find({
         merchantId,
-        status: { $in: ['confirmed', 'processing'] } // Same logic as in confirmedBidRoutes.js
+        status: { $in: ['confirmed', 'processing'] }
       });
 
       // Calculate monthly purchase data
@@ -43,8 +42,7 @@ const merchantController = {
 
       confirmedBids.forEach(bid => {
         const bidDate = new Date(bid.createdAt);
-        const amount = bid.amount || 0; // ConfirmedBid uses 'amount'
-        
+        const amount = bid.amount || 0;
         if (bidDate.getFullYear() === currentYear) {
           monthlyDataArr[bidDate.getMonth()] += amount;
           totalPurchaseAmount += amount;
@@ -54,10 +52,10 @@ const merchantController = {
       // Format monthly data for chart
       const monthlyData = monthlyDataArr.map((amount, index) => ({
         name: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index],
-        revenue: amount // Using 'revenue' to match frontend expectation
+        revenue: amount
       }));
 
-      // Calculate pending payments total (from ConfirmedBids, not Payment model)
+      // Calculate pending payments total
       const pendingPaymentsTotal = pendingPayments.reduce((sum, payment) => {
         return sum + (payment.amount || 0);
       }, 0);
@@ -65,12 +63,11 @@ const merchantController = {
       // Get total orders (confirmed bids count)
       const totalOrders = confirmedBids.length;
 
-      // Get top-rated farmers (limit to top 5 for dashboard)
+      // --- Top Farmers Aggregation (from main branch) ---
       let topFarmers = [];
       try {
-        // First get farmers with ratings
+        // Aggregate top-rated farmers (limit 5)
         const farmerRatings = await Review.aggregate([
-          // Group by farmerId and calculate average rating and review count
           {
             $group: {
               _id: "$farmerId",
@@ -78,21 +75,9 @@ const merchantController = {
               reviewCount: { $sum: 1 }
             }
           },
-          // Filter farmers with at least 1 review
-          {
-            $match: {
-              reviewCount: { $gte: 1 }
-            }
-          },
-          // Sort by average rating in descending order
-          {
-            $sort: { avgRating: -1 }
-          },
-          // Limit to top 5 for dashboard
-          {
-            $limit: 5
-          },
-          // Lookup farmer details from User collection
+          { $match: { reviewCount: { $gte: 1 } } },
+          { $sort: { avgRating: -1 } },
+          { $limit: 5 },
           {
             $lookup: {
               from: "users",
@@ -101,17 +86,8 @@ const merchantController = {
               as: "farmerDetails"
             }
           },
-          // Unwind farmer details
-          {
-            $unwind: "$farmerDetails"
-          },
-          // Filter only farmers (role = 'farmer')
-          {
-            $match: {
-              "farmerDetails.role": "farmer"
-            }
-          },
-          // Project final structure for dashboard
+          { $unwind: "$farmerDetails" },
+          { $match: { "farmerDetails.role": "farmer" } },
           {
             $project: {
               _id: 1,
@@ -128,20 +104,19 @@ const merchantController = {
           }
         ]);
 
-        // Format for dashboard display
         topFarmers = farmerRatings.map(farmer => ({
           name: farmer.name,
           location: farmer.district && farmer.province ? `${farmer.district}, ${farmer.province}` : farmer.address || "Location not available",
-          orders: farmer.reviewCount, // Use review count as proxy for orders
+          orders: farmer.reviewCount,
           rating: farmer.avgRating,
           avatar: farmer.picture || null
         }));
 
-        // If we have less than 5 rated farmers, fill with recent farmers (no rating)
+        // If less than 5, fill with recent farmers (no rating)
         if (topFarmers.length < 5) {
           const ratedFarmerIds = farmerRatings.map(f => f._id);
           const additionalFarmers = await User.find(
-            { 
+            {
               role: "farmer",
               _id: { $nin: ratedFarmerIds }
             },
@@ -165,10 +140,9 @@ const merchantController = {
 
           topFarmers = [...topFarmers, ...additionalFormatted];
         }
-
       } catch (error) {
         console.error('Error fetching top farmers:', error);
-        topFarmers = []; // Fallback to empty array if there's an error
+        topFarmers = [];
       }
 
       const dashboardData = {
@@ -184,12 +158,64 @@ const merchantController = {
 
     } catch (error) {
       console.error('Error fetching merchant dashboard:', error);
-      res.status(500).json({ 
-        error: "Failed to load merchant dashboard", 
-        details: error.message 
+      res.status(500).json({
+        error: "Failed to load merchant dashboard",
+        details: error.message
       });
+    }
+  },
+
+  // Helper function to get top rated farmers for a specific merchant
+  async getTopRatedFarmers(merchantId, limit = 3) {
+    try {
+      // Get all reviews from this merchant to farmers, grouped by farmer
+      const farmerRatings = await Review.aggregate([
+        { $match: { merchantId: merchantId } },
+        {
+          $group: {
+            _id: "$farmerId",
+            averageRating: { $avg: "$rating" },
+            totalReviews: { $sum: 1 },
+            totalOrders: { $sum: 1 }
+          }
+        },
+        { $match: { totalReviews: { $gte: 1 } } },
+        { $sort: { averageRating: -1, totalReviews: -1 } },
+        { $limit: limit }
+      ]);
+
+      // Get farmer details for the top rated farmers
+      const topFarmers = await Promise.all(
+        farmerRatings.map(async (rating) => {
+          try {
+            const farmer = await User.findOne({ auth0Id: rating._id });
+            if (farmer) {
+              return {
+                farmerId: rating._id,
+                name: farmer.name,
+                location: `${farmer.district || 'Unknown'}, ${farmer.province || 'Sri Lanka'}`,
+                averageRating: Math.round(rating.averageRating * 10) / 10,
+                totalReviews: rating.totalReviews,
+                orders: rating.totalOrders,
+                avatar: farmer.picture || null
+              };
+            }
+            return null;
+          } catch (error) {
+            console.error('Error fetching farmer details:', error);
+            return null;
+          }
+        })
+      );
+
+      return topFarmers.filter(farmer => farmer !== null);
+    } catch (error) {
+      console.error('Error getting top rated farmers:', error);
+      return [];
     }
   }
 };
+
+const getTopRatedFarmers = merchantController.getTopRatedFarmers;
 
 module.exports = merchantController;

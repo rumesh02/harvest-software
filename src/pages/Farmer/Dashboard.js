@@ -18,7 +18,9 @@ import {
   Alert,
   Button,
   Chip,
-  Rating
+  Rating,
+  Tabs,
+  Tab
 } from '@mui/material';
 import { 
   TrendingUp as RevenueIcon, 
@@ -26,9 +28,12 @@ import {
   AccountBalance as YearlyIcon,
   Person as PersonIcon,
   MonetizationOn as MoneyIcon,
-  Reviews as ReviewsIcon
+  Reviews as ReviewsIcon,
+  Assessment as AssessmentIcon,
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import TrendAnalysis from "../../components/TrendAnalysis";
 
 const Dashboard = () => {
   const [revenueData, setRevenueData] = useState({
@@ -43,6 +48,11 @@ const Dashboard = () => {
   const { user } = useAuth0();
   const [reviews, setReviews] = useState([]);
   const [farmerRating, setFarmerRating] = useState(0);
+  const [activeTab, setActiveTab] = useState(0);
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
 
   useEffect(() => {
     const fetchRevenueData = async () => {
@@ -248,100 +258,137 @@ const Dashboard = () => {
           </Typography>
         </Box>
 
-        {/* Enhanced Stats Cards */}
-        <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mb: { xs: 2, md: 4 } }}>
-          {statCards.map((card, index) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-              <Card 
-                elevation={0}
-                sx={{ 
-                  height: '100%',
-                  background: card.bgColor,
-                  borderRadius: 3,
-                  color: card.color,
-                  boxShadow: '0 1.5px 6px rgba(67, 160, 71, 0.07)',
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  position: 'relative',
-                  overflow: 'hidden',
-                  "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 4px 16px rgba(67, 160, 71, 0.13)"
-                  }
-                }}
-              >
-                <CardContent sx={{ p: { xs: 2, md: 3 }, pt: { xs: 2.5, md: 3.5 } }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Box sx={{ flex: 1 }}>
-                    <Typography 
-                        variant="subtitle2" 
-                        color="#155724" 
-                        gutterBottom
-                        sx={{ fontWeight: 500, mb: 1, fontSize: { xs: 15, md: 16 } }}
-                      >
-                        {card.title}
-                      </Typography>
-                      <Typography 
-                        variant="h6" 
-                        component="div" 
-                        sx={{ 
-                          fontWeight: 700,
-                          color: card.color,
-                          fontSize: { xs: 22, md: 26 }
-                        }}
-                      >
-                        {card.value}
-                      </Typography>
-                    </Box>
-                    <Avatar 
-                      sx={{ 
-                        background: '#d4edda',
-                        color: '#155724',
-                        width: 44,
-                        height: 44,
-                        boxShadow: '0 1.5px 6px rgba(67, 160, 71, 0.10)',
-                        fontSize: 24
-                      }}
-                    >
-                      {card.icon}
-                    </Avatar>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+        {/* Tab Navigation */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={handleTabChange}
+            centered
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '16px',
+                color: '#6b7280',
+                '&.Mui-selected': {
+                  color: '#155724',
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#155724',
+              },
+            }}
+          >
+            <Tab 
+              icon={<DashboardIcon />} 
+              label="Overview" 
+              iconPosition="start"
+            />
+            <Tab 
+              icon={<AssessmentIcon />} 
+              label="Trend Analysis" 
+              iconPosition="start"
+            />
+          </Tabs>
+        </Box>
 
-        {/* Enhanced Charts and Lists */}
-        {!hasData && (
-          <Box sx={{ 
-            textAlign: 'center', 
-            py: 8, 
-            mb: 4,
-            background: 'rgba(255,255,255,0.8)',
-            borderRadius: 3,
-            backdropFilter: 'blur(10px)'
-          }}>
-            <Box sx={{ 
-              width: 80, 
-              height: 80, 
-              mx: 'auto', 
-              mb: 3,
-              background: 'linear-gradient(135deg, #10B981 0%, #155724 100%)',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <MoneyIcon sx={{ color: 'white', fontSize: 40 }} />
-            </Box>
-            <Typography variant="h5" color="#000" gutterBottom sx={{ fontWeight: 600 }}>
-              No Revenue Data Available Yet
-            </Typography>
-            <Typography variant="body1" color="#000" sx={{ maxWidth: 400, mx: 'auto' }}>
-              Start listing your harvests to see your revenue analytics and track your business growth
-            </Typography>
-          </Box>
-        )}
+        {/* Tab Content */}
+        {activeTab === 0 && (
+          <>
+            {/* Enhanced Stats Cards */}
+            <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mb: { xs: 2, md: 4 } }}>
+              {statCards.map((card, index) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+                  <Card 
+                    elevation={0}
+                    sx={{ 
+                      height: '100%',
+                      background: card.bgColor,
+                      borderRadius: 3,
+                      color: card.color,
+                      boxShadow: '0 1.5px 6px rgba(67, 160, 71, 0.07)',
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      position: 'relative',
+                      overflow: 'hidden',
+                      "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 4px 16px rgba(67, 160, 71, 0.13)"
+                      }
+                    }}
+                  >
+                    <CardContent sx={{ p: { xs: 2, md: 3 }, pt: { xs: 2.5, md: 3.5 } }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <Box sx={{ flex: 1 }}>
+                        <Typography 
+                            variant="subtitle2" 
+                            color="#155724" 
+                            gutterBottom
+                            sx={{ fontWeight: 500, mb: 1, fontSize: { xs: 15, md: 16 } }}
+                          >
+                            {card.title}
+                          </Typography>
+                          <Typography 
+                            variant="h6" 
+                            component="div" 
+                            sx={{ 
+                              fontWeight: 700,
+                              color: card.color,
+                              fontSize: { xs: 22, md: 26 }
+                            }}
+                          >
+                            {card.value}
+                          </Typography>
+                        </Box>
+                        <Avatar 
+                          sx={{ 
+                            background: '#d4edda',
+                            color: '#155724',
+                            width: 44,
+                            height: 44,
+                            boxShadow: '0 1.5px 6px rgba(67, 160, 71, 0.10)',
+                            fontSize: 24
+                          }}
+                        >
+                          {card.icon}
+                        </Avatar>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Enhanced Charts and Lists */}
+            {!hasData && (
+              <Box sx={{ 
+                textAlign: 'center', 
+                py: 8, 
+                mb: 4,
+                background: 'rgba(255,255,255,0.8)',
+                borderRadius: 3,
+                backdropFilter: 'blur(10px)'
+              }}>
+                <Box sx={{ 
+                  width: 80, 
+                  height: 80, 
+                  mx: 'auto', 
+                  mb: 3,
+                  background: 'linear-gradient(135deg, #10B981 0%, #155724 100%)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <MoneyIcon sx={{ color: 'white', fontSize: 40 }} />
+                </Box>
+                <Typography variant="h5" color="#000" gutterBottom sx={{ fontWeight: 600 }}>
+                  No Revenue Data Available Yet
+                </Typography>
+                <Typography variant="body1" color="#000" sx={{ maxWidth: 400, mx: 'auto' }}>
+                  Start listing your harvests to see your revenue analytics and track your business growth
+                </Typography>
+              </Box>
+            )}
         
         <Grid container spacing={{ xs: 2.5, md: 4 }}>
           <Grid size={{ xs: 12, lg: 6 }}>
@@ -661,6 +708,13 @@ const Dashboard = () => {
             </Paper>
           </Grid>
         </Grid>
+          </>
+        )}
+
+        {/* Trend Analysis Tab */}
+        {activeTab === 1 && (
+          <TrendAnalysis />
+        )}
       </Box>
     </Box>
   );

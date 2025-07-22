@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { Snackbar, Alert } from '@mui/material';
 import axios from "axios";
 
 const ProfilePage = () => {
@@ -16,6 +17,11 @@ const ProfilePage = () => {
     district: "",
   });
   const [editing, setEditing] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -61,19 +67,27 @@ const ProfilePage = () => {
     try {
       const response = await axios.put(`/api/users/${user.sub}`, profile);
       if (response.status === 200 || response.status === 204) {
-        alert("Profile updated successfully!");
+        showSnackbar("Profile updated successfully!", "success");
         setEditing(false);
       } else {
-        alert("Unexpected server response.");
+        showSnackbar("Unexpected server response.", "warning");
       }
     } catch (error) {
       console.error("Save error:", error);
       if (error.response?.status === 404) {
-        alert("User not found. Please register first.");
+        showSnackbar("User not found. Please register first.", "error");
       } else {
-        alert(error.response?.data?.error || "Failed to save changes.");
+        showSnackbar(error.response?.data?.error || "Failed to save changes.", "error");
       }
     }
+  };
+
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
@@ -277,6 +291,30 @@ const ProfilePage = () => {
             </div>
           </div>
         </div>
+
+      {/* MUI Snackbar for notifications - matches other components */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ 
+            width: '100%',
+            borderRadius: '8px',
+            fontWeight: 500,
+            '& .MuiAlert-icon': {
+              fontSize: '20px'
+            }
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

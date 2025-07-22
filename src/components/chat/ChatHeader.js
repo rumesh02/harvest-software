@@ -7,13 +7,21 @@ import {
   Badge,
   Tooltip,
   Menu,
-  MenuItem
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button
 } from '@mui/material';
 import {
   Phone as PhoneIcon,
   VideoCall as VideoIcon,
   MoreVert as MoreIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  ClearAll as ClearIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { formatTime } from '../../utils/chatUtils';
@@ -28,8 +36,29 @@ const StyledChatHeader = styled(Box)(({ theme }) => ({
   zIndex: 10,
 }));
 
-const ChatHeader = ({ targetUser, isOnline, lastSeen, onClose }) => {
+const ChatHeader = ({ targetUser, isOnline, lastSeen, onClose, onClearChat, currentUserId }) => {
   const [anchorEl, setAnchorEl] = useState(null);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleClearChatClick = () => {
+    handleMenuClose();
+    setClearDialogOpen(true);
+  };
+
+  const handleClearChatConfirm = () => {
+    setClearDialogOpen(false);
+    if (onClearChat) {
+      onClearChat();
+    }
+  };
+
+  const handleClearChatCancel = () => {
+    setClearDialogOpen(false);
+  };
 
   return (
     <StyledChatHeader>
@@ -95,16 +124,50 @@ const ChatHeader = ({ targetUser, isOnline, lastSeen, onClose }) => {
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
-        onClose={() => setAnchorEl(null)}
+        onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => setAnchorEl(null)}>
+        <MenuItem onClick={handleMenuClose}>
           <InfoIcon sx={{ mr: 1 }} />
           Chat Info
         </MenuItem>
-        <MenuItem onClick={() => setAnchorEl(null)}>
-          Clear Chat
+        <MenuItem onClick={handleClearChatClick} sx={{ color: '#EF4444' }}>
+          <ClearIcon sx={{ mr: 1 }} />
+          Clear My Chat History
         </MenuItem>
       </Menu>
+
+      {/* Clear Chat Confirmation Dialog */}
+      <Dialog
+        open={clearDialogOpen}
+        onClose={handleClearChatCancel}
+        aria-labelledby="clear-chat-dialog-title"
+        aria-describedby="clear-chat-dialog-description"
+      >
+        <DialogTitle id="clear-chat-dialog-title" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningIcon sx={{ color: '#EF4444' }} />
+          Clear My Chat History
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="clear-chat-dialog-description">
+            Are you sure you want to clear your chat history with {targetUser?.name}? 
+            This will only remove the chat history from your account. {targetUser?.name} will still be able to see all messages.
+            This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClearChatCancel} color="primary">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleClearChatConfirm} 
+            color="error" 
+            variant="contained"
+            sx={{ ml: 1 }}
+          >
+            Clear My History
+          </Button>
+        </DialogActions>
+      </Dialog>
     </StyledChatHeader>
   );
 };

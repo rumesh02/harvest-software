@@ -229,27 +229,30 @@ router.delete('/:messageId', async (req, res) => {
 // Get conversation between two users
 router.get('/:user1/:user2', async (req, res) => {
   const { user1, user2 } = req.params;
-  const { page = 1, limit = 50 } = req.query;
+  const { page = 1, limit = 50, requestingUserId } = req.query;
 
   try {
-    const messages = await Message.find({
+    // Base query for messages between the two users
+    const baseQuery = {
       $or: [
         { senderId: user1, receiverId: user2 },
         { senderId: user2, receiverId: user1 },
-      ],
-    })
-    .populate('files.fileId')
-    .populate('replyTo')
-    .sort({ timestamp: -1 })
-    .limit(limit * 1)
-    .skip((page - 1) * limit);
+      ]
+    };
 
-    const total = await Message.countDocuments({
-      $or: [
-        { senderId: user1, receiverId: user2 },
-        { senderId: user2, receiverId: user1 },
-      ],
-    });
+    // If a requesting user is specified, filter out messages hidden for that user
+    if (requestingUserId) {
+      baseQuery['hiddenFor.userId'] = { $ne: requestingUserId };
+    }
+
+    const messages = await Message.find(baseQuery)
+      .populate('files.fileId')
+      .populate('replyTo')
+      .sort({ timestamp: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await Message.countDocuments(baseQuery);
 
     res.json({
       success: true,
@@ -278,7 +281,14 @@ router.get('/contacts/:userId', async (req, res) => {
 
   try {
     const messages = await Message.find({
-      $or: [{ senderId: userId }, { receiverId: userId }]
+      $and: [
+        {
+          $or: [{ senderId: userId }, { receiverId: userId }]
+        },
+        {
+          'hiddenFor.userId': { $ne: userId } // Exclude messages hidden for this user
+        }
+      ]
     });
 
     const userIds = new Set();
@@ -302,11 +312,18 @@ router.get('/recent/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // Get all conversations for this user
+    // Get all conversations for this user, excluding hidden messages
     const conversations = await Message.aggregate([
       {
         $match: {
-          $or: [{ senderId: userId }, { receiverId: userId }]
+          $and: [
+            {
+              $or: [{ senderId: userId }, { receiverId: userId }]
+            },
+            {
+              'hiddenFor.userId': { $ne: userId } // Exclude messages hidden for this user
+            }
+          ]
         }
       },
       {
@@ -382,7 +399,12 @@ router.put('/read/:userId/:senderId', async (req, res) => {
 
   try {
     await Message.updateMany(
-      { senderId: senderId, receiverId: userId, read: { $ne: true } },
+      { 
+        senderId: senderId, 
+        receiverId: userId, 
+        read: { $ne: true },
+        'hiddenFor.userId': { $ne: userId } // Don't mark hidden messages as read
+      },
       { read: true }
     );
 
@@ -400,13 +422,63 @@ router.get('/unread/:userId', async (req, res) => {
   try {
     const unreadCount = await Message.countDocuments({
       receiverId: userId,
-      read: { $ne: true }
+      read: { $ne: true },
+      'hiddenFor.userId': { $ne: userId } // Exclude messages hidden for this user
     });
 
     res.json({ unreadCount });
   } catch (err) {
     console.error('Error getting unread count:', err);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Clear chat history between two users (user-specific)
+router.put('/clear/:user1/:user2', async (req, res) => {
+  const { user1, user2 } = req.params;
+  const { userId } = req.body; // User requesting the clear
+
+  try {
+    // Verify that the requesting user is one of the participants
+    if (userId !== user1 && userId !== user2) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized to clear this conversation'
+      });
+    }
+
+    // Instead of deleting messages, mark them as hidden for the requesting user
+    const result = await Message.updateMany(
+      {
+        $or: [
+          { senderId: user1, receiverId: user2 },
+          { senderId: user2, receiverId: user1 },
+        ],
+        'hiddenFor.userId': { $ne: userId } // Only update messages not already hidden for this user
+      },
+      {
+        $push: {
+          hiddenFor: {
+            userId: userId,
+            hiddenAt: new Date()
+          }
+        }
+      }
+    );
+
+    res.json({
+      success: true,
+      message: `Chat history cleared successfully for user. ${result.modifiedCount} messages hidden.`,
+      hiddenCount: result.modifiedCount
+    });
+
+  } catch (error) {
+    console.error('Clear chat history error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to clear chat history',
+      error: error.message
+    });
   }
 });
 

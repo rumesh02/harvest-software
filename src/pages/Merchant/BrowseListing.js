@@ -32,8 +32,10 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import EmojiNatureIcon from "@mui/icons-material/EmojiNature";
 import CloseIcon from "@mui/icons-material/Close";
+import ChatIcon from "@mui/icons-material/Chat";
 import axios from "axios";
 import { useCart } from "../../context/CartContext";
+import { useNavigate } from "react-router-dom";
 import {
   setupProductUpdateListeners,
   joinUserRoom,
@@ -59,6 +61,7 @@ const BrowseListing = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   // Add these states for See More functionality
   const [seeMoreOpen, setSeeMoreOpen] = useState(false);
@@ -142,6 +145,17 @@ const BrowseListing = () => {
       setFarmerInfo(null);
     } finally {
       setLoadingFarmer(false);
+    }
+  };
+
+  // Add the handleChatWithFarmer function
+  const handleChatWithFarmer = () => {
+    if (selectedProduct && selectedProduct.farmerID) {
+      // Close the product details dialog first
+      setSeeMoreOpen(false);
+      
+      // Navigate to merchant messages page with chatWith parameter
+      navigate(`/merchant/messages?chatWith=${selectedProduct.farmerID}`);
     }
   };
 
@@ -812,7 +826,14 @@ const BrowseListing = () => {
                 <strong>Description:</strong> {selectedProduct.description || "No description available"}
               </Typography>
               <Typography variant="body2">
-                <strong>Harvest Location:</strong> {selectedProduct.harvestDetails?.location || "N/A"}
+                <strong>Harvest Location:</strong> {
+                  selectedProduct.harvestDetails?.location || 
+                  (farmerInfo?.address && farmerInfo?.district ? 
+                    `${farmerInfo.address}, ${farmerInfo.district}` : 
+                    farmerInfo?.address || 
+                    farmerInfo?.district || 
+                    "Location not available")
+                }
               </Typography>
               <Typography variant="body2">
                 <strong>Listed Date:</strong> {new Date(selectedProduct.listedDate).toLocaleDateString()}
@@ -829,7 +850,36 @@ const BrowseListing = () => {
             </>
           )}
         </DialogContent>
-        <DialogActions />
+        <DialogActions sx={{ p: 3, gap: 2 }}>
+          <Button
+            variant="contained"
+            onClick={handleChatWithFarmer}
+            startIcon={<ChatIcon />}
+            disabled={!selectedProduct?.farmerID}
+            sx={{
+              backgroundColor: '#2E7D32',
+              '&:hover': {
+                backgroundColor: '#1B5E20'
+              },
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3
+            }}
+          >
+            Chat with Farmer
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => setSeeMoreOpen(false)}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
       </Dialog>
     </Container>
   );

@@ -153,6 +153,8 @@ const TransporterSidebar = () => {
       {/* Settings and Logout */}
       <List sx={{ padding: 0 }}>
         <ListItemButton 
+          component={Link}
+          to="/transporter/profile"
           sx={{ 
             borderRadius: "8px", 
             padding: "8px 12px",

@@ -1,18 +1,19 @@
 import React, { useState } from "react";
-import "./AddVehicle.css";
 import { UploadCloud, Truck, FileText, Scale, Camera } from "lucide-react";
 import { addVehicle } from "../../services/api";
 import { useAuth0 } from "@auth0/auth0-react";
+import "./AddVehicle.css";
 
 const AddVehicle = () => {
-  const { user } = useAuth0();
+  const { user, isAuthenticated } = useAuth0();
   const [vehicleType, setVehicleType] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
   const [loadCapacity, setLoadCapacity] = useState("");
+  const [pricePerKm, setPricePerKm] = useState("");
   const [file, setFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [success] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
@@ -33,6 +34,12 @@ const AddVehicle = () => {
     setIsSubmitting(true);
     setError(null);
 
+    if (!isAuthenticated || !user) {
+      setError("Please log in to add a vehicle");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       if (!file) {
         setError("Please upload a vehicle image");
@@ -44,8 +51,9 @@ const AddVehicle = () => {
         vehicleType,
         licensePlate,
         loadCapacity,
-        transporterId: user.sub, // Auth0 user.sub
-        district: user['https://your-app/district'] || "Colombo", // Replace with actual path or form value
+        pricePerKm: parseFloat(pricePerKm),
+        transporterId: user.sub,
+        district: user['https://your-app/district'] || "Colombo",
         file
       };
 
@@ -54,18 +62,14 @@ const AddVehicle = () => {
       setVehicleType("");
       setLicensePlate("");
       setLoadCapacity("");
+      setPricePerKm("");
       setFile(null);
+      setSuccess(true);
 
-      alert("Vehicle added successfully!");
-      window.location.reload();
-
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error("Failed to add vehicle:", err);
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Failed to add vehicle. Please try again.");
-      }
+      setError(err.response?.data?.message || "Failed to add vehicle. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -73,26 +77,20 @@ const AddVehicle = () => {
 
   return (
     <div className="add-vehicle-page">
-      {/* Page Header */}
       <div className="page-header">
         <h1>Add New Vehicle</h1>
         <p>Register your transport vehicle to start receiving booking requests from merchants</p>
       </div>
 
-      {/* Main Content */}
       <div className="form-container">
-        {/* Form Section */}
         <div className="form-section">
           <h2>Vehicle Information</h2>
           {error && <p className="error-message">{error}</p>}
           {success && <p className="success-message">Vehicle added successfully!</p>}
-          
+
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>
-                <Truck className="label-icon" />
-                Vehicle Type
-              </label>
+              <label><Truck className="label-icon" /> Vehicle Type</label>
               <input
                 type="text"
                 value={vehicleType}
@@ -103,10 +101,7 @@ const AddVehicle = () => {
             </div>
 
             <div className="form-group">
-              <label>
-                <FileText className="label-icon" />
-                License Plate
-              </label>
+              <label><FileText className="label-icon" /> License Plate</label>
               <input
                 type="text"
                 value={licensePlate}
@@ -117,10 +112,7 @@ const AddVehicle = () => {
             </div>
 
             <div className="form-group">
-              <label>
-                <Scale className="label-icon" />
-                Load Capacity (kg)
-              </label>
+              <label><Scale className="label-icon" /> Load Capacity (kg)</label>
               <input
                 type="number"
                 value={loadCapacity}
@@ -131,10 +123,7 @@ const AddVehicle = () => {
             </div>
 
             <div className="form-group">
-              <label className="upload-label">
-                <Camera className="label-icon" />
-                Vehicle Photo
-              </label>
+              <label className="upload-label"><Camera className="label-icon" /> Vehicle Photo</label>
               <div
                 className={`file-upload-box ${file ? 'has-file' : ''}`}
                 onDragOver={handleDragOver}
@@ -156,15 +145,24 @@ const AddVehicle = () => {
                     </div>
                   ) : (
                     <>
-                      <p>
-                        <span className="click-text">Click to upload</span> or{" "}
-                        <span className="drag-text">drag and drop</span>
-                      </p>
+                      <p><span className="click-text">Click to upload</span> or <span className="drag-text">drag and drop</span></p>
                       <p className="file-info">JPG, JPEG, PNG less than 1MB</p>
                     </>
                   )}
                 </label>
               </div>
+            </div>
+
+            <div className="form-group">
+              <label>Price Per KM (LKR)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={pricePerKm}
+                onChange={(e) => setPricePerKm(e.target.value)}
+                placeholder="Enter price per kilometer"
+                required
+              />
             </div>
 
             <button type="submit" disabled={isSubmitting}>
@@ -173,21 +171,17 @@ const AddVehicle = () => {
           </form>
         </div>
 
-        {/* Preview Section */}
         <div className="preview-section">
           <h3>Vehicle Preview</h3>
           <div className="vehicle-preview">
             {file ? (
-              <img 
-                src={URL.createObjectURL(file)} 
-                alt="Vehicle preview" 
-              />
+              <img src={URL.createObjectURL(file)} alt="Vehicle preview" />
             ) : (
-              <div style={{ 
-                width: '100%', 
-                height: '150px', 
-                backgroundColor: '#f7fafc', 
-                borderRadius: '8px', 
+              <div style={{
+                width: '100%',
+                height: '150px',
+                backgroundColor: '#f7fafc',
+                borderRadius: '8px',
                 marginBottom: '15px',
                 display: 'flex',
                 alignItems: 'center',
@@ -201,6 +195,7 @@ const AddVehicle = () => {
               <p><strong>Type:</strong> {vehicleType || "Not specified"}</p>
               <p><strong>License:</strong> {licensePlate || "Not specified"}</p>
               <p><strong>Capacity:</strong> {loadCapacity ? `${loadCapacity} kg` : "Not specified"}</p>
+              <p><strong>Price/KM:</strong> {pricePerKm ? `${pricePerKm} LKR` : "Not specified"}</p>
             </div>
           </div>
         </div>

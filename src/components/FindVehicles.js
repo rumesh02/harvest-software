@@ -695,6 +695,17 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
                     </Typography>
                     <Typography
                       variant="body2"
+                      sx={{ 
+                        mb: 1.5, 
+                        fontSize: "0.85rem",
+                        color: "#1976d2",
+                        fontWeight: 600
+                      }}
+                    >
+                      Price: LKR {vehicle.pricePerKm || "N/A"}/km
+                    </Typography>
+                    <Typography
+                      variant="body2"
                       color="text.secondary"
                       sx={{ mb: 1.5, fontSize: "0.85rem" }}
                     >
@@ -840,6 +851,12 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
                 <Box>
                   <Typography variant="body2" color="text.secondary">Load Capacity:</Typography>
                   <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1.1rem' }}>{selectedVehicle?.loadCapacity} kg</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">Price per KM:</Typography>
+                  <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1.1rem', color: '#1976d2' }}>
+                    LKR {selectedVehicle?.pricePerKm || "N/A"}/km
+                  </Typography>
                 </Box>
                 <Box>
                   <Typography variant="body2" color="text.secondary">Transporter Contact:</Typography>

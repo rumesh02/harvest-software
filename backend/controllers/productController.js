@@ -68,7 +68,7 @@ const getProducts = async (req, res) => {
     const skip = (Number(page) - 1) * Number(limit);
     const products = await Product.find(
       filter,
-      "name price quantity image listedDate farmerID harvestDetails itemCode location productID"
+      "name price quantity image listedDate farmerID harvestDetails itemCode location productID type"
     )
       .sort(sortOptions)
       .skip(skip)

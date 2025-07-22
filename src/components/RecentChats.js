@@ -93,6 +93,9 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
           apiChats = response.data.chats;
         } else if (response.data.data && Array.isArray(response.data.data)) {
           apiChats = response.data.data;
+        } else if (response.data.messages && Array.isArray(response.data.messages)) {
+          // Handle the actual API response structure: {success: true, messages: Array, pagination: {...}}
+          apiChats = response.data.messages;
         } else {
           console.warn('⚠️ Unexpected API response structure:', response.data);
           apiChats = [];
@@ -293,7 +296,7 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
       if (mountedRef.current) {
         fetchRecentChats();
       }
-    }, 30000); // Refresh every 30 seconds
+    }, 60000); // Refresh every 60 seconds (reduced from 30 for better performance)
 
     return () => {
       if (intervalRef.current) {

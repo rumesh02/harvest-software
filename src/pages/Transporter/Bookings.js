@@ -122,7 +122,10 @@ const Bookings = () => {
     }
     
     try {
+      console.log('✅ Attempting to accept booking:', bookingId);
       const response = await axios.put(`http://localhost:5000/api/bookings/${bookingId}/accept`);
+      console.log('📋 Acceptance response:', response.data);
+      
       if (response.data.success) {
         // Update the booking status in the local state
         setBookings(prevBookings => 
@@ -133,10 +136,32 @@ const Bookings = () => {
           )
         );
         alert('Booking accepted successfully!');
+        console.log('✅ Booking accepted successfully');
+      } else {
+        console.error('❌ Acceptance failed - no success flag in response');
+        alert('Failed to accept booking. Server response: ' + JSON.stringify(response.data));
       }
     } catch (error) {
-      console.error('Error accepting booking:', error);
-      alert('Failed to accept booking. Please try again.');
+      console.error('❌ Error accepting booking:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      });
+      
+      let errorMessage = 'Failed to accept booking. ';
+      if (error.response?.data?.error) {
+        errorMessage += error.response.data.error;
+      } else if (error.response?.data?.details) {
+        errorMessage += error.response.data.details;
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Please try again.';
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -147,7 +172,10 @@ const Bookings = () => {
     }
     
     try {
+      console.log('🔴 Attempting to reject booking:', bookingId);
       const response = await axios.put(`http://localhost:5000/api/bookings/${bookingId}/reject`);
+      console.log('📋 Rejection response:', response.data);
+      
       if (response.data.success) {
         // Update the booking status in the local state
         setBookings(prevBookings => 
@@ -158,10 +186,32 @@ const Bookings = () => {
           )
         );
         alert('Booking rejected successfully!');
+        console.log('✅ Booking rejected successfully');
+      } else {
+        console.error('❌ Rejection failed - no success flag in response');
+        alert('Failed to reject booking. Server response: ' + JSON.stringify(response.data));
       }
     } catch (error) {
-      console.error('Error rejecting booking:', error);
-      alert('Failed to reject booking. Please try again.');
+      console.error('❌ Error rejecting booking:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      });
+      
+      let errorMessage = 'Failed to reject booking. ';
+      if (error.response?.data?.error) {
+        errorMessage += error.response.data.error;
+      } else if (error.response?.data?.details) {
+        errorMessage += error.response.data.details;
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Please try again.';
+      }
+      
+      alert(errorMessage);
     }
   };
 

@@ -127,6 +127,11 @@ const Bookings = () => {
       console.log('📋 Acceptance response:', response.data);
       
       if (response.data.success) {
+        // Get booking details for merchant notification testing
+        const booking = response.data.booking;
+        console.log('📦 Booking details:', booking);
+        console.log('🏪 Merchant ID from booking:', booking.merchantId);
+        
         // Update the booking status in the local state
         setBookings(prevBookings => 
           prevBookings.map(booking => 
@@ -135,8 +140,10 @@ const Bookings = () => {
               : booking
           )
         );
-        alert('Booking accepted successfully!');
+        
+        alert(`Booking accepted successfully! Notification sent to merchant ${booking.merchantName}`);
         console.log('✅ Booking accepted successfully');
+        console.log('📧 Merchant notification should be created for:', booking.merchantId);
       } else {
         console.error('❌ Acceptance failed - no success flag in response');
         alert('Failed to accept booking. Server response: ' + JSON.stringify(response.data));
@@ -177,6 +184,11 @@ const Bookings = () => {
       console.log('📋 Rejection response:', response.data);
       
       if (response.data.success) {
+        // Get booking details for merchant notification testing
+        const booking = response.data.booking;
+        console.log('📦 Booking details:', booking);
+        console.log('🏪 Merchant ID from booking:', booking.merchantId);
+        
         // Update the booking status in the local state
         setBookings(prevBookings => 
           prevBookings.map(booking => 
@@ -185,8 +197,10 @@ const Bookings = () => {
               : booking
           )
         );
-        alert('Booking rejected successfully!');
+        
+        alert(`Booking rejected successfully! Notification sent to merchant ${booking.merchantName}`);
         console.log('✅ Booking rejected successfully');
+        console.log('📧 Merchant notification should be created for:', booking.merchantId);
       } else {
         console.error('❌ Rejection failed - no success flag in response');
         alert('Failed to reject booking. Server response: ' + JSON.stringify(response.data));
@@ -276,6 +290,22 @@ const Bookings = () => {
             >
               {notificationLoading ? 'Checking...' : 'Check Notifications'}
             </Button>
+            
+            {/* Info about notifications */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              bgcolor: 'rgba(255,255,255,0.1)',
+              px: 2,
+              py: 1,
+              borderRadius: 1,
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                💡 Merchants will receive notifications when you accept/reject bookings
+              </Typography>
+            </Box>
           </Box>
           
           {/* Stats */}

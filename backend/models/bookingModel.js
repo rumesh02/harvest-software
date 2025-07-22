@@ -10,6 +10,10 @@ const bookingSchema = new mongoose.Schema({
     type: String, // Auth0 user.sub
     required: true,
   },
+  merchantId: {
+    type: String, // Auth0 user.sub for merchant
+    required: true,
+  },
   merchantPhone: {
     type: String,
     required: true,
@@ -33,6 +37,11 @@ const bookingSchema = new mongoose.Schema({
   weight: {
     type: Number,
     required: true,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'confirmed', 'completed', 'cancelled'],
+    default: 'pending'
   },
   // Add other fields as needed
 }, {

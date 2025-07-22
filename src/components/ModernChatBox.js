@@ -32,12 +32,23 @@ const ChatContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
 }));
 
-const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose }) => {
+const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose, fromNotification = false }) => {
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'info'
   });
+  const [showNotificationBanner, setShowNotificationBanner] = useState(fromNotification);
+
+  // Auto-hide notification banner after 8 seconds
+  useEffect(() => {
+    if (fromNotification) {
+      const timer = setTimeout(() => {
+        setShowNotificationBanner(false);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [fromNotification]);
 
   // Get the correct target user ID - prefer targetUserId prop, fallback to targetUser properties
   const actualTargetUserId = targetUserId || targetUser?.auth0Id || targetUser?.id;
@@ -175,6 +186,44 @@ const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose }) => 
         currentUserId={currentUserId}
         onClearChat={handleClearChat}
       />
+
+      {/* Notification Banner - shown when chat is opened from notification */}
+      {showNotificationBanner && (
+        <Box
+          sx={{
+            backgroundColor: '#E3F2FD',
+            borderLeft: '4px solid #2196F3',
+            padding: '8px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '0.875rem',
+            color: '#1565C0',
+            animation: 'slideIn 0.3s ease-out',
+            '@keyframes slideIn': {
+              from: { opacity: 0, transform: 'translateY(-10px)' },
+              to: { opacity: 1, transform: 'translateY(0)' }
+            }
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              🔔 Opened from notification
+            </Typography>
+          </Box>
+          <Button
+            size="small"
+            onClick={() => setShowNotificationBanner(false)}
+            sx={{ 
+              minWidth: 'auto', 
+              color: '#1565C0',
+              '&:hover': { backgroundColor: 'rgba(33, 150, 243, 0.1)' }
+            }}
+          >
+            ×
+          </Button>
+        </Box>
+      )}
 
       {/* Messages Area */}
       <MessageList

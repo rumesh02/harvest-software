@@ -300,4 +300,64 @@ router.put('/:id/reject', async (req, res) => {
   }
 });
 
+// Complete a booking
+router.put('/:id/complete', async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    console.log('✅ Completing booking with ID:', bookingId);
+    
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      console.log('❌ Booking not found:', bookingId);
+      return res.status(404).json({ error: "Booking not found" });
+    }
+    
+    console.log('📋 Found booking:', booking);
+    
+    // Update booking status to completed
+    booking.status = 'completed';
+    await booking.save();
+    
+    console.log('✅ Booking status updated to completed');
+    
+    // Create notification for merchant about booking completion
+    try {
+      const merchantNotification = new Notification({
+        userId: booking.merchantId,
+        title: '✅ Booking Completed!',
+        message: `Your vehicle booking has been completed by the transporter. Booking ID: ${booking._id}`,
+        type: 'booking_completed',
+        relatedId: booking._id.toString(),
+        metadata: {
+          bookingId: booking._id.toString(),
+          transporterId: booking.transporterId,
+          vehicleId: booking.vehicleId,
+          status: 'completed'
+        }
+      });
+      
+      await merchantNotification.save();
+      console.log('📧 Merchant notification created for completion');
+      
+      // Emit socket event for real-time notification
+      if (req.app.get('io')) {
+        const io = req.app.get('io');
+        io.emit('newNotification', {
+          userId: booking.merchantId,
+          notification: merchantNotification
+        });
+        console.log('🔔 Socket notification sent for completion');
+      }
+    } catch (notificationError) {
+      console.error('❌ Error creating merchant notification for booking completion:', notificationError);
+    }
+    
+    console.log('✅ Booking completion completed successfully');
+    res.json({ success: true, booking });
+  } catch (err) {
+    console.error('❌ Error completing booking:', err);
+    res.status(500).json({ error: "Failed to complete booking", details: err.message });
+  }
+});
+
 module.exports = router;

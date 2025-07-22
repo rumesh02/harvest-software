@@ -41,6 +41,7 @@ import Collection from "./pages/Merchant/Collection";
 // Transporter Pages
 import TransporterDashboard from "./pages/Transporter/TransporterDashboard";
 import Bookings from "./pages/Transporter/Bookings";
+import AcceptedBookings from "./pages/Transporter/AcceptedBookings";
 import AddVehicle from "./pages/Transporter/AddVehicle";
 import Inbox from "./pages/Transporter/Inbox";
 import EditListed from "./pages/Transporter/EditListed";
@@ -195,6 +196,7 @@ const AppRoutes = () => {
         <Route path="dashboard" element={<TransporterDashboard />} />
         <Route path="addVehicle" element={<AddVehicle />} />
         <Route path="bookings" element={<Bookings />} />
+        <Route path="acceptedBookings" element={<AcceptedBookings />} />
         <Route path="editListed" element={<EditListed />} />
         <Route path="inbox" element={<Inbox />} />
         <Route path="profile" element={<ProfilePage />} />

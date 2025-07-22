@@ -96,6 +96,14 @@
 .load-capacity {
   color: #555;
   font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.price-per-km {
+  color: #28a745;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
 }
 
 /* Shared button styles for edit and remove */

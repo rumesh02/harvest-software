@@ -13,6 +13,7 @@ const menuItems = [
   { text: "Dashboard", icon: <Home />, path: "dashboard" },
   { text: "Add New", icon: <PlusCircleFill />, path: "addVehicle" },
   { text: "Bookings", icon: <Gavel />, path: "bookings" },
+  { text: "Accepted Bookings", icon: <Gavel />, path: "acceptedBookings" },
   { text: "Edit Listed", icon: <PenFill />, path: "editListed" },
   { text: "Go to Inbox", icon: <MessageRounded />, path: "inbox" }
 ];

@@ -6,7 +6,7 @@ const notificationSchema = new mongoose.Schema({
   message: { type: String, required: true },
   type: { 
     type: String, 
-    enum: ['bid_accepted', 'bid_rejected', 'order_confirmed', 'payment_received', 'vehicle_booked', 'booking_confirmed', 'booking_rejected', 'message', 'general'],
+    enum: ['bid_accepted', 'bid_rejected', 'order_confirmed', 'payment_received', 'vehicle_booked', 'booking_confirmed', 'booking_rejected', 'booking_completed', 'message', 'general'],
     default: 'general'
   },
   isRead: { type: Boolean, default: false },

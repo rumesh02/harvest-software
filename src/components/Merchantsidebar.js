@@ -137,7 +137,7 @@ const MerchantSidebar = () => {
 
         {/* Settings and Logout */}
         <List sx={{ marginTop: "40px" }}>
-          <ListItemButton component={Link} to="/merchant/settings" sx={{ borderRadius: "8px", marginTop: "10px" }}>
+          <ListItemButton component={Link} to="/merchant/profile" sx={{ borderRadius: "8px", marginTop: "10px" }}>
             <ListItemIcon><Settings /></ListItemIcon>
             <ListItemText primary="Settings" />
           </ListItemButton>

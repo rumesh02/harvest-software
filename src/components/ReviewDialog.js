@@ -17,20 +17,42 @@ export default function ReviewDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    if (rating === 0) {
+      alert("Please select a rating before submitting.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await axios.post("http://localhost:5000/api/reviews", {
+      console.log("Submitting review:", { farmerId, merchantId, orderId, rating, comment });
+      
+      const response = await axios.post("http://localhost:5000/api/reviews", {
         farmerId,
         merchantId,
         orderId,
         rating,
         comment,
       });
+
+      console.log("Review submitted successfully:", response.data);
+      alert(`Review submitted successfully! Farmer's new average rating: ${response.data.avgRating?.toFixed(1) || 'N/A'}`);
       onClose(true);
     } catch (err) {
-      alert("Error submitting review");
+      console.error("Error submitting review:", err);
+      let errorMessage = "Error submitting review. ";
+      
+      if (err.response?.data?.message) {
+        errorMessage += err.response.data.message;
+      } else if (err.message) {
+        errorMessage += err.message;
+      } else {
+        errorMessage += "Please try again.";
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   return (
@@ -51,29 +73,6 @@ export default function ReviewDialog({
           </div>
 
           <div className="modal-body">
-            {/* Average Rating */}
-            {product && (
-              <div className="d-flex align-items-center mb-3">
-                <div style={{ fontSize: "48px", color: "#fbc02d" }}>
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <i
-                      key={i}
-                      className={`fas fa-star ${
-                        i < (farmerRatings[product.farmerID] || 0)
-                          ? ""
-                          : "text-muted"
-                      }`}
-                    ></i>
-                  ))}
-                </div>
-                <span className="ms-2 text-muted">
-                  {farmerRatings[product.farmerID]
-                    ? `${farmerRatings[product.farmerID].toFixed(1)} / 5`
-                    : "No ratings"}
-                </span>
-              </div>
-            )}
-
             {/* User Input Rating */}
             <div className="text-center mb-2 mt-2">
               {Array.from({ length: 5 }, (_, i) => (

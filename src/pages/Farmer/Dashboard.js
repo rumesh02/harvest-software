@@ -17,14 +17,16 @@ import {
   CircularProgress,
   Alert,
   Button,
-  Chip
+  Chip,
+  Rating
 } from '@mui/material';
 import { 
   TrendingUp as RevenueIcon, 
   ShoppingCart as OrdersIcon, 
   AccountBalance as YearlyIcon,
   Person as PersonIcon,
-  MonetizationOn as MoneyIcon
+  MonetizationOn as MoneyIcon,
+  Reviews as ReviewsIcon
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -39,6 +41,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth0();
+  const [reviews, setReviews] = useState([]);
+  const [farmerRating, setFarmerRating] = useState(0);
 
   useEffect(() => {
     const fetchRevenueData = async () => {
@@ -57,8 +61,36 @@ const Dashboard = () => {
       }
     };
 
+    const fetchReviewsData = async () => {
+      try {
+        const reviewsResponse = await axios.get(`http://localhost:5000/api/reviews/farmer/${user.sub}`);
+        // Ensure the response data is an array before setting it
+        const reviewsData = Array.isArray(reviewsResponse.data) ? reviewsResponse.data : [];
+        
+        // Sort reviews by latest first (createdAt descending)
+        const sortedReviews = reviewsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        setReviews(sortedReviews);
+        console.log('Reviews fetched and sorted successfully:', sortedReviews);
+
+        // We can use the farmerRating from the user data instead of separate avgRating
+      } catch (error) {
+        console.error("Error fetching reviews data:", error);
+        // Set reviews to empty array on error to prevent slice error
+        setReviews([]);
+      }
+    };
     if (user?.sub) {
       fetchRevenueData();
+      fetchReviewsData();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.sub) {
+      axios.get(`http://localhost:5000/api/users/${user.sub}`)
+        .then(res => setFarmerRating(res.data.farmerRatings || 0)) // Fetch farmerRatings
+        .catch(err => console.error("Error fetching farmer ratings:", err));
     }
   }, [user]);
 
@@ -95,7 +127,8 @@ const Dashboard = () => {
       icon: <OrdersIcon fontSize="small" />,
       bgColor: "#d4edda",
       color: "#155724"
-    }
+    },
+
   ];
 
   // Custom tooltip component for the chart
@@ -311,7 +344,7 @@ const Dashboard = () => {
         )}
         
         <Grid container spacing={{ xs: 2.5, md: 4 }}>
-          <Grid size={{ xs: 12, lg: 7 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Paper 
               elevation={0}
               sx={{ 
@@ -379,7 +412,7 @@ const Dashboard = () => {
             </Paper>
           </Grid>
 
-          <Grid size={{ xs: 12, lg: 5 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Paper 
               elevation={0}
               sx={{ 
@@ -505,9 +538,131 @@ const Dashboard = () => {
             </Paper>
           </Grid>
         </Grid>
+
+        {/* Reviews Section */}
+        <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mt: 4 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 4, 
+                height: '100%',
+                background: 'rgba(255,255,255,0.9)',
+                border: "1px solid #E5E7EB",
+                borderRadius: 3,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+              }}
+            >
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, color: '#155724', mb: 3, fontSize: { xs: 15, md: 17 } }}>
+                <ReviewsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Your Rating
+              </Typography>
+              <Box sx={{ textAlign: 'center', py: 2 }}>
+                <Rating value={farmerRating} precision={0.1} readOnly size="large" />
+                <Typography variant="h5" sx={{ mt: 1, fontWeight: 600 }}>
+                  {farmerRating ? `${farmerRating.toFixed(1)} / 5` : "No ratings yet"}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Based on customer reviews
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 4, 
+                height: '100%',
+                background: 'rgba(255,255,255,0.9)',
+                border: "1px solid #E5E7EB",
+                borderRadius: 3,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                maxHeight: '400px', 
+                overflow: 'auto'
+              }}
+            >
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, color: '#155724', mb: 3, fontSize: { xs: 15, md: 17 } }}>
+                <ReviewsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Recent Reviews
+              </Typography>
+              {(reviews || []).length === 0 ? (
+                <Box sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  py: 4,
+                  color: 'text.secondary'
+                }}>
+                  <ReviewsIcon sx={{ fontSize: 60, mb: 2 }} />
+                  <Typography variant="body1">
+                    No reviews yet
+                  </Typography>
+                  <Typography variant="body2">
+                    Reviews will appear here once customers rate your products
+                  </Typography>
+                </Box>
+              ) : (
+                <List>
+                  {(reviews || []).slice(0, 5).map((review, idx) => (
+                    <Box key={idx}>
+                      <ListItem alignItems="flex-start" sx={{ px: 0 }}>
+                        <ListItemAvatar>
+                          <Avatar sx={{ bgcolor: '#4CAF50' }}>
+                            {review.merchantId?.name ? review.merchantId.name.charAt(0).toUpperCase() : 'M'}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Rating value={review.rating} readOnly size="small" />
+                                <Chip
+                                  label={`${review.rating}/5`}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              </Box>
+                              <Typography variant="caption" color="text.secondary">
+                                {new Date(review.createdAt).toLocaleDateString()}
+                              </Typography>
+                            </Box>
+                          }
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500, color: '#2e7d32' }}>
+                                {review.merchantId?.name || 'Anonymous Merchant'}
+                              </Typography>
+                              {review.comment && (
+                                <Typography variant="body2" sx={{ mb: 1, fontStyle: review.comment ? 'normal' : 'italic', color: review.comment ? 'text.primary' : 'text.secondary' }}>
+                                  {review.comment || 'No comment provided'}
+                                </Typography>
+                              )}
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                      {idx < Math.min((reviews || []).length, 5) - 1 && <Divider />}
+                    </Box>
+                  ))}
+                  {(reviews || []).length > 5 && (
+                    <Box sx={{ textAlign: 'center', mt: 2 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Showing 5 of {(reviews || []).length} reviews
+                      </Typography>
+                    </Box>
+                  )}
+                </List>
+              )}
+            </Paper>
+          </Grid>
+        </Grid>
       </Box>
     </Box>
   );
 };
-
 export default Dashboard;

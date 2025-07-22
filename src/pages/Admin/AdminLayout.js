@@ -1,17 +1,63 @@
 import React from "react";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import AdminSidebar from "../../components/AdminSidebar";
 import Navbar from "../../components/Navbar";
 
-const AdminLayout = ({ children }) => (
-  <div>
-    <Navbar />
-    <div style={{ display: "flex" }}>
-      <AdminSidebar />
-      <div style={{ flex: 1, background: "#f7fbff", minHeight: "100vh" }}>
-        {children}
-      </div>
-    </div>
-  </div>
-);
+const AdminLayout = ({ children }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  return (
+    <Box sx={{ minHeight: "100vh" }}>
+      {/* ✅ Admin Sidebar (Fixed Position) */}
+      <Box sx={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "220px", // AdminSidebar width
+        height: "100vh",
+        zIndex: 9999,
+        overflow: "hidden",
+        display: { xs: 'none', md: 'block' } // Hide on mobile
+      }}>
+        <AdminSidebar />
+      </Box>
+
+      {/* Main Content Area */}
+      <Box sx={{
+        marginLeft: { xs: 0, md: "220px" }, // No margin on mobile, sidebar width on desktop
+        minHeight: "100vh",
+        background: "#f7fbff"
+      }}>
+        {/* Fixed Navbar */}
+        <Box 
+          id="navbar-container"
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: { xs: 0, md: "220px" }, // Full width on mobile, start after sidebar on desktop
+            right: 0,
+            zIndex: 1000,
+            backgroundColor: "#ffffff",
+            backdropFilter: "blur(10px)",
+            borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+            transition: "all 0.3s ease-in-out"
+          }}
+        >
+          <Navbar />
+        </Box>
+        
+        {/* Scrollable Content Area */}
+        <Box sx={{
+          marginTop: "64px", // Using margin-top instead of padding-top for better spacing
+          p: 3
+        }}>
+          {children}
+        </Box>
+      </Box>
+    </Box>
+  );
+};
 
 export default AdminLayout;

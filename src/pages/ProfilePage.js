@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import axios from "axios";
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
 
-const ProfilePage = ({ SidebarComponent = Sidebar }) => {
+const ProfilePage = () => {
   const { user, isAuthenticated } = useAuth0();
   const [profile, setProfile] = useState({
     name: "",
@@ -88,16 +86,10 @@ const ProfilePage = ({ SidebarComponent = Sidebar }) => {
         }
       `}
       </style>
-      <Navbar />
-      <div className="row min-vh-100">
-        {/* Sidebar */}
-        <div className="col-md-3 col-lg-2 p-0 bg-light">
-          <SidebarComponent userRole={profile.role || "Farmer"} />
-        </div>
-
-        {/* Profile Edit Section */}
-        <div className="col-md-9 col-lg-10 d-flex align-items-center justify-content-center">
-          <div className="w-100">
+      
+      {/* Profile Edit Section - Full width since layout handles navbar/sidebar */}
+      <div className="d-flex align-items-center justify-content-center min-vh-100">
+        <div className="w-100">
             <div
               className="card shadow-lg border-0 mx-auto"
               style={{
@@ -285,7 +277,6 @@ const ProfilePage = ({ SidebarComponent = Sidebar }) => {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 };

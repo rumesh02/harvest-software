@@ -26,19 +26,29 @@ import {
   Chat as ChatIcon
 } from '@mui/icons-material';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { 
+  handleNotificationClick as handleNotificationClickUtil,
+  getNotificationDisplayData,
+  formatNotificationTime
+} from '../utils/notificationUtils';
 
 const socket = io('http://localhost:5000');
 
 const NotificationBell = () => {
   const { user } = useAuth0();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const open = Boolean(anchorEl);
+  
+  // Get user role from localStorage for navigation
+  const userRole = localStorage.getItem('userRole');
 
   // Fetch notifications and unread count
   useEffect(() => {
@@ -276,20 +286,20 @@ const NotificationBell = () => {
   };
 
   const handleNotificationClick = async (notification) => {
-    if (notification.isRead) return;
-
-    // Mark as read
-    await markAsRead(notification._id);
-
-    // Handle different notification types
-    if (notification.type === 'message') {
-      // For message notifications, we can trigger chat opening
-      if (window.handleMessageNotificationClick) {
-        window.handleMessageNotificationClick(notification.metadata.senderId);
+    // Use the enhanced utility function for handling navigation
+    const { handleNotificationClick: handleClick } = await import('../hooks/useNotificationHandler');
+    
+    handleClick(notification, navigate, {
+      markAsRead: !notification.isRead ? markAsRead : null,
+      userRole: userRole,
+      onError: (message) => {
+        console.error('Navigation error:', message);
+        alert(message); // Fallback error display
       }
-      // Close the notification popup
-      handleClose();
-    }
+    });
+
+    // Close the notification popup
+    handleClose();
   };
 
   const renderMessageNotification = (notification) => {
@@ -348,26 +358,6 @@ const NotificationBell = () => {
         </Box>
       </Box>
     );
-  };
-
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInMinutes = (now - date) / (1000 * 60);
-    const diffInHours = diffInMinutes / 60;
-    const diffInDays = diffInHours / 24;
-
-    if (diffInMinutes < 1) {
-      return 'now';
-    } else if (diffInMinutes < 60) {
-      return `${Math.floor(diffInMinutes)}m ago`;
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`;
-    } else if (diffInDays < 7) {
-      return `${Math.floor(diffInDays)}d ago`;
-    } else {
-      return date.toLocaleDateString();
-    }
   };
 
   return (
@@ -494,7 +484,7 @@ const NotificationBell = () => {
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             {renderMessageNotification(notification)}
                             <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                              {formatTime(notification.createdAt)}
+                              {formatNotificationTime(notification.createdAt)}
                             </Typography>
                           </Box>
                         }
@@ -521,7 +511,7 @@ const NotificationBell = () => {
                                 {notification.title}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">
-                                {formatTime(notification.createdAt)}
+                                {formatNotificationTime(notification.createdAt)}
                               </Typography>
                             </Box>
                           }

@@ -6,6 +6,7 @@ import ChatFilterBar from './ChatFilterBar';
 import FilteredUserList from './FilteredUserList';
 import ChatNotificationSystem from './ChatNotificationSystem';
 import useRecentChats from '../hooks/useRecentChats';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Box, 
   Typography, 
@@ -52,6 +53,9 @@ const BlueBadge = styled(Badge)(({ theme }) => ({
 }));
 
 const ChatContainer = ({ currentUserId }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
   const [chatUsers, setChatUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -59,6 +63,7 @@ const ChatContainer = ({ currentUserId }) => {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [refreshChats, setRefreshChats] = useState(0);
+  const [openedFromNotification, setOpenedFromNotification] = useState(false);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,7 +87,13 @@ const ChatContainer = ({ currentUserId }) => {
       const user = allUsers.find(u => u.auth0Id === senderId);
       if (user) {
         setSelectedUser(user);
+        setOpenedFromNotification(true); // This is from a notification click
         setActiveTab(0); // Switch to Recent Chats tab
+        
+        // Reset the flag after a delay
+        setTimeout(() => {
+          setOpenedFromNotification(false);
+        }, 10000);
         
         // Add to recent chats
         addNewChat({
@@ -169,14 +180,85 @@ const ChatContainer = ({ currentUserId }) => {
     };
   }, [currentUserId]);
 
+  // Handle URL parameters for opening specific chats from notifications
+  useEffect(() => {
+    if (!currentUserId || !allUsers.length) return;
+
+    const searchParams = new URLSearchParams(location.search);
+    const chatWithUserId = searchParams.get('chatWith');
+    
+    if (chatWithUserId) {
+      console.log('🔗 URL parameter detected: chatWith =', chatWithUserId);
+      
+      // Find the user in allUsers
+      const targetUser = allUsers.find(u => u.auth0Id === chatWithUserId);
+      
+      if (targetUser) {
+        console.log('✅ Found target user for chat:', targetUser.name);
+        
+        // Set selected user to open the chat
+        setSelectedUser(targetUser);
+        
+        // Mark that this chat was opened from a notification
+        setOpenedFromNotification(true);
+        
+        // Reset the flag after a delay to avoid it showing on subsequent chats
+        setTimeout(() => {
+          setOpenedFromNotification(false);
+        }, 10000); // Hide banner after 10 seconds
+        
+        // Switch to Recent Chats tab
+        setActiveTab(0);
+        
+        // Add to recent chats if not already there
+        addNewChat({
+          userId: targetUser.auth0Id,
+          name: targetUser.name,
+          picture: targetUser.picture,
+          role: targetUser.role,
+          email: targetUser.email,
+          lastMessage: '',
+          lastMessageTime: new Date().toISOString(),
+          unreadCount: 0
+        });
+        
+        // Mark message notifications from this user as read
+        setTimeout(async () => {
+          try {
+            await axios.put(`http://localhost:5000/api/notifications/read-messages/${currentUserId}/${chatWithUserId}`);
+            console.log('✅ Message notifications marked as read for user:', targetUser.name);
+          } catch (error) {
+            console.error('❌ Error marking message notifications as read:', error);
+          }
+        }, 1000);
+        
+        // Show notification that chat was opened from notification
+        setNotificationMessage(`🔔 Opened chat with ${targetUser.name} from notification`);
+        setShowNotification(true);
+        
+        // Clear the URL parameter to avoid re-triggering on navigation
+        navigate(location.pathname, { replace: true });
+        
+        console.log('🎯 Chat opened with user:', targetUser.name);
+      } else {
+        console.warn('⚠️ User not found for chatWith parameter:', chatWithUserId);
+        console.log('📋 Available users:', allUsers.map(u => ({ id: u.auth0Id, name: u.name })));
+      }
+    }
+  }, [location.search, allUsers, currentUserId, addNewChat, navigate, location.pathname]);
+
   const startNewChat = (e) => {
     const selectedId = e.target.value;
     const user = allUsers.find((u) => u.auth0Id === selectedId);
-    if (user) setSelectedUser(user);
+    if (user) {
+      setSelectedUser(user);
+      setOpenedFromNotification(false); // Reset notification flag for normal selection
+    }
   };
 
   const handleSelectUser = (user) => {
     setSelectedUser(user);
+    setOpenedFromNotification(false); // Reset notification flag for normal selection
   };
 
   const handleChatSelect = (chat) => {
@@ -215,6 +297,7 @@ const ChatContainer = ({ currentUserId }) => {
           currentUserId: currentUserId
         });
         setSelectedUser(user);
+        setOpenedFromNotification(false); // Reset notification flag for normal selection
       } else {
         console.error('❌ User not found in allUsers for chat.userId:', chat.userId);
         console.log('📋 Available users:', allUsers.map(u => ({ id: u.auth0Id, name: u.name })));
@@ -227,6 +310,7 @@ const ChatContainer = ({ currentUserId }) => {
     console.log('🔵 addNewChat function available:', typeof addNewChat);
     
     setSelectedUser(user);
+    setOpenedFromNotification(false); // Reset notification flag for normal selection
     
     // Add to recent chats using the hook
     try {
@@ -289,7 +373,13 @@ const ChatContainer = ({ currentUserId }) => {
     const user = allUsers.find(u => u.auth0Id === senderId);
     if (user) {
       setSelectedUser(user);
+      setOpenedFromNotification(true); // This is from a notification click
       setActiveTab(0); // Switch to Recent Chats tab
+      
+      // Reset the flag after a delay
+      setTimeout(() => {
+        setOpenedFromNotification(false);
+      }, 10000);
       
       // Add to recent chats using the hook
       addNewChat({
@@ -430,7 +520,8 @@ const ChatContainer = ({ currentUserId }) => {
               key={`${currentUserId}-${selectedUser.auth0Id}`}
               currentUserId={currentUserId} 
               targetUserId={selectedUser.auth0Id} 
-              targetUser={selectedUser} 
+              targetUser={selectedUser}
+              fromNotification={openedFromNotification}
             />
           </>
         ) : (

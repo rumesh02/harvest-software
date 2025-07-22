@@ -759,12 +759,19 @@ const Collection = () => {
                 onClose={() => setTransportDialogOpen(false)}
                 maxWidth="sm"
                 fullWidth
+                sx={{
+                    zIndex: 9999, // Ensure dialog appears above sidebar
+                    '& .MuiBackdrop-root': {
+                        zIndex: 9998 // Backdrop should be below dialog but above everything else
+                    }
+                }}
                 PaperProps={{
                     sx: {
                         borderRadius: 3,
                         maxHeight: '95vh',
                         overflow: 'hidden',
-                        background: "#f0f9ff"
+                        background: "#f0f9ff",
+                        zIndex: 9999 // Ensure paper is on top
                     }
                 }}
             >
@@ -944,12 +951,19 @@ const Collection = () => {
                     onClose={() => setFindVehiclesOpen(false)}
                     maxWidth="lg"
                     fullWidth
+                    sx={{
+                        zIndex: 9999, // Ensure dialog appears above sidebar
+                        '& .MuiBackdrop-root': {
+                            zIndex: 9998 // Backdrop should be below dialog but above everything else
+                        }
+                    }}
                     PaperProps={{
                         sx: {
                             borderRadius: 3,
                             maxHeight: '95vh',
                             overflow: 'hidden',
-                            background: "#f0f9ff"
+                            background: "#f0f9ff",
+                            zIndex: 9999 // Ensure paper is on top
                         }
                     }}
                 >
@@ -969,11 +983,18 @@ const Collection = () => {
                 onClose={() => setTransporterDetailsOpen(false)}
                 maxWidth="lg"
                 fullWidth
+                sx={{
+                    zIndex: 9999, // Ensure dialog appears above sidebar
+                    '& .MuiBackdrop-root': {
+                        zIndex: 9998 // Backdrop should be below dialog but above everything else
+                    }
+                }}
                 PaperProps={{
                     sx: {
                         borderRadius: 3,
                         maxHeight: '95vh',
                         overflow: 'hidden',
+                        zIndex: 9999 // Ensure paper is on top
                     }
                 }}
             >
@@ -1249,11 +1270,18 @@ const Collection = () => {
                 onClose={() => setInvoiceDialogOpen(false)}
                 maxWidth="md"
                 fullWidth
+                sx={{
+                    zIndex: 9999, // Ensure dialog appears above sidebar
+                    '& .MuiBackdrop-root': {
+                        zIndex: 9998 // Backdrop should be below dialog but above everything else
+                    }
+                }}
                 PaperProps={{
                     sx: {
                         borderRadius: 3,
                         maxHeight: '95vh',
                         overflow: 'hidden',
+                        zIndex: 9999 // Ensure paper is on top
                     }
                 }}
             >

@@ -71,7 +71,7 @@ const MerchantDashboard = () => {
       
       // Encode the merchantId properly
       const encodedMerchantId = encodeURIComponent(user.sub);
-      
+
       const url = `http://localhost:5000/api/merchant/dashboard/${encodedMerchantId}`;
       console.log('Fetching dashboard data from:', url);
       
@@ -116,7 +116,6 @@ const MerchantDashboard = () => {
   const handleFarmerClick = (farmer) => {
     setSelectedFarmer(farmer);
     setReviewModalOpen(true);
-    fetchFarmerReviews(farmer._id);
   };
 
   // Handle closing review modal

@@ -42,14 +42,6 @@ import {
   disconnectSocket,
 } from "../../socket";
 
-const districts = [
-  "All Districts", "Colombo", "Gampaha", "Kalutara", "Kandy", "Matale", 
-  "Nuwara Eliya", "Galle", "Matara", "Hambantota", "Jaffna", "Kilinochchi", 
-  "Mannar", "Vavuniya", "Mullaitivu", "Batticaloa", "Ampara", "Trincomalee", 
-  "Kurunegala", "Puttalam", "Anuradhapura", "Polonnaruwa", "Badulla", 
-  "Monaragala", "Ratnapura", "Kegalle"
-];
-
 const BrowseListing = () => {
   const [fetchedProducts, setFetchedProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,6 +60,30 @@ const BrowseListing = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [farmerInfo, setFarmerInfo] = useState(null);
   const [loadingFarmer, setLoadingFarmer] = useState(false);
+  const [districts, setDistricts] = useState(["All Districts"]);
+
+  // Fetch available districts on component mount
+  useEffect(() => {
+    const fetchDistricts = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/products/districts");
+        const availableDistricts = response.data || [];
+        setDistricts(["All Districts", ...availableDistricts]);
+      } catch (error) {
+        console.error("Error fetching districts:", error);
+        // Fallback to hardcoded districts if API fails
+        setDistricts([
+          "All Districts", "Colombo", "Gampaha", "Kalutara", "Kandy", "Matale", 
+          "Nuwara Eliya", "Galle", "Matara", "Hambantota", "Jaffna", "Kilinochchi", 
+          "Mannar", "Vavuniya", "Mullaitivu", "Batticaloa", "Ampara", "Trincomalee", 
+          "Kurunegala", "Puttalam", "Anuradhapura", "Polonnaruwa", "Badulla", 
+          "Monaragala", "Ratnapura", "Kegalle"
+        ]);
+      }
+    };
+
+    fetchDistricts();
+  }, []);
 
   const updateProductInList = useCallback((productId, updatedProduct) => {
     setFetchedProducts(prev => prev.map(p => (p._id === productId ? { ...p, ...updatedProduct } : p)));
@@ -842,9 +858,9 @@ const BrowseListing = () => {
                 <strong>Farmer:</strong> {loadingFarmer ? "Loading..." : farmerInfo?.name || "Unknown"}
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-                <Rating value={farmerInfo?.farmerRatings || 0} precision={0.1} readOnly size="large" />
+                <Rating value={farmerInfo?.farmerRating || 0} precision={0.1} readOnly size="large" />
                 <Typography variant="caption" sx={{ ml: 1 }}>
-                  {farmerInfo?.farmerRatings ? `${farmerInfo.farmerRatings.toFixed(1)} / 5` : "No ratings"}
+                  {farmerInfo?.farmerRating ? `${farmerInfo.farmerRating.toFixed(1)} / 5` : "No ratings"}
                 </Typography>
               </Box>
             </>

@@ -13,13 +13,7 @@ import {
   Grid,
   Chip,
   Divider,
-  Alert,
-  IconButton,
   Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   Fade,
   CircularProgress
 } from '@mui/material';
@@ -35,8 +29,25 @@ import {
   CheckCircle as CheckIcon,
   Schedule as ScheduleIcon,
   Assignment as BookingIcon,
-  Map as MapIcon
+  Cancel as RejectIcon,
+  OpenInNew as OpenIcon
 } from '@mui/icons-material';
+
+export const formatPickupLocations = (selectedItems) => {
+  if (!selectedItems || selectedItems.length === 0) {
+    return "Pick-up Locations:\nNo items selected.";
+  }
+  
+  let output = "Pick-up Locations:\n";
+  
+  selectedItems.forEach((item, index) => {
+    const itemName = item.name || item.item || item.productName || "Unknown Item";
+    const location = item.pickupLocation || item.location || "Location not available";
+    output += `${index + 1}. ${itemName} - ${location}\n`;
+  });
+  
+  return output.trim();
+};
 
 const Bookings = () => {
   const { user } = useAuth0();
@@ -94,28 +105,63 @@ const Bookings = () => {
     if (user?.sub) fetchBookings();
   }, [user]);
 
-  // Function to open Google Maps with route
-  const openGoogleMaps = (startLocation, endLocation) => {
-    if (!startLocation || !endLocation) {
-      alert('Start or end location is missing');
+  // Function to open individual pickup location in Google Maps
+  const openLocationInMaps = (location) => {
+    if (!location || location === 'Location not available') {
+      alert('Location not available');
       return;
     }
+    const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(location)}`;
+    window.open(mapsUrl, '_blank');
+  };
 
-    // Handle multiple start locations
-    const startLocations = startLocation.split(/[,;]/).map(loc => loc.trim()).filter(loc => loc);
+  // Function to handle booking acceptance
+  const handleAcceptBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to accept this booking?')) {
+      return;
+    }
     
-    if (startLocations.length === 1) {
-      // Single location - direct route
-      const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(startLocations[0])}/${encodeURIComponent(endLocation)}`;
-      window.open(mapsUrl, '_blank');
-    } else if (startLocations.length > 1) {
-      // Multiple locations - create waypoint route
-      const origin = encodeURIComponent(startLocations[0]);
-      const destination = encodeURIComponent(endLocation);
-      const waypoints = startLocations.slice(1).map(loc => encodeURIComponent(loc)).join('|');
-      
-      const mapsUrl = `https://www.google.com/maps/dir/${origin}/${waypoints}/${destination}`;
-      window.open(mapsUrl, '_blank');
+    try {
+      const response = await axios.put(`http://localhost:5000/api/bookings/${bookingId}/accept`);
+      if (response.data.success) {
+        // Update the booking status in the local state
+        setBookings(prevBookings => 
+          prevBookings.map(booking => 
+            booking._id === bookingId 
+              ? { ...booking, status: 'confirmed' }
+              : booking
+          )
+        );
+        alert('Booking accepted successfully!');
+      }
+    } catch (error) {
+      console.error('Error accepting booking:', error);
+      alert('Failed to accept booking. Please try again.');
+    }
+  };
+
+  // Function to handle booking rejection
+  const handleRejectBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to reject this booking?')) {
+      return;
+    }
+    
+    try {
+      const response = await axios.put(`http://localhost:5000/api/bookings/${bookingId}/reject`);
+      if (response.data.success) {
+        // Update the booking status in the local state
+        setBookings(prevBookings => 
+          prevBookings.map(booking => 
+            booking._id === bookingId 
+              ? { ...booking, status: 'cancelled' }
+              : booking
+          )
+        );
+        alert('Booking rejected successfully!');
+      }
+    } catch (error) {
+      console.error('Error rejecting booking:', error);
+      alert('Failed to reject booking. Please try again.');
     }
   };
 
@@ -124,7 +170,7 @@ const Bookings = () => {
       'pending': { color: 'warning', label: 'Pending', icon: <ScheduleIcon /> },
       'confirmed': { color: 'success', label: 'Confirmed', icon: <CheckIcon /> },
       'completed': { color: 'primary', label: 'Completed', icon: <CheckIcon /> },
-      'cancelled': { color: 'error', label: 'Cancelled', icon: <ScheduleIcon /> }
+      'cancelled': { color: 'error', label: 'Rejected', icon: <RejectIcon /> }
     };
     
     const config = statusConfig[status] || statusConfig['pending'];
@@ -184,7 +230,7 @@ const Bookings = () => {
           
           {/* Stats */}
           <Grid container spacing={4} sx={{ mt: 2 }}>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <Box sx={{ 
                 textAlign: 'center',
                 p: 2,
@@ -200,7 +246,7 @@ const Bookings = () => {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <Box sx={{ 
                 textAlign: 'center',
                 p: 2,
@@ -216,7 +262,7 @@ const Bookings = () => {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <Box sx={{ 
                 textAlign: 'center',
                 p: 2,
@@ -229,6 +275,22 @@ const Bookings = () => {
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Pending
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Box sx={{ 
+                textAlign: 'center',
+                p: 2,
+                borderRadius: 2,
+                bgcolor: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(5px)'
+              }}>
+                <Typography variant="h3" fontWeight={700}>
+                  {bookings.filter(b => b.status === 'cancelled').length}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Rejected
                 </Typography>
               </Box>
             </Grid>
@@ -326,36 +388,102 @@ const Bookings = () => {
                               
                               {/* Start Locations - Handle multiple locations */}
                               <Box sx={{ mb: 2 }}>
-                                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                                  <LocationIcon sx={{ fontSize: 16, color: '#4caf50', mr: 1 }} />
-                                  <strong>Pick-up Locations:</strong>
-                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                  <LocationIcon sx={{ fontSize: 16, color: '#4caf50' }} />
+                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                    <strong>Pick-up Locations:</strong>
+                                  </Typography>
+                                </Box>
                                 {(() => {
-                                  const startLocations = booking.startLocation ? 
-                                    booking.startLocation.split(/[,;]/).map(loc => loc.trim()).filter(loc => loc) : 
-                                    ['Not specified'];
+                                  // Create pickup locations for selected items only
+                                  const pickupLocations = [];
                                   
-                                  return startLocations.map((location, index) => (
-                                    <Typography 
-                                      key={index} 
-                                      variant="body2" 
+                                  // Check if booking has selectedItems data (the preferred structure)
+                                  if (booking.selectedItems && Array.isArray(booking.selectedItems)) {
+                                    // Use selectedItems array - each item should have name/item and location
+                                    booking.selectedItems.forEach(selectedItem => {
+                                      const itemName = selectedItem.name || selectedItem.item || selectedItem.productName || 'Selected item';
+                                      const location = selectedItem.location || selectedItem.pickupLocation || 'Location not available';
+                                      pickupLocations.push(`${itemName} - ${location}`);
+                                    });
+                                  } else if (booking.items && booking.startLocation) {
+                                    // Fallback: Parse items and locations (legacy format)
+                                    const items = booking.items.split(/[,]/).map(item => item.trim()).filter(item => item);
+                                    
+                                    // Check if startLocation contains structured data or simple location
+                                    if (booking.startLocation.includes('Multiple Pickup Locations:')) {
+                                      // Parse structured location data
+                                      const locationLines = booking.startLocation
+                                        .replace('Multiple Pickup Locations:\n', '')
+                                        .split('\n')
+                                        .filter(line => line.trim());
+                                      
+                                      locationLines.forEach(line => {
+                                        if (line.includes('. ') && line.includes(' - ')) {
+                                          // Extract item and location from format "1. ItemName - Location"
+                                          const parts = line.split(' - ');
+                                          if (parts.length >= 2) {
+                                            const itemPart = parts[0].replace(/^\d+\.\s*/, ''); // Remove number prefix
+                                            const locationPart = parts.slice(1).join(' - '); // Join remaining parts as location
+                                            pickupLocations.push(`${itemPart} - ${locationPart}`);
+                                          }
+                                        }
+                                      });
+                                    } else {
+                                      // Simple format: pair items with single location
+                                      items.forEach(item => {
+                                        pickupLocations.push(`${item} - ${booking.startLocation || 'Location not available'}`);
+                                      });
+                                    }
+                                  } else {
+                                    // Fallback for when no proper data is available
+                                    pickupLocations.push('Selected item - Location not available');
+                                  }
+                                  
+                                  return pickupLocations.map((locationInfo, index) => (
+                                    <Box 
+                                      key={index}
                                       sx={{ 
-                                        ml: 3, 
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        ml: 2, 
                                         mb: 0.5,
                                         pl: 2,
                                         py: 0.5,
                                         borderLeft: '2px solid #4caf50',
                                         backgroundColor: index % 2 === 0 ? 'rgba(76, 175, 80, 0.05)' : 'transparent',
                                         borderRadius: '4px',
-                                        display: 'block',
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis'
                                       }}
-                                      title={location} // Show full address on hover
                                     >
-                                      {startLocations.length > 1 ? `${index + 1}. ${location}` : location}
-                                    </Typography>
+                                      <Typography 
+                                        variant="body2" 
+                                        sx={{ 
+                                          flex: 1,
+                                          wordWrap: 'break-word',
+                                          whiteSpace: 'normal'
+                                        }}
+                                        title={locationInfo} // Show full info on hover
+                                      >
+                                        {`${index + 1}. ${locationInfo}`}
+                                      </Typography>
+                                      <Button
+                                        size="small"
+                                        variant="outlined"
+                                        startIcon={<OpenIcon />}
+                                        onClick={() => {
+                                          const location = locationInfo.split(' - ')[1];
+                                          openLocationInMaps(location);
+                                        }}
+                                        sx={{ 
+                                          minWidth: 'auto',
+                                          px: 1,
+                                          fontSize: '0.75rem'
+                                        }}
+                                      >
+                                        Maps
+                                      </Button>
+                                    </Box>
                                   ));
                                 })()}
                               </Box>
@@ -411,23 +539,51 @@ const Bookings = () => {
 
                         {/* Actions */}
                         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
-                          <Button 
-                            variant="outlined"
-                            color="primary"
-                            startIcon={<MapIcon />}
-                            onClick={() => openGoogleMaps(booking.startLocation, booking.endLocation)}
-                            sx={{ minWidth: 160 }}
-                          >
-                            Open in Maps
-                          </Button>
-                          <Button 
-                            variant="contained" 
-                            color="primary"
-                            startIcon={<CheckIcon />}
-                            sx={{ minWidth: 160 }}
-                          >
-                            Accept Booking
-                          </Button>
+                          {booking.status === 'pending' ? (
+                            <>
+                              <Button 
+                                variant="outlined"
+                                color="error"
+                                startIcon={<RejectIcon />}
+                                onClick={() => handleRejectBooking(booking._id)}
+                                sx={{ minWidth: 160 }}
+                              >
+                                Reject Booking
+                              </Button>
+                              <Button 
+                                variant="contained" 
+                                color="success"
+                                startIcon={<CheckIcon />}
+                                onClick={() => handleAcceptBooking(booking._id)}
+                                sx={{ minWidth: 160 }}
+                              >
+                                Accept Booking
+                              </Button>
+                            </>
+                          ) : (
+                            <Chip 
+                              label={
+                                booking.status === 'confirmed' ? 'Booking Confirmed' :
+                                booking.status === 'cancelled' ? 'Booking Rejected' :
+                                booking.status === 'completed' ? 'Booking Completed' : 
+                                'Status Unknown'
+                              }
+                              color={
+                                booking.status === 'confirmed' ? 'success' :
+                                booking.status === 'cancelled' ? 'error' :
+                                booking.status === 'completed' ? 'primary' : 
+                                'default'
+                              }
+                              variant="filled"
+                              sx={{ 
+                                fontSize: '1rem', 
+                                px: 3, 
+                                py: 1,
+                                color: 'white',
+                                fontWeight: 600
+                              }}
+                            />
+                          )}
                         </Box>
                       </CardContent>
                     </Card>

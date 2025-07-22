@@ -136,7 +136,7 @@ const Sidebar = ({ userRole = "Farmer" }) => {
       {/* Settings and Logout */}
       <ul className="list-unstyled">
         <li className="mb-2">
-          <Link to="/settings" className="d-flex align-items-center text-decoration-none text-dark py-2 px-3 justify-content-start">
+          <Link to="/profile" className="d-flex align-items-center text-decoration-none text-dark py-2 px-3 justify-content-start">
             <Gear size={18} className="me-2" />
             <span>Settings</span>
           </Link>

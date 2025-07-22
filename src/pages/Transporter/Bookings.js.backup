@@ -21,7 +21,11 @@ import {
   ListItemAvatar,
   ListItemText,
   Fade,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
   LocalShipping as TruckIcon,
@@ -37,8 +41,11 @@ import {
   Assignment as BookingIcon,
   Map as MapIcon,
   Cancel as RejectIcon,
-  OpenInNew as OpenIcon
-} from '@mui/icons-material';
+  OpenInNew as OpenIcon,
+  Close as CloseIcon
+} from '@mui/material/icons';
+import { GoogleMap, Marker } from '@react-google-maps/api';
+import { useGoogleMaps } from '../../config/GoogleMapsProvider';
 
 export const formatPickupLocations = (selectedItems) => {
   if (!selectedItems || selectedItems.length === 0) {
@@ -56,11 +63,151 @@ export const formatPickupLocations = (selectedItems) => {
   return output.trim();
 };
 
+// Map modal component to show pickup locations with red markers
+const PickupLocationsMapModal = ({ open, onClose, pickupLocations, title }) => {
+  const { isLoaded } = useGoogleMaps();
+  const [mapMarkers, setMapMarkers] = useState([]);
+  const [mapCenter, setMapCenter] = useState({ lat: 6.9271, lng: 79.8612 }); // Default to Colombo
+
+  useEffect(() => {
+    if (open && pickupLocations && pickupLocations.length > 0) {
+      // Parse locations and create markers
+      const markers = [];
+      
+      pickupLocations.forEach((locationInfo, index) => {
+        if (locationInfo.includes(' - ')) {
+          const parts = locationInfo.split(' - ');
+          const itemName = parts[0].replace(/^\d+\.\s*/, ''); // Remove number prefix
+          const locationText = parts.slice(1).join(' - ');
+          
+          if (locationText && locationText !== 'Location not available') {
+            // For demo purposes, we'll use the Geocoding API or mock coordinates
+            // In a real app, you'd geocode the address to get lat/lng
+            // For now, using mock coordinates around Sri Lanka
+            const mockCoords = getMockCoordinates(index, locationText);
+            
+            markers.push({
+              id: index,
+              position: mockCoords,
+              title: `${itemName}`,
+              address: locationText
+            });
+          }
+        }
+      });
+      
+      setMapMarkers(markers);
+      
+      // Set map center to first valid location or default
+      if (markers.length > 0) {
+        setMapCenter(markers[0].position);
+      }
+    }
+  }, [open, pickupLocations]);
+
+  // Mock function to generate coordinates (in real app, use geocoding)
+  const getMockCoordinates = (index, locationText) => {
+    // Mock coordinates around Sri Lanka for demonstration
+    const sriLankaRegions = [
+      { lat: 6.9271, lng: 79.8612 }, // Colombo
+      { lat: 7.2906, lng: 80.6337 }, // Kandy
+      { lat: 6.0535, lng: 80.2210 }, // Galle
+      { lat: 8.3114, lng: 80.4037 }, // Anuradhapura
+      { lat: 7.9553, lng: 81.0188 }, // Polonnaruwa
+    ];
+    
+    const baseCoord = sriLankaRegions[index % sriLankaRegions.length];
+    
+    // Add small random offset to avoid markers overlapping
+    return {
+      lat: baseCoord.lat + (Math.random() - 0.5) * 0.1,
+      lng: baseCoord.lng + (Math.random() - 0.5) * 0.1
+    };
+  };
+
+  if (!isLoaded) {
+    return (
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogContent sx={{ textAlign: 'center', py: 4 }}>
+          <CircularProgress />
+          <Typography sx={{ mt: 2 }}>Loading map...</Typography>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        bgcolor: 'primary.main',
+        color: 'white'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <LocationIcon />
+          <Typography variant="h6">
+            {title || 'Pickup Locations Map'}
+          </Typography>
+        </Box>
+        <IconButton onClick={onClose} sx={{ color: 'white' }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      
+      <DialogContent sx={{ p: 0 }}>
+        <Box sx={{ height: 500, width: '100%' }}>
+          <GoogleMap
+            mapContainerStyle={{ width: '100%', height: '100%' }}
+            zoom={mapMarkers.length > 1 ? 8 : 10}
+            center={mapCenter}
+            options={{
+              disableDefaultUI: false,
+              zoomControl: true,
+              mapTypeControl: true,
+              streetViewControl: false,
+              fullscreenControl: true,
+            }}
+          >
+            {mapMarkers.map((marker) => (
+              <Marker
+                key={marker.id}
+                position={marker.position}
+                title={`${marker.title}\n${marker.address}`}
+                icon={{
+                  url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                  scaledSize: new window.google.maps.Size(32, 32)
+                }}
+              />
+            ))}
+          </GoogleMap>
+        </Box>
+      </DialogContent>
+      
+      <DialogActions sx={{ px: 3, py: 2, bgcolor: 'grey.50' }}>
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            📍 Showing {mapMarkers.length} pickup location{mapMarkers.length !== 1 ? 's' : ''} with red markers
+          </Typography>
+        </Box>
+        <Button onClick={onClose} variant="contained" startIcon={<CloseIcon />}>
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 const Bookings = () => {
   const { user } = useAuth0();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notificationLoading, setNotificationLoading] = useState(false);
+  
+  // Map modal states
+  const [mapModalOpen, setMapModalOpen] = useState(false);
+  const [selectedBookingForMap, setSelectedBookingForMap] = useState(null);
 
   // Debug function to check notifications
   const checkNotifications = async () => {
@@ -112,6 +259,55 @@ const Bookings = () => {
     if (user?.sub) fetchBookings();
   }, [user]);
 
+  // Function to extract pickup locations for map
+  const getPickupLocationsForMap = (booking) => {
+    const pickupLocations = [];
+    
+    // Check if booking has selectedItems data (the preferred structure)
+    if (booking.selectedItems && Array.isArray(booking.selectedItems)) {
+      booking.selectedItems.forEach((selectedItem, index) => {
+        const itemName = selectedItem.name || selectedItem.item || selectedItem.productName || 'Selected item';
+        const location = selectedItem.location || selectedItem.pickupLocation || 'Location not available';
+        pickupLocations.push(`${index + 1}. ${itemName} - ${location}`);
+      });
+    } else if (booking.items && booking.startLocation) {
+      const items = booking.items.split(/[,]/).map(item => item.trim()).filter(item => item);
+      
+      if (booking.startLocation.includes('Multiple Pickup Locations:')) {
+        const locationLines = booking.startLocation
+          .replace('Multiple Pickup Locations:\n', '')
+          .split('\n')
+          .filter(line => line.trim());
+        
+        locationLines.forEach(line => {
+          if (line.includes('. ') && line.includes(' - ')) {
+            pickupLocations.push(line);
+          }
+        });
+      } else {
+        items.forEach((item, index) => {
+          pickupLocations.push(`${index + 1}. ${item} - ${booking.startLocation || 'Location not available'}`);
+        });
+      }
+    } else {
+      pickupLocations.push('1. Selected item - Location not available');
+    }
+    
+    return pickupLocations;
+  };
+
+  // Function to open map modal
+  const openMapModal = (booking) => {
+    setSelectedBookingForMap(booking);
+    setMapModalOpen(true);
+  };
+
+  // Function to close map modal
+  const closeMapModal = () => {
+    setMapModalOpen(false);
+    setSelectedBookingForMap(null);
+  };
+
   // Function to open Google Maps with route
   const openGoogleMaps = (startLocation, endLocation) => {
     if (!startLocation || !endLocation) {
@@ -121,7 +317,6 @@ const Bookings = () => {
 
     // Check if we have structured pickup location data
     if (startLocation.includes('Multiple Pickup Locations:')) {
-      // Parse structured location data to get actual locations
       const locationLines = startLocation
         .replace('Multiple Pickup Locations:\n', '')
         .split('\n')
@@ -132,7 +327,7 @@ const Bookings = () => {
         if (line.includes(' - ') && !line.includes('Location not available')) {
           const parts = line.split(' - ');
           if (parts.length >= 2) {
-            const location = parts.slice(1).join(' - '); // Join remaining parts as location
+            const location = parts.slice(1).join(' - ');
             if (location && location !== 'Location not available') {
               actualLocations.push(location.trim());
             }
@@ -144,11 +339,9 @@ const Bookings = () => {
         alert('No valid pickup locations available');
         return;
       } else if (actualLocations.length === 1) {
-        // Single valid location - direct route
         const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(actualLocations[0])}/${encodeURIComponent(endLocation)}`;
         window.open(mapsUrl, '_blank');
       } else {
-        // Multiple valid locations - create waypoint route
         const origin = encodeURIComponent(actualLocations[0]);
         const destination = encodeURIComponent(endLocation);
         const waypoints = actualLocations.slice(1).map(loc => encodeURIComponent(loc)).join('|');
@@ -157,7 +350,6 @@ const Bookings = () => {
         window.open(mapsUrl, '_blank');
       }
     } else {
-      // Simple single location format
       const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(startLocation)}/${encodeURIComponent(endLocation)}`;
       window.open(mapsUrl, '_blank');
     }
@@ -180,8 +372,6 @@ const Bookings = () => {
     }
     
     try {
-      // You can implement the API call to reject booking here
-      // await axios.put(`http://localhost:5000/api/bookings/${bookingId}/reject`);
       alert('Booking rejection functionality will be implemented');
       console.log('Rejecting booking:', bookingId);
     } catch (error) {
@@ -405,49 +595,7 @@ const Bookings = () => {
                                 </Box>
                                 {(() => {
                                   // Create pickup locations for selected items only
-                                  const pickupLocations = [];
-                                  
-                                  // Check if booking has selectedItems data (the preferred structure)
-                                  if (booking.selectedItems && Array.isArray(booking.selectedItems)) {
-                                    // Use selectedItems array - each item should have name/item and location
-                                    booking.selectedItems.forEach(selectedItem => {
-                                      const itemName = selectedItem.name || selectedItem.item || selectedItem.productName || 'Selected item';
-                                      const location = selectedItem.location || selectedItem.pickupLocation || 'Location not available';
-                                      pickupLocations.push(`${itemName} - ${location}`);
-                                    });
-                                  } else if (booking.items && booking.startLocation) {
-                                    // Fallback: Parse items and locations (legacy format)
-                                    const items = booking.items.split(/[,]/).map(item => item.trim()).filter(item => item);
-                                    
-                                    // Check if startLocation contains structured data or simple location
-                                    if (booking.startLocation.includes('Multiple Pickup Locations:')) {
-                                      // Parse structured location data
-                                      const locationLines = booking.startLocation
-                                        .replace('Multiple Pickup Locations:\n', '')
-                                        .split('\n')
-                                        .filter(line => line.trim());
-                                      
-                                      locationLines.forEach(line => {
-                                        if (line.includes('. ') && line.includes(' - ')) {
-                                          // Extract item and location from format "1. ItemName - Location"
-                                          const parts = line.split(' - ');
-                                          if (parts.length >= 2) {
-                                            const itemPart = parts[0].replace(/^\d+\.\s*/, ''); // Remove number prefix
-                                            const locationPart = parts.slice(1).join(' - '); // Join remaining parts as location
-                                            pickupLocations.push(`${itemPart} - ${locationPart}`);
-                                          }
-                                        }
-                                      });
-                                    } else {
-                                      // Simple format: pair items with single location
-                                      items.forEach(item => {
-                                        pickupLocations.push(`${item} - ${booking.startLocation || 'Location not available'}`);
-                                      });
-                                    }
-                                  } else {
-                                    // Fallback for when no proper data is available
-                                    pickupLocations.push('Selected item - Location not available');
-                                  }
+                                  const pickupLocations = getPickupLocationsForMap(booking);
                                   
                                   return pickupLocations.map((locationInfo, index) => (
                                     <Box 
@@ -472,9 +620,9 @@ const Bookings = () => {
                                           wordWrap: 'break-word',
                                           whiteSpace: 'normal'
                                         }}
-                                        title={locationInfo} // Show full info on hover
+                                        title={locationInfo}
                                       >
-                                        {`${index + 1}. ${locationInfo}`}
+                                        {locationInfo}
                                       </Typography>
                                       <Button
                                         size="small"
@@ -552,10 +700,19 @@ const Bookings = () => {
                             variant="outlined"
                             color="primary"
                             startIcon={<MapIcon />}
+                            onClick={() => openMapModal(booking)}
+                            sx={{ minWidth: 160 }}
+                          >
+                            View on Map
+                          </Button>
+                          <Button 
+                            variant="outlined"
+                            color="primary"
+                            startIcon={<RouteIcon />}
                             onClick={() => openGoogleMaps(booking.startLocation, booking.endLocation)}
                             sx={{ minWidth: 160 }}
                           >
-                            Open in Maps
+                            Open Route
                           </Button>
                           <Button 
                             variant="outlined"
@@ -584,6 +741,14 @@ const Bookings = () => {
           )}
         </Box>
       </Paper>
+
+      {/* Map Modal */}
+      <PickupLocationsMapModal
+        open={mapModalOpen}
+        onClose={closeMapModal}
+        pickupLocations={selectedBookingForMap ? getPickupLocationsForMap(selectedBookingForMap) : []}
+        title={`Pickup Locations - ${selectedBookingForMap?.merchantDetails?.name || selectedBookingForMap?.merchantName || 'Merchant'}`}
+      />
     </Container>
   );
 };

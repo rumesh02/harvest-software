@@ -89,7 +89,7 @@ const Collection = () => {
                 }
             });
             
-            // Sort by status priority
+            // Sort by status priority, then by date in descending order within each status
             const statusOrder = {
                 "confirmed": 1,    // Awaiting Payment
                 "paid": 2,         // Awaiting Pickup
@@ -99,7 +99,16 @@ const Collection = () => {
             const sortedOrders = allOrders.sort((a, b) => {
                 const orderA = statusOrder[a.status] || 999;
                 const orderB = statusOrder[b.status] || 999;
-                return orderA - orderB;
+                
+                // First sort by status priority
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+                
+                // If same status, sort by date in descending order (newest first)
+                const dateA = new Date(a.createdAt || a.updatedAt || 0);
+                const dateB = new Date(b.createdAt || b.updatedAt || 0);
+                return dateB - dateA; // Descending order (newest first)
             });
             
             console.log("Final sorted orders:", sortedOrders);
@@ -812,6 +821,7 @@ const Collection = () => {
                         <FindVehicles 
                             selectedOrders={selectedOrders} 
                             onBack={() => setFindVehiclesOpen(false)}
+                            user={user}
                         />
                     </DialogContent>
                 </Dialog>

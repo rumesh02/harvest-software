@@ -21,6 +21,7 @@ import {
   Payment,
   Star,
   CheckCircle,
+  Phone,
 } from "@mui/icons-material";
 import { useAuth0 } from "@auth0/auth0-react";
 import { fetchCompletedPayments } from "../../services/orderService";
@@ -110,9 +111,9 @@ const PurchaseHistory = () => {
   return (
     <Box sx={{ padding: "32px", backgroundColor: '#fafafa', minHeight: '100vh' }}>
       {/* Header Section */}
-      <Paper elevation={2} sx={{ p: 4, mb: 4, borderRadius: 3, background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
+      <Paper elevation={2} sx={{ p: 4, mb: 4, borderRadius: 3, background: 'rgba(255, 165, 0, 0.1)', border: '1px solid rgba(255, 165, 0, 0.2)' }}>
         <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-          <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>
+          <Avatar sx={{ bgcolor: '#FF8C00', width: 56, height: 56 }}>
             <ShoppingBag />
           </Avatar>
           <Box>
@@ -138,31 +139,31 @@ const PurchaseHistory = () => {
         </Stack>
       </Paper>
 
-      <Grid container spacing={4}>
+      <Grid container spacing={3}>
         {purchases.map((purchase) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={purchase._id}>
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={purchase._id}>
             <Card sx={{ 
               height: '100%',
               display: 'flex',
               flexDirection: 'column',
-              borderRadius: 3,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              borderRadius: 2,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               transition: 'all 0.3s ease-in-out',
               '&:hover': {
-                transform: 'translateY(-8px)',
-                boxShadow: '0 12px 40px rgba(0,0,0,0.15)'
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
               }
             }}>
               <Box sx={{ position: 'relative' }}>
                 <CardMedia
                   component="img"
-                  height="220"
-                  image={purchase.items[0]?.imageUrl || "https://via.placeholder.com/300x220?text=Farm+Product"}
+                  height="160"
+                  image={purchase.items[0]?.imageUrl || "https://via.placeholder.com/300x160?text=Farm+Product"}
                   alt={purchase.items[0]?.name || "Farm Product"}
                   sx={{ 
                     objectFit: 'cover',
-                    borderTopLeftRadius: 12,
-                    borderTopRightRadius: 12
+                    borderTopLeftRadius: 8,
+                    borderTopRightRadius: 8
                   }}
                 />
                 <Chip
@@ -172,24 +173,25 @@ const PurchaseHistory = () => {
                   size="small"
                   sx={{
                     position: 'absolute',
-                    top: 12,
-                    right: 12,
+                    top: 8,
+                    right: 8,
                     fontWeight: 'bold',
                     backgroundColor: 'rgba(76, 175, 80, 0.9)',
-                    color: 'white'
+                    color: 'white',
+                    fontSize: '0.75rem'
                   }}
                 />
               </Box>
               
               <CardContent sx={{ 
                 flexGrow: 1, 
-                p: 3,
+                p: 2,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 2
+                gap: 1.5
               }}>
                 <Typography 
-                  variant="h6" 
+                  variant="subtitle1" 
                   fontWeight="bold"
                   sx={{
                     overflow: 'hidden',
@@ -197,8 +199,9 @@ const PurchaseHistory = () => {
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
-                    minHeight: '3em',
-                    lineHeight: '1.5em'
+                    minHeight: '2.5em',
+                    lineHeight: '1.25em',
+                    fontSize: '0.95rem'
                   }}
                 >
                   {purchase.items[0]?.name || "Farm Product"}
@@ -207,33 +210,42 @@ const PurchaseHistory = () => {
                 <Divider />
 
                 {/* Purchase Details */}
-                <Stack spacing={1.5}>
+                <Stack spacing={1}>
                   <Stack direction="row" alignItems="center" spacing={1}>
-                    <CalendarToday sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary">
-                      Purchased on
-                    </Typography>
-                    <Typography variant="body2" fontWeight="medium">
+                    <CalendarToday sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    <Typography variant="caption" color="text.secondary">
                       {format(new Date(purchase.createdAt), 'MMM dd, yyyy')}
                     </Typography>
                   </Stack>
 
                   <Stack direction="row" alignItems="center" spacing={1}>
-                    <Person sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary">
-                      Farmer:
-                    </Typography>
-                    <Typography variant="body2" fontWeight="medium">
+                    <Person sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    <Typography variant="caption" fontWeight="medium" sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '150px'
+                    }}>
                       {purchase.farmerName || "Unknown Farmer"}
                     </Typography>
                   </Stack>
 
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Payment sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary">
-                      Amount:
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 3 }}>
+                    <Phone sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    <Typography variant="caption" fontWeight="medium" sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '150px',
+                      color: 'text.secondary'
+                    }}>
+                      {purchase.farmerPhone || "Contact not available"}
                     </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="success.main">
+                  </Stack>
+
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Payment sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    <Typography variant="subtitle2" fontWeight="bold" color="success.main">
                       Rs. {purchase.amount.toFixed(2)}
                     </Typography>
                   </Stack>
@@ -244,42 +256,33 @@ const PurchaseHistory = () => {
                 {/* Order Details */}
                 <Box sx={{ 
                   backgroundColor: '#f8f9fa', 
-                  p: 2, 
-                  borderRadius: 2,
+                  p: 1.5, 
+                  borderRadius: 1,
                   border: '1px solid #e9ecef'
                 }}>
-                  <Stack spacing={1}>
+                  <Stack spacing={0.5}>
                     <Stack direction="row" justifyContent="space-between">
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                         Order ID:
                       </Typography>
-                      <Typography variant="caption" fontWeight="medium">
-                        {purchase.orderId}
+                      <Typography variant="caption" fontWeight="medium" sx={{ fontSize: '0.7rem' }}>
+                        {purchase.orderId.slice(-8)}...
                       </Typography>
                     </Stack>
                     
                     <Stack direction="row" justifyContent="space-between">
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                         Quantity:
                       </Typography>
-                      <Typography variant="caption" fontWeight="medium">
+                      <Typography variant="caption" fontWeight="medium" sx={{ fontSize: '0.7rem' }}>
                         {purchase.items[0]?.quantity || 0} kg
-                      </Typography>
-                    </Stack>
-
-                    <Stack direction="row" justifyContent="space-between">
-                      <Typography variant="caption" color="text.secondary">
-                        Payment Method:
-                      </Typography>
-                      <Typography variant="caption" fontWeight="medium">
-                        {purchase.paymentMethod || "Online Payment"}
                       </Typography>
                     </Stack>
                   </Stack>
                 </Box>
               </CardContent>
 
-              <Box sx={{ p: 3, pt: 0 }}>
+              <Box sx={{ p: 2, pt: 0 }}>
                 <Button 
                   fullWidth
                   variant="contained" 
@@ -287,14 +290,14 @@ const PurchaseHistory = () => {
                   onClick={() => handleRateClick(purchase)}
                   startIcon={<Star />}
                   sx={{
-                    borderRadius: 2,
-                    py: 1.5,
+                    borderRadius: 1.5,
+                    py: 1,
                     fontWeight: 'bold',
                     textTransform: 'none',
-                    fontSize: '1rem',
-                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
+                    fontSize: '0.85rem',
+                    boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)',
                     '&:hover': {
-                      boxShadow: '0 6px 16px rgba(76, 175, 80, 0.4)',
+                      boxShadow: '0 4px 12px rgba(76, 175, 80, 0.4)',
                       transform: 'translateY(-1px)'
                     }
                   }}

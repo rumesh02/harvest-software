@@ -99,12 +99,15 @@ const merchantController = {
               address: "$farmerDetails.address",
               province: "$farmerDetails.province",
               district: "$farmerDetails.district",
-              picture: "$farmerDetails.picture"
+              picture: "$farmerDetails.picture",
+              auth0Id: "$farmerDetails.auth0Id"
             }
           }
         ]);
 
         topFarmers = farmerRatings.map(farmer => ({
+          _id: farmer._id,
+          auth0Id: farmer.auth0Id, // Add auth0Id for review fetching
           name: farmer.name,
           location: farmer.district && farmer.province ? `${farmer.district}, ${farmer.province}` : farmer.address || "Location not available",
           orders: farmer.reviewCount,
@@ -126,11 +129,14 @@ const merchantController = {
               address: 1,
               province: 1,
               district: 1,
-              picture: 1
+              picture: 1,
+              auth0Id: 1
             }
           ).limit(5 - topFarmers.length).sort({ createdAt: -1 });
 
           const additionalFormatted = additionalFarmers.map(farmer => ({
+            _id: farmer._id,
+            auth0Id: farmer.auth0Id,
             name: farmer.name,
             location: farmer.district && farmer.province ? `${farmer.district}, ${farmer.province}` : farmer.address || "Location not available",
             orders: 0,

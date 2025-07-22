@@ -74,12 +74,24 @@ const Bookings = () => {
     if (user?.sub) fetchBookings();
   }, [user]);
 
-  // Function to open individual pickup location in Google Maps
+  // Function to open individual pickup location in Google Maps with red marker
   const openLocationInMaps = (location) => {
     if (!location || location === 'Location not available') {
       alert('Location not available');
       return;
     }
+    // Create URL that shows the location with a red marker using the place search
+    const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(location)}`;
+    window.open(mapsUrl, '_blank');
+  };
+
+  // Function to open destination location in Google Maps with red marker
+  const openDestinationInMaps = (location) => {
+    if (!location || location === 'Location not available' || location === 'Not specified') {
+      alert('Destination location not available');
+      return;
+    }
+    // Create URL that shows the location with a red marker using the place search
     const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(location)}`;
     window.open(mapsUrl, '_blank');
   };
@@ -366,9 +378,11 @@ const Bookings = () => {
                           <Grid item xs={12}>
                             <Box sx={{ 
                               p: 3, 
+                              maxWidth: '100%',
                               bgcolor: 'rgba(25, 118, 210, 0.05)', 
                               borderRadius: 2,
-                              border: '1px solid rgba(25, 118, 210, 0.1)'
+                              border: '1px solid rgba(25, 118, 210, 0.1)',
+                              mb: 2  // Added margin bottom for better spacing
                             }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                                 <RouteIcon color="primary" />
@@ -481,11 +495,50 @@ const Bookings = () => {
 
                               {/* End Location */}
                               <Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                   <LocationIcon sx={{ fontSize: 16, color: '#f44336' }} />
-                                  <Typography variant="body2">
-                                    <strong>Destination:</strong> {booking.endLocation || 'Not specified'}
+                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                    <strong>Destination:</strong>
                                   </Typography>
+                                </Box>
+                                <Box sx={{ 
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  ml: 2, 
+                                  pl: 2,
+                                  py: 0.5,
+                                  borderLeft: '2px solid #f44336',
+                                  backgroundColor: 'rgba(244, 67, 54, 0.05)',
+                                  borderRadius: '4px',
+                                }}>
+                                  <Typography 
+                                    variant="body2"
+                                    sx={{ 
+                                      flex: 1,
+                                      wordWrap: 'break-word',
+                                      whiteSpace: 'normal'
+                                    }}
+                                    title={booking.endLocation || 'Not specified'}
+                                  >
+                                    {booking.endLocation || 'Not specified'}
+                                  </Typography>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    startIcon={<OpenIcon />}
+                                    onClick={() => {
+                                      openDestinationInMaps(booking.endLocation);
+                                    }}
+                                    disabled={!booking.endLocation || booking.endLocation === 'Not specified'}
+                                    sx={{ 
+                                      minWidth: 'auto',
+                                      px: 1,
+                                      fontSize: '0.75rem'
+                                    }}
+                                  >
+                                    Maps
+                                  </Button>
                                 </Box>
                               </Box>
                             </Box>
@@ -495,10 +548,12 @@ const Bookings = () => {
                           <Grid item xs={12}>
                             <Box sx={{ 
                               p: 3, 
+                              width: '100%',
                               bgcolor: 'rgba(76, 175, 80, 0.05)', 
                               borderRadius: 2,
                               border: '1px solid rgba(76, 175, 80, 0.1)'
                             }}>
+                              
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                                 <InventoryIcon color="success" />
                                 <Typography variant="subtitle1" fontWeight={600} color="success.main">

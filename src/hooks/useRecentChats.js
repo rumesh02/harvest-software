@@ -10,7 +10,8 @@ const useRecentChats = () => {
     return window.recentChatsAPI && 
            typeof window.recentChatsAPI.addNewChat === 'function' &&
            typeof window.recentChatsAPI.updateChatMessage === 'function' &&
-           typeof window.recentChatsAPI.clearUnreadCount === 'function';
+           typeof window.recentChatsAPI.clearUnreadCount === 'function' &&
+           typeof window.recentChatsAPI.refreshChats === 'function';
   }, []);
   // Add a new chat to recent chats list
   const addNewChat = useCallback((chatData) => {
@@ -63,6 +64,15 @@ const useRecentChats = () => {
     }
   }, [isAPIAvailable]);
 
+  // Refresh recent chats
+  const refreshChats = useCallback(() => {
+    if (isAPIAvailable() && window.recentChatsAPI.refreshChats) {
+      window.recentChatsAPI.refreshChats();
+    } else {
+      console.warn('⚠️ RecentChats API not available for refreshChats');
+    }
+  }, [isAPIAvailable]);
+
   // Listen for new messages and update recent chats
   const handleNewMessage = useCallback((messageData) => {
     const { senderId, receiverId, message, senderName, senderPicture, senderRole } = messageData;
@@ -110,7 +120,8 @@ const useRecentChats = () => {
     window.recentChatsMessageHandlers = {
       handleNewMessage,
       handleSentMessage,
-      clearUnreadCount
+      clearUnreadCount,
+      refreshChats
     };
 
     return () => {
@@ -119,7 +130,7 @@ const useRecentChats = () => {
         delete window.recentChatsMessageHandlers;
       }
     };
-  }, [handleNewMessage, handleSentMessage, clearUnreadCount]);
+  }, [handleNewMessage, handleSentMessage, clearUnreadCount, refreshChats]);
 
   return {
     addNewChat,
@@ -127,6 +138,7 @@ const useRecentChats = () => {
     clearUnreadCount,
     handleNewMessage,
     handleSentMessage,
+    refreshChats,
     isAPIAvailable
   };
 };

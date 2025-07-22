@@ -64,7 +64,8 @@ const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose }) => 
     lastSeen,
     sendMessage,
     handleTyping,
-    setMessages
+    setMessages,
+    clearChatHistory
   } = useChat(currentUserId, actualTargetUserId, targetUser);
 
   const {
@@ -131,6 +132,21 @@ const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose }) => 
     }
   };
 
+  // Handle clear chat history
+  const handleClearChat = async () => {
+    try {
+      const result = await clearChatHistory();
+      if (result.success) {
+        showSnackbar('Your chat history has been cleared successfully!', 'success');
+      } else {
+        showSnackbar(result.message || 'Failed to clear chat history', 'error');
+      }
+    } catch (error) {
+      console.error('Error clearing chat history:', error);
+      showSnackbar('Failed to clear chat history. Please try again.', 'error');
+    }
+  };
+
   if (!targetUser) {
     return (
       <ChatContainer>
@@ -156,6 +172,8 @@ const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose }) => 
         isOnline={isOnline}
         lastSeen={lastSeen}
         onClose={onClose}
+        currentUserId={currentUserId}
+        onClearChat={handleClearChat}
       />
 
       {/* Messages Area */}

@@ -13,8 +13,12 @@ import {
   TextField,
   Box,
   Snackbar,
-  Alert
+  Alert,
+  Paper
 } from "@mui/material";
+import {
+  ShoppingCartOutlined
+} from "@mui/icons-material";
 import { useCart } from "../../context/CartContext";
 import axios from "axios";
 
@@ -197,8 +201,67 @@ const PlaceBids = () => {
     return () => clearInterval(interval);
   }, [cartItems, refreshCartProduct]);
 
+  // Empty cart component
+  const EmptyCartMessage = () => (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 'calc(100vh - 200px)',
+        width: '100%',
+        textAlign: 'center',
+        px: { xs: 2, sm: 3, md: 4 },
+        py: { xs: 3, sm: 4, md: 6 }
+      }}
+    >
+      <Box
+        sx={{
+          maxWidth: '600px',
+          width: '100%',
+          p: { xs: 3, sm: 4, md: 5 },
+          borderRadius: 2,
+          backgroundColor: '#f8f9fa',
+          border: '2px dashed #dee2e6'
+        }}
+      >
+        <ShoppingCartOutlined 
+          sx={{ 
+            fontSize: { xs: 64, sm: 80, md: 96 },
+            color: '#6c757d',
+            mb: { xs: 2, sm: 3 }
+          }} 
+        />
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            mb: { xs: 1.5, sm: 2 },
+            fontWeight: 600,
+            color: '#495057',
+            fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' }
+          }}
+        >
+          Your Cart is Empty
+        </Typography>
+        <Typography 
+          variant="body1" 
+          sx={{ 
+            color: '#6c757d',
+            fontSize: { xs: '0.875rem', sm: '1rem' },
+            lineHeight: 1.5,
+            maxWidth: '400px',
+            mx: 'auto'
+          }}
+        >
+          You haven't added any products to your cart yet. Browse the marketplace to discover fresh produce from local farmers.
+        </Typography>
+      </Box>
+    </Box>
+  );
+
   return (
-    <div style={{ padding: { xs: "12px", sm: "16px", md: "20px" } }}>
+    <Box sx={{ width: '100%', minHeight: '100vh', p: { xs: 2, sm: 3, md: 4 } }}>
       <Typography 
         variant="h5" 
         gutterBottom 
@@ -211,17 +274,22 @@ const PlaceBids = () => {
       >
         Selected Products
       </Typography>
-      <Grid 
-        container 
-        spacing={{ xs: 1, sm: 2, md: 3 }}
-        sx={{
-          display: 'flex',
-          justifyContent: 'flex-start',
-          alignItems: 'stretch',
-          width: '100%',
-          margin: 0
-        }}
-      >
+
+      {/* Show empty cart message if no items */}
+      {cartItems.length === 0 ? (
+        <EmptyCartMessage />
+      ) : (
+        <Grid 
+          container 
+          spacing={{ xs: 1, sm: 2, md: 3 }}
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            alignItems: 'stretch',
+            width: '100%',
+            margin: 0
+          }}
+        >
         {cartItems.map((product, index) => (
           <Grid 
             item 
@@ -412,7 +480,9 @@ const PlaceBids = () => {
             </Card>
           </Grid>
         ))}
-      </Grid>
+        </Grid>
+      )}
+
       {/* Dialog for entering bid details */}
       <Dialog 
         open={open} 
@@ -629,7 +699,7 @@ const PlaceBids = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 

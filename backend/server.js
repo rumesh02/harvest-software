@@ -34,6 +34,8 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const emojiRoutes = require('./routes/emojiRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const trendsRoutes = require('./routes/trendsRoutes');
+const driverRoutes = require('./routes/driverRoutes');
 
 const socketHandler = require('./socket');
 
@@ -90,6 +92,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/emojis', emojiRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api', trendsRoutes);
+app.use('/api/drivers', driverRoutes);
 
 // PayHere Hash Generator Function
 function generatePayHereHash({ merchant_id, order_id, amount, currency }, merchant_secret) {

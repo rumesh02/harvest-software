@@ -15,6 +15,11 @@ const vehicleSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    pricePerKm: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
     image: {
       type: String,
       required: false,

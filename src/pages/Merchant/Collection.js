@@ -3,12 +3,14 @@ import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, Chip, Button, Checkbox, Box, Typography, Dialog, DialogTitle, 
-    DialogContent, DialogActions, DialogContentText, IconButton, Alert
+    DialogContent, DialogActions, DialogContentText, IconButton, Alert,
+    Card, CardContent, Grid, Divider
 } from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
+import { ArrowBack, LocalShipping as TruckIcon, OpenInNew as OpenIcon } from "@mui/icons-material";
 import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 import LocationDisplay from "../../components/LocationDisplay";
+import { getBookingsForMerchant } from "../../services/api";
 
 const FindVehicles = lazy(() => import("../../components/FindVehicles"));
 
@@ -26,6 +28,30 @@ const Collection = () => {
     const [transporterDetails, setTransporterDetails] = useState([]);
     const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
     const [orderPreferences, setOrderPreferences] = useState([]);
+    const [vehicleBookings, setVehicleBookings] = useState([]);
+    const [showBookingStatuses, setShowBookingStatuses] = useState(false);
+
+    // Function to open pickup location in Google Maps with red marker
+    const openLocationInMaps = (location) => {
+        if (!location || location === 'Location not available') {
+            alert('Location not available');
+            return;
+        }
+        // Create URL that shows the location with a red marker using the place search
+        const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(location)}`;
+        window.open(mapsUrl, '_blank');
+    };
+
+    // Function to open destination location in Google Maps with red marker
+    const openDestinationInMaps = (location) => {
+        if (!location || location === 'Location not available' || location === 'Not specified') {
+            alert('Destination location not available');
+            return;
+        }
+        // Create URL that shows the location with a red marker using the place search
+        const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(location)}`;
+        window.open(mapsUrl, '_blank');
+    };
 
     const fetchConfirmedBids = useCallback(async () => {
         try {
@@ -167,6 +193,43 @@ const Collection = () => {
             window.removeEventListener('refreshCollection', handlePaymentCompleted);
         };
     }, [fetchConfirmedBids]);
+
+    // Function to fetch vehicle bookings
+    const fetchVehicleBookings = useCallback(async () => {
+        try {
+            const merchantId = user?.sub || localStorage.getItem('user_id');
+            if (!merchantId) {
+                return;
+            }
+            
+            const bookings = await getBookingsForMerchant(merchantId);
+            setVehicleBookings(bookings);
+        } catch (error) {
+            console.error("Error fetching vehicle bookings:", error);
+        }
+    }, [user]);
+
+    // Fetch vehicle bookings on component mount
+    useEffect(() => {
+        if (user?.sub || localStorage.getItem('user_id')) {
+            fetchVehicleBookings();
+        }
+    }, [user, fetchVehicleBookings]);
+
+    // Add listener for booking status updates
+    useEffect(() => {
+        const handleBookingUpdated = () => {
+            console.log("Booking status updated, refreshing...");
+            fetchVehicleBookings();
+        };
+        
+        // Listen for booking update events
+        window.addEventListener('bookingUpdated', handleBookingUpdated);
+        
+        return () => {
+            window.removeEventListener('bookingUpdated', handleBookingUpdated);
+        };
+    }, [fetchVehicleBookings]);
 
     const handleSelect = (id) => {
         // Find the item to check its status
@@ -506,6 +569,135 @@ const Collection = () => {
 
     return (
         <Paper sx={{ p: 3 }}>
+            {/* Transport Booking Status Section */}
+            {vehicleBookings.length > 0 && (
+                <Box sx={{ mb: 4 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <TruckIcon color="primary" />
+                            Transport Booking Status
+                        </Typography>
+                        <Button 
+                            variant="outlined" 
+                            size="small"
+                            onClick={() => setShowBookingStatuses(!showBookingStatuses)}
+                        >
+                            {showBookingStatuses ? 'Hide' : 'Show'} Transport Status
+                        </Button>
+                    </Box>
+                    
+                    {showBookingStatuses && (
+                        <Box sx={{ mb: 3 }}>
+                            <Grid container spacing={2}>
+                                {vehicleBookings.map((booking) => (
+                                    <Grid item xs={12} md={6} lg={4} key={booking._id}>
+                                        <Card 
+                                            variant="outlined" 
+                                            sx={{ 
+                                                height: '100%',
+                                                borderLeft: `4px solid ${
+                                                    booking.status === 'confirmed' ? '#4caf50' :
+                                                    booking.status === 'cancelled' ? '#f44336' :
+                                                    '#ff9800'
+                                                }`
+                                            }}
+                                        >
+                                            <CardContent>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                                    <Typography variant="subtitle2" color="text.secondary">
+                                                        Booking #{booking._id?.slice(-8)}
+                                                    </Typography>
+                                                    <Chip 
+                                                        label={
+                                                            booking.status === 'pending' ? 'Pending' :
+                                                            booking.status === 'confirmed' ? 'Confirmed' :
+                                                            booking.status === 'cancelled' ? 'Rejected' :
+                                                            booking.status
+                                                        }
+                                                        size="small"
+                                                        color={
+                                                            booking.status === 'confirmed' ? 'success' :
+                                                            booking.status === 'cancelled' ? 'error' :
+                                                            'warning'
+                                                        }
+                                                    />
+                                                </Box>
+                                                
+                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                    <strong>Items:</strong> {booking.items}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                    <strong>Weight:</strong> {booking.weight} kg
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                    <Typography variant="body2">
+                                                        <strong>From:</strong> {booking.startLocation}
+                                                    </Typography>
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        startIcon={<OpenIcon />}
+                                                        onClick={() => openLocationInMaps(booking.startLocation)}
+                                                        disabled={!booking.startLocation}
+                                                        sx={{ 
+                                                            minWidth: 'auto',
+                                                            px: 1,
+                                                            fontSize: '0.75rem',
+                                                            ml: 1
+                                                        }}
+                                                    >
+                                                        Maps
+                                                    </Button>
+                                                </Box>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                    <Typography variant="body2">
+                                                        <strong>To:</strong> {booking.endLocation}
+                                                    </Typography>
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        startIcon={<OpenIcon />}
+                                                        onClick={() => openDestinationInMaps(booking.endLocation)}
+                                                        disabled={!booking.endLocation}
+                                                        sx={{ 
+                                                            minWidth: 'auto',
+                                                            px: 1,
+                                                            fontSize: '0.75rem',
+                                                            ml: 1
+                                                        }}
+                                                    >
+                                                        Maps
+                                                    </Button>
+                                                </Box>
+                                                
+                                                {booking.transporterDetails && (
+                                                    <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            <strong>Transporter:</strong> {booking.transporterDetails.name}
+                                                        </Typography>
+                                                        {booking.transporterDetails.phone && (
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                <strong>Phone:</strong> {booking.transporterDetails.phone}
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                )}
+                                                
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+                                                    Booked: {new Date(booking.createdAt).toLocaleDateString()}
+                                                </Typography>
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Box>
+                    )}
+                    
+                    <Divider sx={{ mb: 3 }} />
+                </Box>
+            )}
+
             {/* Warning message about order limit */}
             <Alert 
                 severity="warning" 
@@ -623,12 +815,19 @@ const Collection = () => {
                 onClose={() => setTransportDialogOpen(false)}
                 maxWidth="sm"
                 fullWidth
+                sx={{
+                    zIndex: 9999, // Ensure dialog appears above sidebar
+                    '& .MuiBackdrop-root': {
+                        zIndex: 9998 // Backdrop should be below dialog but above everything else
+                    }
+                }}
                 PaperProps={{
                     sx: {
                         borderRadius: 3,
                         maxHeight: '95vh',
                         overflow: 'hidden',
-                        background: "#f0f9ff"
+                        background: "#f0f9ff",
+                        zIndex: 9999 // Ensure paper is on top
                     }
                 }}
             >
@@ -808,12 +1007,19 @@ const Collection = () => {
                     onClose={() => setFindVehiclesOpen(false)}
                     maxWidth="lg"
                     fullWidth
+                    sx={{
+                        zIndex: 9999, // Ensure dialog appears above sidebar
+                        '& .MuiBackdrop-root': {
+                            zIndex: 9998 // Backdrop should be below dialog but above everything else
+                        }
+                    }}
                     PaperProps={{
                         sx: {
                             borderRadius: 3,
                             maxHeight: '95vh',
                             overflow: 'hidden',
-                            background: "#f0f9ff"
+                            background: "#f0f9ff",
+                            zIndex: 9999 // Ensure paper is on top
                         }
                     }}
                 >
@@ -833,11 +1039,18 @@ const Collection = () => {
                 onClose={() => setTransporterDetailsOpen(false)}
                 maxWidth="lg"
                 fullWidth
+                sx={{
+                    zIndex: 9999, // Ensure dialog appears above sidebar
+                    '& .MuiBackdrop-root': {
+                        zIndex: 9998 // Backdrop should be below dialog but above everything else
+                    }
+                }}
                 PaperProps={{
                     sx: {
                         borderRadius: 3,
                         maxHeight: '95vh',
                         overflow: 'hidden',
+                        zIndex: 9999 // Ensure paper is on top
                     }
                 }}
             >
@@ -1113,11 +1326,18 @@ const Collection = () => {
                 onClose={() => setInvoiceDialogOpen(false)}
                 maxWidth="md"
                 fullWidth
+                sx={{
+                    zIndex: 9999, // Ensure dialog appears above sidebar
+                    '& .MuiBackdrop-root': {
+                        zIndex: 9998 // Backdrop should be below dialog but above everything else
+                    }
+                }}
                 PaperProps={{
                     sx: {
                         borderRadius: 3,
                         maxHeight: '95vh',
                         overflow: 'hidden',
+                        zIndex: 9999 // Ensure paper is on top
                     }
                 }}
             >

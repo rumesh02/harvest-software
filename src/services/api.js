@@ -35,6 +35,7 @@ export const addVehicle = async (vehicleData) => {
   formData.append('vehicleType', vehicleData.vehicleType);
   formData.append('licensePlate', vehicleData.licensePlate);
   formData.append('loadCapacity', vehicleData.loadCapacity);
+  formData.append('pricePerKm', vehicleData.pricePerKm);
   formData.append('transporterId', vehicleData.transporterId);
   formData.append('district', vehicleData.district);
   if (vehicleData.file) {
@@ -72,6 +73,7 @@ export const updateVehicle = async (id, vehicleData) => {
   formData.append('vehicleType', vehicleData.vehicleType);
   formData.append('licensePlate', vehicleData.licensePlate);
   formData.append('loadCapacity', vehicleData.loadCapacity);
+  formData.append('pricePerKm', vehicleData.pricePerKm);
   formData.append("transporterAuth0Id", vehicleData.transporterAuth0Id);
   if (vehicleData.file) {
     formData.append('vehicleImage', vehicleData.file);
@@ -103,6 +105,11 @@ export const deleteVehicle = async (id) => {
 
 export const getBookingsForTransporter = async (transporterId) => {
   const res = await axios.get(`/api/bookings/transporter/${transporterId}`);
+  return res.data;
+};
+
+export const getBookingsForMerchant = async (merchantId) => {
+  const res = await axios.get(`/api/bookings/merchant/${merchantId}`);
   return res.data;
 };
 

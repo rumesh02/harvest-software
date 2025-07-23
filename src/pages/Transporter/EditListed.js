@@ -1,35 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
-import {
-  Box,
-  Typography,
-  Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Alert,
-  CircularProgress,
-  Container,
-  Paper,
-  Avatar,
-  Divider
-} from "@mui/material";
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  LocalShipping as VehicleIcon,
-  Add as AddIcon
-} from "@mui/icons-material";
+import { 
+  Container, 
+  Row, 
+  Col, 
+  Card, 
+  Button, 
+  Modal, 
+  Form, 
+  Alert, 
+  Spinner 
+} from "react-bootstrap";
+import { 
+  PencilSquare, 
+  Trash, 
+  Truck, 
+  Plus 
+} from "react-bootstrap-icons";
 import { getVehicles, updateVehicle, deleteVehicle } from "../../services/api";
 import placeholderImage from "../../assets/lorry.jpg";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./EditListed.css";
 
 export default function EditListed() {
   const { user } = useAuth0();
@@ -55,6 +47,15 @@ export default function EditListed() {
       try {
         // Use backend filtering instead of client-side filtering
         const data = await getVehicles(user.sub);
+        console.log("Fetched vehicles data:", data); // Debug log
+        console.log("📊 Price analysis:");
+        data.forEach((vehicle, index) => {
+          console.log(`${index + 1}. ${vehicle.vehicleType}:`);
+          console.log(`   - Price/km: ${vehicle.pricePerKm}`);
+          console.log(`   - Price type: ${typeof vehicle.pricePerKm}`);
+          console.log(`   - Has price field: ${vehicle.hasOwnProperty('pricePerKm')}`);
+          console.log(`   - Price valid: ${vehicle.pricePerKm && vehicle.pricePerKm > 0}`);
+        });
         setVehicles(data);
       } catch (err) {
         console.error("Error fetching vehicles:", err);
@@ -123,343 +124,322 @@ export default function EditListed() {
 
   if (loading) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '50vh' 
-      }}>
-        <CircularProgress size={60} />
-      </Box>
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+        <Spinner animation="border" variant="primary" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="md" sx={{ py: 3 }}>
-        <Alert severity="error">{error}</Alert>
+      <Container className="py-3">
+        <Alert variant="danger">{error}</Alert>
       </Container>
     );
   }
 
   return (
-    <Box sx={{ 
-      background: '#f9f9f9',
-      minHeight: "100vh",
-      py: 3
-    }}>
-      <Container maxWidth="lg">
+    <div style={{ background: '#f9f9f9', minHeight: "100vh", paddingTop: '20px', paddingBottom: '20px' }}>
+      <Container>
         {/* Header Section */}
-        <Box sx={{ mb: { xs: 2, md: 3 }, textAlign: 'center' }}>
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 700,
-              color: '#1565c0',
-              mb: 0.5,
-              fontSize: { xs: 22, md: 24 }
-            }}
-          >
-            Edit Listed Vehicles
-          </Typography>
-          <Typography variant="body2" color="#1565c0" sx={{ fontWeight: 400, fontSize: { xs: 15, md: 16 } }}>
-            Manage your transport vehicles
-          </Typography>
-        </Box>
+        <div className="mb-4 text-center">
+          <h2 className="fw-bold text-primary mb-2">Edit Listed Vehicles</h2>
+          <p className="text-primary">Manage your transport vehicles</p>
+        </div>
 
         {vehicles.length === 0 ? (
-          <Paper
-            elevation={0}
-            sx={{ 
-              p: 4, 
-              textAlign: 'center',
-              background: 'rgba(255,255,255,0.9)',
-              border: "1px solid #E5E7EB",
-              borderRadius: 3
-            }}
-          >
-            <VehicleIcon sx={{ fontSize: 60, color: '#ccc', mb: 2 }} />
-            <Typography variant="h6" sx={{ mb: 2, color: '#666' }}>
-              No vehicles added yet
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 3, color: '#888' }}>
-              Add your first vehicle to start receiving booking requests
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate("/transporter/add-vehicle")}
-              sx={{
-                bgcolor: '#1565c0',
-                color: 'white',
-                px: 3,
-                py: 1.5,
-                borderRadius: 2,
-                textTransform: 'none',
-                '&:hover': {
-                  bgcolor: '#1976d2',
-                }
-              }}
-            >
-              Add Vehicle
-            </Button>
-          </Paper>
+          <Card className="text-center p-4" style={{ background: 'rgba(255,255,255,0.9)', border: "1px solid #E5E7EB" }}>
+            <Card.Body>
+              <Truck size={60} className="text-muted mb-3" />
+              <h5 className="mb-3 text-muted">No vehicles added yet</h5>
+              <p className="mb-4 text-muted">Add your first vehicle to start receiving booking requests</p>
+              <Button 
+                variant="primary" 
+                onClick={() => navigate("/transporter/add-vehicle")}
+                className="px-4 py-2"
+              >
+                <Plus className="me-2" />
+                Add Vehicle
+              </Button>
+            </Card.Body>
+          </Card>
         ) : (
-          <Grid container spacing={3}>
+          <Row className="g-3">
             {vehicles.map((vehicle) => (
-              <Grid item xs={12} sm={6} md={4} key={vehicle._id}>
+              <Col xs={12} sm={6} md={4} lg={3} key={vehicle._id}>
                 <Card 
-                  elevation={0}
-                  sx={{ 
-                    height: '100%',
-                    background: 'rgba(255,255,255,0.9)',
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 3,
+                  className="h-100 shadow-sm border-0 vehicle-card"
+                  style={{ 
+                    height: '380px',
                     transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
-                    }
+                    border: "2px solid #E3F2FD"
                   }}
                 >
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={vehicle.image || placeholderImage}
-                    alt={vehicle.vehicleType}
-                    onError={(e) => {
-                      e.target.src = placeholderImage;
-                    }}
-                    sx={{ 
-                      objectFit: 'cover',
-                      borderRadius: '12px 12px 0 0'
-                    }}
-                  />
+                  <div className="position-relative">
+                    <Card.Img 
+                      variant="top" 
+                      src={vehicle.image || placeholderImage}
+                      alt={vehicle.vehicleType}
+                      style={{ 
+                        height: '160px', 
+                        objectFit: 'cover' 
+                      }}
+                      onError={(e) => {
+                        e.target.src = placeholderImage;
+                      }}
+                    />
+                    <div 
+                      className="position-absolute top-0 end-0 m-2 px-3 py-1 rounded-pill text-white price-badge"
+                      style={{ 
+                        backgroundColor: vehicle.pricePerKm ? 'rgba(21, 101, 192, 0.95)' : 'rgba(220, 53, 69, 0.95)', 
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        boxShadow: vehicle.pricePerKm ? '0 2px 8px rgba(21, 101, 192, 0.3)' : '0 2px 8px rgba(220, 53, 69, 0.3)',
+                        border: '2px solid white',
+                        minWidth: '80px',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {vehicle.pricePerKm && vehicle.pricePerKm > 0 
+                        ? `LKR ${Math.round(parseFloat(vehicle.pricePerKm))}/km` 
+                        : 'No Price Set'}
+                    </div>
+                  </div>
 
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 600, 
-                        color: '#1565c0',
-                        mb: 1,
-                        fontSize: 18
+                  <Card.Body className="d-flex flex-column" style={{ height: '140px' }}>
+                    <Card.Title 
+                      className="text-center text-primary fw-bold mb-3"
+                      style={{ 
+                        fontSize: '16px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
                       }}
                     >
                       {vehicle.vehicleType}
-                    </Typography>
+                    </Card.Title>
                     
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#666', 
-                        mb: 1,
-                        fontWeight: 500
-                      }}
-                    >
-                      License: {vehicle.licensePlate}
-                    </Typography>
-                    
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#666', 
-                        mb: 1
-                      }}
-                    >
-                      Capacity: {vehicle.loadCapacity}
-                    </Typography>
-                    
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#2e7d32',
-                        fontWeight: 600,
-                        fontSize: 16
-                      }}
-                    >
-                      LKR {vehicle.pricePerKm ? parseFloat(vehicle.pricePerKm).toFixed(2) : 'N/A'}/km
-                    </Typography>
-                  </CardContent>
+                    <div className="flex-grow-1">
+                      <div 
+                        className="d-flex justify-content-between align-items-center mb-2 p-2 rounded"
+                        style={{ 
+                          backgroundColor: '#F8F9FA',
+                          height: '28px'
+                        }}
+                      >
+                        <small className="text-muted" style={{ fontSize: '11px' }}>License:</small>
+                        <small 
+                          className="text-primary fw-bold"
+                          style={{ 
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: '100px',
+                            fontSize: '11px'
+                          }}
+                        >
+                          {vehicle.licensePlate}
+                        </small>
+                      </div>
+                      
+                      <div 
+                        className="d-flex justify-content-between align-items-center mb-2 p-2 rounded"
+                        style={{ 
+                          backgroundColor: '#F0F8FF',
+                          height: '28px'
+                        }}
+                      >
+                        <small className="text-muted" style={{ fontSize: '11px' }}>Capacity:</small>
+                        <small 
+                          className="text-success fw-bold"
+                          style={{ 
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: '100px',
+                            fontSize: '11px'
+                          }}
+                        >
+                          {vehicle.loadCapacity}
+                        </small>
+                      </div>
 
-                  <CardActions sx={{ p: 2, pt: 0 }}>
+                      <div 
+                        className="d-flex justify-content-between align-items-center p-2 rounded"
+                        style={{ 
+                          backgroundColor: vehicle.pricePerKm && vehicle.pricePerKm > 0 ? '#E8F5E8' : '#FFF5F5',
+                          height: '28px',
+                          border: vehicle.pricePerKm && vehicle.pricePerKm > 0 ? '1px solid #c8e6c9' : '1px solid #ffcdd2'
+                        }}
+                      >
+                        <small className="text-muted" style={{ fontSize: '11px' }}>Price/km:</small>
+                        <small 
+                          className="fw-bold"
+                          style={{ 
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: '100px',
+                            fontSize: '11px',
+                            color: vehicle.pricePerKm && vehicle.pricePerKm > 0 ? '#28a745' : '#dc3545'
+                          }}
+                        >
+                          {vehicle.pricePerKm && vehicle.pricePerKm > 0 
+                            ? `LKR ${Math.round(parseFloat(vehicle.pricePerKm))}` 
+                            : 'Not set - Edit to add'}
+                        </small>
+                      </div>
+                    </div>
+                  </Card.Body>
+
+                  <div className="p-3 pt-0 d-flex gap-2" style={{ height: '60px', alignItems: 'center' }}>
                     <Button
-                      variant="outlined"
-                      startIcon={<EditIcon />}
+                      variant="primary"
+                      size="sm"
+                      className="flex-fill"
                       onClick={() => handleEdit(vehicle)}
-                      sx={{
-                        flex: 1,
-                        borderColor: '#1565c0',
-                        color: '#1565c0',
-                        textTransform: 'none',
-                        '&:hover': {
-                          borderColor: '#1976d2',
-                          bgcolor: 'rgba(21, 101, 192, 0.04)'
-                        }
-                      }}
+                      style={{ fontSize: '11px' }}
                     >
+                      <PencilSquare className="me-1" size={14} />
                       Edit
                     </Button>
                     <Button
-                      variant="outlined"
-                      startIcon={<DeleteIcon />}
+                      variant="outline-danger"
+                      size="sm"
+                      className="flex-fill"
                       onClick={() => handleRemove(vehicle._id)}
-                      sx={{
-                        flex: 1,
-                        ml: 1,
-                        borderColor: '#d32f2f',
-                        color: '#d32f2f',
-                        textTransform: 'none',
-                        '&:hover': {
-                          borderColor: '#c62828',
-                          bgcolor: 'rgba(211, 47, 47, 0.04)'
-                        }
-                      }}
+                      style={{ fontSize: '11px' }}
                     >
+                      <Trash className="me-1" size={14} />
                       Remove
                     </Button>
-                  </CardActions>
+                  </div>
                 </Card>
-              </Grid>
+              </Col>
             ))}
-          </Grid>
+          </Row>
         )}
 
         {/* Edit Modal */}
-        <Dialog 
-          open={showModal} 
-          onClose={() => setShowModal(false)}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{
-            sx: { borderRadius: 3 }
-          }}
+        <Modal 
+          show={showModal} 
+          onHide={() => setShowModal(false)}
+          size="lg"
+          centered
         >
-          <DialogTitle sx={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            borderBottom: '1px solid #E5E7EB',
-            pb: 2
-          }}>
-            <Avatar 
-              sx={{ 
-                background: '#1976d2',
-                width: 40,
-                height: 40,
-                mr: 2
-              }}
-            >
-              <EditIcon fontSize="small" />
-            </Avatar>
-            <Typography variant="h6" sx={{ fontWeight: 600, color: '#1565c0' }}>
-              Edit Vehicle
-            </Typography>
-          </DialogTitle>
+          <Modal.Header closeButton className="border-bottom">
+            <Modal.Title className="d-flex align-items-center">
+              <div 
+                className="rounded-circle d-flex align-items-center justify-content-center me-3"
+                style={{ 
+                  backgroundColor: '#1976d2',
+                  width: '40px',
+                  height: '40px',
+                  color: 'white'
+                }}
+              >
+                <PencilSquare size={20} />
+              </div>
+              <span className="text-primary fw-bold">Edit Vehicle</span>
+            </Modal.Title>
+          </Modal.Header>
 
-          <DialogContent sx={{ pt: 3 }}>
+          <Modal.Body className="pt-4">
             {saveError && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert variant="danger" className="mb-4">
                 {saveError}
               </Alert>
             )}
 
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Vehicle Type"
-                  name="vehicleType"
-                  value={editFields.vehicleType}
-                  onChange={handleFieldChange}
-                  variant="outlined"
-                />
-              </Grid>
+            <Row className="g-3">
+              <Col xs={12}>
+                <Form.Group>
+                  <Form.Label>Vehicle Type</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="vehicleType"
+                    value={editFields.vehicleType}
+                    onChange={handleFieldChange}
+                    placeholder="Enter vehicle type"
+                  />
+                </Form.Group>
+              </Col>
 
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="License Plate"
-                  name="licensePlate"
-                  value={editFields.licensePlate}
-                  onChange={handleFieldChange}
-                  variant="outlined"
-                />
-              </Grid>
+              <Col xs={12}>
+                <Form.Group>
+                  <Form.Label>License Plate</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="licensePlate"
+                    value={editFields.licensePlate}
+                    onChange={handleFieldChange}
+                    placeholder="Enter license plate"
+                  />
+                </Form.Group>
+              </Col>
 
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Load Capacity"
-                  name="loadCapacity"
-                  value={editFields.loadCapacity}
-                  onChange={handleFieldChange}
-                  variant="outlined"
-                />
-              </Grid>
+              <Col xs={12}>
+                <Form.Group>
+                  <Form.Label>Load Capacity</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="loadCapacity"
+                    value={editFields.loadCapacity}
+                    onChange={handleFieldChange}
+                    placeholder="Enter load capacity"
+                  />
+                </Form.Group>
+              </Col>
 
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Price per KM (LKR)"
-                  name="pricePerKm"
-                  type="number"
-                  inputProps={{ step: "0.01" }}
-                  value={editFields.pricePerKm}
-                  onChange={handleFieldChange}
-                  placeholder="Enter price per kilometer"
-                  variant="outlined"
-                />
-              </Grid>
+              <Col xs={12}>
+                <Form.Group>
+                  <Form.Label>Price per KM (LKR)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    name="pricePerKm"
+                    value={editFields.pricePerKm}
+                    onChange={handleFieldChange}
+                    placeholder="Enter price per kilometer"
+                  />
+                </Form.Group>
+              </Col>
 
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                  Change Image (optional)
-                </Typography>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  fullWidth
-                  sx={{ py: 1.5, textTransform: 'none' }}
-                >
-                  Choose File
-                  <input
+              <Col xs={12}>
+                <Form.Group>
+                  <Form.Label className="fw-bold mb-2">Change Image (optional)</Form.Label>
+                  <Form.Control
                     type="file"
                     name="file"
                     accept="image/png, image/jpeg, image/jpg"
                     onChange={handleFieldChange}
-                    hidden
                   />
-                </Button>
-              </Grid>
-            </Grid>
-          </DialogContent>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Modal.Body>
 
-          <DialogActions sx={{ p: 3, pt: 2 }}>
+          <Modal.Footer className="border-top pt-3">
             <Button 
+              variant="secondary" 
               onClick={() => setShowModal(false)} 
               disabled={isSaving}
-              sx={{ textTransform: 'none' }}
             >
               Cancel
             </Button>
             <Button 
-              variant="contained"
+              variant="primary"
               onClick={handleSave} 
               disabled={isSaving}
-              sx={{
-                bgcolor: '#1565c0',
-                textTransform: 'none',
-                '&:hover': {
-                  bgcolor: '#1976d2',
-                }
-              }}
-              startIcon={isSaving ? <CircularProgress size={16} color="inherit" /> : null}
+              className="d-flex align-items-center"
             >
+              {isSaving && <Spinner animation="border" size="sm" className="me-2" />}
               {isSaving ? "Saving..." : "Save"}
             </Button>
-          </DialogActions>
-        </Dialog>
+          </Modal.Footer>
+        </Modal>
       </Container>
-    </Box>
+    </div>
   );
 }

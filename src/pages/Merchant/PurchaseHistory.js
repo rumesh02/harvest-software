@@ -13,6 +13,8 @@ import {
   Avatar,
   Stack,
   Paper,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   ShoppingBag,
@@ -60,9 +62,13 @@ const PurchaseHistory = () => {
     setReviewOpen(true);
   };
 
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
   const handleReviewClose = (success) => {
     if (success) {
-      alert(`Review submitted successfully for ${selectedFarmer}!`);
+      setSnackbarMessage(`Review for ${selectedFarmer} submitted successfully!`);
+      setSnackbarOpen(true);
     }
     setReviewOpen(false);
     setSelectedOrder(null);
@@ -318,6 +324,28 @@ const PurchaseHistory = () => {
         farmerRatings={{}}
         product={selectedOrder?.items?.[0]}
       />
+
+      {/* Success Notification */}
+      <Snackbar 
+        open={snackbarOpen} 
+        autoHideDuration={4000} 
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity="success" 
+          variant="filled"
+          sx={{ 
+            display: 'flex',
+            alignItems: 'center',
+            boxShadow: '0px 3px 8px rgba(0, 0, 0, 0.2)',
+            '& .MuiAlert-icon': { fontSize: 24 }
+          }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

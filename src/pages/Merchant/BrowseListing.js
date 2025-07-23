@@ -26,12 +26,12 @@ import {
   CircularProgress
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import EmojiNatureIcon from "@mui/icons-material/EmojiNature";
-import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import CloseIcon from "@mui/icons-material/Close";
 import ChatIcon from "@mui/icons-material/Chat";
 import axios from "axios";
@@ -72,119 +72,6 @@ const BrowseListing = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [totalResults, setTotalResults] = useState(0);
   const [searchPerformance, setSearchPerformance] = useState(null);
-
-  // Progressive filtering states
-  const [filteredDistricts, setFilteredDistricts] = useState(["All Districts"]);
-  const [filteredTypes, setFilteredTypes] = useState(["All Types"]);
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000, avg: 0 });
-  const [isFiltering, setIsFiltering] = useState(false);
-
-  // Progressive filtering functions
-  const updateFilteredOptions = useCallback(async () => {
-    if (isFiltering) return; // Prevent concurrent updates
-    
-    setIsFiltering(true);
-    try {
-      // Build current filter params (excluding the filter being updated)
-      const getCurrentFilters = (exclude = []) => {
-        const params = new URLSearchParams();
-        if (!exclude.includes('search') && searchQuery.trim()) {
-          params.append('search', searchQuery.trim());
-        }
-        if (!exclude.includes('type') && typeFilter !== "All Types") {
-          params.append('type', typeFilter);
-        }
-        if (!exclude.includes('district') && districtFilter !== "All Districts") {
-          params.append('district', districtFilter);
-        }
-        if (!exclude.includes('maxPrice') && maxPrice && maxPrice > 0) {
-          params.append('maxPrice', maxPrice);
-        }
-        return params;
-      };
-
-      // Update available districts based on other filters
-      const districtParams = getCurrentFilters(['district']);
-      const districtResponse = await axios.get(`http://localhost:5000/api/products/filter/districts?${districtParams}`);
-      const availableDistricts = (districtResponse.data || [])
-        .filter(d => d.district && d.district.trim())
-        .map(d => d.district);
-      setFilteredDistricts(["All Districts", ...availableDistricts]);
-
-      // Update available types based on other filters
-      const typeParams = getCurrentFilters(['type']);
-      const typeResponse = await axios.get(`http://localhost:5000/api/products/filter/types?${typeParams}`);
-      const availableTypes = (typeResponse.data || [])
-        .filter(t => t.type && t.type.trim())
-        .map(t => t.type);
-      setFilteredTypes(["All Types", ...availableTypes]);
-
-      // Update price range based on other filters
-      const priceParams = getCurrentFilters(['maxPrice']);
-      const priceResponse = await axios.get(`http://localhost:5000/api/products/filter/price-range?${priceParams}`);
-      if (priceResponse.data && priceResponse.data.maxPrice > 0) {
-        setPriceRange({
-          min: priceResponse.data.minPrice || 0,
-          max: priceResponse.data.maxPrice || 1000,
-          avg: priceResponse.data.avgPrice || 0
-        });
-      }
-
-    } catch (error) {
-      console.error("Error updating filtered options:", error);
-      // Fallback to default options if API fails
-      setFilteredDistricts(districts);
-      setFilteredTypes(productTypes);
-    } finally {
-      setIsFiltering(false);
-    }
-  }, [searchQuery, typeFilter, districtFilter, maxPrice, districts, productTypes, isFiltering]);
-
-  // Update filtered options when any filter changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      updateFilteredOptions();
-    }, 300); // Debounce to avoid too many API calls
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, typeFilter, districtFilter, maxPrice, updateFilteredOptions]);
-
-  // Fetch search suggestions with progressive filtering
-  const fetchFilteredSearchSuggestions = useCallback(async (query) => {
-    if (!query || query.length < 2) {
-      setSearchSuggestions([]);
-      return;
-    }
-
-    try {
-      setSearchLoading(true);
-      const params = new URLSearchParams({ search: query });
-      
-      // Add current filters to get contextual suggestions
-      if (typeFilter !== "All Types") {
-        params.append('type', typeFilter);
-      }
-      if (districtFilter !== "All Districts") {
-        params.append('district', districtFilter);
-      }
-      if (maxPrice && maxPrice > 0) {
-        params.append('maxPrice', maxPrice);
-      }
-
-      const response = await axios.get(`http://localhost:5000/api/products/filter/names?${params}`);
-      const suggestions = (response.data || [])
-        .filter(item => item.name && item.name.trim())
-        .map(item => item.name)
-        .slice(0, 10); // Limit suggestions
-      
-      setSearchSuggestions(suggestions);
-    } catch (error) {
-      console.error("Error fetching filtered search suggestions:", error);
-      setSearchSuggestions([]);
-    } finally {
-      setSearchLoading(false);
-    }
-  }, [typeFilter, districtFilter, maxPrice]);
 
   // Fetch available districts and product types on component mount
   useEffect(() => {
@@ -238,18 +125,39 @@ const BrowseListing = () => {
     fetchPopularTerms();
   }, []);
 
-  // Debounced search suggestions with progressive filtering
+  // Fetch search suggestions with debouncing
+  const fetchSearchSuggestions = useCallback(async (query) => {
+    if (!query || query.length < 2) {
+      setSearchSuggestions([]);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const response = await axios.get(`http://localhost:5000/api/products/search/suggestions?q=${encodeURIComponent(query)}`);
+      // Filter out null, undefined, and empty values
+      const suggestions = (response.data || []).filter(item => item != null && item !== "");
+      setSearchSuggestions(suggestions);
+    } catch (error) {
+      console.error("Error fetching search suggestions:", error);
+      setSearchSuggestions([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  // Debounced search suggestions
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchQuery.trim()) {
-        fetchFilteredSearchSuggestions(searchQuery.trim());
+        fetchSearchSuggestions(searchQuery.trim());
       } else {
         setSearchSuggestions([]);
       }
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, fetchFilteredSearchSuggestions]);
+  }, [searchQuery, fetchSearchSuggestions]);
 
   const updateProductInList = useCallback((productId, updatedProduct) => {
     setFetchedProducts(prev => prev.map(p => (p._id === productId ? { ...p, ...updatedProduct } : p)));
@@ -650,122 +558,6 @@ const BrowseListing = () => {
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'space-between' }}>
           <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300, position: 'relative' }}>
             <Autocomplete
-              value={typeFilter}
-              onChange={(event, newValue) => setTypeFilter(newValue || "All Types")}
-              options={filteredTypes.filter(type => type != null && type !== "")}
-              size="small"
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Product Type"
-                  placeholder="Select type..."
-                  InputProps={{
-                    ...params.InputProps,
-                    startAdornment: (
-                      <>
-                        <InputAdornment position="start">
-                          <EmojiNatureIcon sx={{ color: '#000' }} fontSize="small" />
-                        </InputAdornment>
-                        {params.InputProps.startAdornment}
-                      </>
-                    )
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      height: 40,
-                      '& fieldset': {
-                        borderColor: '#000',
-                        borderWidth: 2,
-                      },
-                      '&:hover fieldset': { borderColor: '#222' },
-                      '&.Mui-focused fieldset': { borderColor: '#222' }
-                    },
-                    '& .MuiInputLabel-outlined': {
-                      color: '#000',
-                      fontWeight: 600,
-                      background: '#fff',
-                      px: 0.5,
-                      margin: 0
-                    }
-                  }}
-                />
-              )}
-              renderOption={(props, option) => {
-                // Check if this option is in popularTerms to show with special styling
-                const termText = typeof option === 'string' ? option : option?.term;
-                const isPopular = popularTerms.some(term => {
-                  const popularTermText = typeof term === 'string' ? term : term?.term;
-                  return popularTermText === termText;
-                });
-
-                if (isPopular && option !== "All Types") {
-                  // Get color scheme for popular terms
-                  const getTypeColor = (type) => {
-                    const lowerType = type.toLowerCase();
-                    if (lowerType.includes('vegetable') || lowerType.includes('herb') || lowerType.includes('leafy')) {
-                      return { icon: '🥬', color: '#2e7d32' };
-                    } else if (lowerType.includes('fruit') || lowerType.includes('berry')) {
-                      return { icon: '🍎', color: '#f57c00' };
-                    } else if (lowerType.includes('grain') || lowerType.includes('cereal') || lowerType.includes('rice')) {
-                      return { icon: '🌾', color: '#7b1fa2' };
-                    } else if (lowerType.includes('spice') || lowerType.includes('seasoning')) {
-                      return { icon: '🌶️', color: '#c2185b' };
-                    } else {
-                      return { icon: '🌱', color: '#616161' };
-                    }
-                  };
-
-                  const colors = getTypeColor(termText);
-
-                  return (
-                    <li {...props} style={{ ...props.style, padding: '8px 12px' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        <span style={{ fontSize: '16px' }}>{colors.icon}</span>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            color: colors.color, 
-                            fontWeight: 600,
-                            flex: 1
-                          }}
-                        >
-                          {option}
-                        </Typography>
-                        <Chip
-                          label="Popular"
-                          size="small"
-                          sx={{
-                            fontSize: '10px',
-                            height: 20,
-                            backgroundColor: colors.color + '20',
-                            color: colors.color,
-                            fontWeight: 500,
-                            '& .MuiChip-label': { px: 1 }
-                          }}
-                        />
-                      </Box>
-                    </li>
-                  );
-                }
-
-                // Regular option styling
-                return (
-                  <li {...props} style={{ ...props.style, padding: '8px 12px' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <EmojiNatureIcon sx={{ color: '#666', fontSize: 16 }} />
-                      <Typography variant="body2" sx={{ color: '#333' }}>
-                        {option}
-                      </Typography>
-                    </Box>
-                  </li>
-                );
-              }}
-              disableClearable
-            />
-          </Box>
-          <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300 }}>
-            <Autocomplete
               freeSolo
               value={searchQuery}
               onChange={(event, newValue) => {
@@ -837,11 +629,141 @@ const BrowseListing = () => {
               }}
             />
           </Box>
+          <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300, position: 'relative' }}>
+            <Autocomplete
+              value={typeFilter}
+              onChange={(event, newValue) => setTypeFilter(newValue || "All Types")}
+              options={productTypes.filter(type => type != null && type !== "")}
+              size="small"
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Product Type"
+                  placeholder="Select type..."
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <>
+                        <InputAdornment position="start">
+                          <EmojiNatureIcon sx={{ color: '#000' }} fontSize="small" />
+                        </InputAdornment>
+                        {params.InputProps.startAdornment}
+                      </>
+                    )
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      height: 40,
+                      '& fieldset': {
+                        borderColor: '#000',
+                        borderWidth: 2,
+                      },
+                      '&:hover fieldset': { borderColor: '#222' },
+                      '&.Mui-focused fieldset': { borderColor: '#222' }
+                    },
+                    '& .MuiInputLabel-outlined': {
+                      color: '#000',
+                      fontWeight: 600,
+                      background: '#fff',
+                      px: 0.5,
+                      margin: 0
+                    }
+                  }}
+                />
+              )}
+              renderOption={(props, option) => {
+                // Check if this option is in popularTerms to show with special styling
+                const termText = typeof option === 'string' ? option : option?.term;
+                const isPopular = popularTerms.some(term => {
+                  const popularTermText = typeof term === 'string' ? term : term?.term;
+                  return popularTermText === termText;
+                });
+
+                if (isPopular && option !== "All Types") {
+                  // Get color scheme for popular terms
+                  const getTypeColor = (type) => {
+                    const lowerType = type.toLowerCase();
+                    if (lowerType.includes('vegetable') || lowerType.includes('herb') || lowerType.includes('leafy')) {
+                      return { icon: '🥬', color: '#2e7d32', bg: '#e8f5e8' };
+                    } else if (lowerType.includes('fruit') || lowerType.includes('berry')) {
+                      return { icon: '🍎', color: '#f57c00', bg: '#fff8e1' };
+                    } else if (lowerType.includes('grain') || lowerType.includes('cereal') || lowerType.includes('rice')) {
+                      return { icon: '🌾', color: '#7b1fa2', bg: '#f3e5f5' };
+                    } else if (lowerType.includes('spice') || lowerType.includes('seasoning')) {
+                      return { icon: '🌶️', color: '#c2185b', bg: '#fce4ec' };
+                    } else {
+                      return { icon: '🌱', color: '#616161', bg: '#f5f5f5' };
+                    }
+                  };
+
+                  const colors = getTypeColor(termText);
+
+                  return (
+                    <li {...props} style={{ 
+                      ...props.style, 
+                      padding: '8px 12px',
+                      backgroundColor: typeFilter === termText ? colors.bg : 'transparent'
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                        <span style={{ fontSize: '16px' }}>{colors.icon}</span>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: colors.color, 
+                            fontWeight: typeFilter === termText ? 700 : 600,
+                            flex: 1
+                          }}
+                        >
+                          {option}
+                        </Typography>
+                        <Chip
+                          label="Popular"
+                          size="small"
+                          sx={{
+                            fontSize: '10px',
+                            height: 20,
+                            backgroundColor: colors.color + '20',
+                            color: colors.color,
+                            fontWeight: 500,
+                            '& .MuiChip-label': { px: 1 }
+                          }}
+                        />
+                      </Box>
+                    </li>
+                  );
+                }
+
+                // Regular option styling
+                return (
+                  <li {...props} style={{ 
+                    ...props.style, 
+                    padding: '8px 12px',
+                    backgroundColor: typeFilter === option ? '#f5f5f5' : 'transparent'
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <EmojiNatureIcon sx={{ color: '#666', fontSize: 16 }} />
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#333',
+                          fontWeight: typeFilter === option ? 600 : 400
+                        }}
+                      >
+                        {option}
+                      </Typography>
+                    </Box>
+                  </li>
+                );
+              }}
+              disableClearable
+            />
+          </Box>
           <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300 }}>
             <Autocomplete
               value={districtFilter}
               onChange={(event, newValue) => setDistrictFilter(newValue || "All Districts")}
-              options={filteredDistricts.filter(district => district != null && district !== "")}
+              options={districts.filter(district => district != null && district !== "")}
               size="small"
               renderInput={(params) => (
                 <TextField
@@ -896,7 +818,7 @@ const BrowseListing = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <MonetizationOnIcon sx={{ color: '#000' }} fontSize="small" />
+                    <AttachMoneyIcon sx={{ color: '#000' }} fontSize="small" />
                   </InputAdornment>
                 ),
               }}

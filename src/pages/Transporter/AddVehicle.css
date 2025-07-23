@@ -133,7 +133,6 @@ label,
 
 .upload-area:hover,
 .file-upload-box:hover {
-  border-color: #667eea;
   background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
 }
 
@@ -147,7 +146,7 @@ label,
 
 .upload-text-bold {
   font-weight: 600;
-  color: #667eea;
+
 }
 
 .upload-caption {
@@ -233,7 +232,7 @@ button,
 button:hover:not(:disabled),
 .submit-button:hover {
   transform: translateY(-2px);
-  background-color: #1976d2;
+
 }
 
 button:disabled,

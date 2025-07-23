@@ -702,15 +702,9 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
                         fontWeight: 600
                       }}
                     >
-                      Price: LKR {vehicle.pricePerKm || "N/A"}/km
+                      Price per KM: LKR {vehicle.pricePerKm || "N/A"}
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 1.5, fontSize: "0.85rem" }}
-                    >
-                      Price per Km: {vehicle.pricePerKm || "###"}
-                    </Typography>
+                    
                   </CardContent>
                   <Button
                     variant="contained"

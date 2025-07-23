@@ -318,7 +318,7 @@ function LoginPage() {
                       alignItems="center"
                       sx={{
                         width: '100%',
-                        ml: 8,
+                        ml:1,
                         maxWidth: '100%'
                       }}
                     >
@@ -350,7 +350,7 @@ function LoginPage() {
                       <Box sx={{ width: '80%', maxWidth: 300, display: 'flex', alignItems: 'center', my: 1, ml: 'auto', mr: 0 }}>
                         <Divider sx={{ flex: 1 }} />
                         <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
-                          
+                          or
                         </Typography>
                         <Divider sx={{ flex: 1 }} />
                       </Box>

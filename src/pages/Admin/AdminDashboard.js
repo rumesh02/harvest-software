@@ -114,14 +114,7 @@ const AdminDashboard = () => {
       color: "#7b1fa2",
       iconBg: "#ce93d8"
       },
-      {
-        title: "Success Rate",
-        value: `${Math.round(((analytics.platformStats?.totalConfirmedBids || 0) / (analytics.platformStats?.totalBookings || 1)) * 100)}%`,
-        icon: <Analytics fontSize="small" />,
-        bgColor: "#e1bee7",
-      color: "#7b1fa2",
-      iconBg: "#ce93d8"
-      }
+      
     ];
   };
 

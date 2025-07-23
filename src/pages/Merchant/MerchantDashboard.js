@@ -174,6 +174,20 @@ const MerchantDashboard = () => {
       // Add detailed logging
       console.log('Full dashboard response:', response.data);
       console.log('Monthly data received:', response.data.monthlyData);
+      console.log('Top farmers received:', response.data.topFarmers);
+      
+      // Log each farmer's structure for debugging
+      if (response.data.topFarmers && response.data.topFarmers.length > 0) {
+        console.log('First farmer structure:', response.data.topFarmers[0]);
+        response.data.topFarmers.forEach((farmer, index) => {
+          console.log(`Farmer ${index + 1}:`, {
+            name: farmer.name,
+            auth0Id: farmer.auth0Id,
+            _id: farmer._id,
+            hasAuth0Id: !!farmer.auth0Id
+          });
+        });
+      }
       
       // Cache the new data
       setCachedData(response.data);
@@ -238,10 +252,22 @@ const MerchantDashboard = () => {
   const fetchFarmerReviews = async (farmerId) => {
     try {
       setReviewsLoading(true);
+      console.log('Fetching reviews for farmer ID:', farmerId);
+      
       const response = await axios.get(`http://localhost:5000/api/reviews/farmer/${farmerId}`);
-      setFarmerReviews(response.data.reviews || []);
+      console.log('Reviews API response:', response.data);
+      
+      const reviewsData = response.data.reviews || [];
+      console.log(`Found ${reviewsData.length} reviews for farmer ${farmerId}`);
+      
+      setFarmerReviews(reviewsData);
     } catch (error) {
       console.error('Error fetching farmer reviews:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
       setFarmerReviews([]);
     } finally {
       setReviewsLoading(false);
@@ -250,8 +276,19 @@ const MerchantDashboard = () => {
 
   // Handle farmer click to open review modal
   const handleFarmerClick = (farmer) => {
+    console.log('Farmer clicked:', farmer);
     setSelectedFarmer(farmer);
     setReviewModalOpen(true);
+    
+    // Fetch reviews for the selected farmer using auth0Id (as per backend API)
+    if (farmer.auth0Id) {
+      console.log('Fetching reviews for farmer auth0Id:', farmer.auth0Id);
+      fetchFarmerReviews(farmer.auth0Id);
+    } else {
+      console.error('No auth0Id found in farmer object:', farmer);
+      console.log('Available farmer fields:', Object.keys(farmer));
+      setFarmerReviews([]);
+    }
   };
 
   // Handle closing review modal
@@ -428,20 +465,7 @@ const MerchantDashboard = () => {
             <Typography variant="body2" color="#92400e" sx={{ fontWeight: 400, fontSize: { xs: 15, md: 16 } }}>
               Track your purchases and business analytics
             </Typography>
-            {dataLoaded && (
-              <Chip
-                size="small"
-                label={cacheAge === 0 ? "Fresh" : `Cached ${cacheAge}m ago`}
-                sx={{
-                  background: cacheAge === 0 ? '#22c55e' : '#3b82f6',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: 10,
-                  height: 20,
-                  '& .MuiChip-label': { px: 1 }
-                }}
-              />
-            )}
+            
           </Box>
           {/* Refresh Button */}
           <IconButton

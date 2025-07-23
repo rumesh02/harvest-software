@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getRoleColor } from '../utils/roleColors';
 import {
   Box,
   List,
@@ -64,19 +65,6 @@ const RoleIcon = ({ role }) => {
       return <TruckIcon {...iconProps} />;
     default:
       return <PersonIcon {...iconProps} />;
-  }
-};
-
-const getRoleColor = (role) => {
-  switch (role?.toLowerCase()) {
-    case 'farmer':
-      return '#059669';
-    case 'merchant':
-      return '#dc2626';
-    case 'transporter':
-      return '#2563eb';
-    default:
-      return '#6b7280';
   }
 };
 
@@ -199,7 +187,7 @@ const FilteredUserList = ({
                     sx={{
                       width: 40,
                       height: 40,
-                      border: `2px solid ${getRoleColor(user.role)}`,
+                      border: `2px solid ${getRoleColor(user.role).primary}`,
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     }}
                   >
@@ -229,13 +217,13 @@ const FilteredUserList = ({
                         sx={{
                           height: '20px',
                           fontSize: '11px',
-                          backgroundColor: `${getRoleColor(user.role)}15`,
-                          color: getRoleColor(user.role),
+                          backgroundColor: `${getRoleColor(user.role).primary}15`,
+                          color: getRoleColor(user.role).primary,
                           fontWeight: 600,
                           textTransform: 'capitalize',
                           alignSelf: 'flex-start',
                           '& .MuiChip-icon': {
-                            color: getRoleColor(user.role),
+                            color: getRoleColor(user.role).primary,
                             fontSize: '14px',
                           },
                         }}

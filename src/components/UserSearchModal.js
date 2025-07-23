@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getRoleColor } from '../utils/roleColors';
 import {
   Dialog,
   DialogTitle,
@@ -99,19 +100,6 @@ const RoleIcon = ({ role }) => {
       return <TruckIcon {...iconProps} sx={{ ...iconProps.sx, color: '#2563eb' }} />;
     default:
       return <PersonIcon {...iconProps} sx={{ ...iconProps.sx, color: '#6b7280' }} />;
-  }
-};
-
-const getRoleColor = (role) => {
-  switch (role?.toLowerCase()) {
-    case 'farmer':
-      return '#059669';
-    case 'merchant':
-      return '#dc2626';
-    case 'transporter':
-      return '#2563eb';
-    default:
-      return '#6b7280';
   }
 };
 
@@ -270,7 +258,7 @@ const UserSearchModal = ({
                       sx={{
                         width: 48,
                         height: 48,
-                        border: `2px solid ${getRoleColor(user.role)}`,
+                        border: `2px solid ${getRoleColor(user.role).primary}`,
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                       }}
                     >
@@ -296,12 +284,12 @@ const UserSearchModal = ({
                           label={user.role}
                           size="small"
                           sx={{
-                            backgroundColor: `${getRoleColor(user.role)}15`,
-                            color: getRoleColor(user.role),
+                            backgroundColor: `${getRoleColor(user.role).primary}15`,
+                            color: getRoleColor(user.role).primary,
                             fontWeight: 600,
                             textTransform: 'capitalize',
                             '& .MuiChip-icon': {
-                              color: getRoleColor(user.role),
+                              color: getRoleColor(user.role).primary,
                             },
                           }}
                         />
@@ -336,8 +324,8 @@ const UserSearchModal = ({
                     textTransform: 'capitalize',
                     cursor: 'pointer',
                     '&:hover': {
-                      backgroundColor: `${getRoleColor(role)}20`,
-                      color: getRoleColor(role),
+                      backgroundColor: `${getRoleColor(role).primary}20`,
+                      color: getRoleColor(role).primary,
                     },
                   }}
                 />

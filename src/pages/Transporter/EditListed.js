@@ -33,25 +33,28 @@ const VehicleCard = memo(({ vehicle, onEdit, onDelete }) => (
   <Card 
     className="vehicle-card"
     sx={{ 
-      maxWidth: 300,
-      borderRadius: 2,
-      boxShadow: 3,
-      m: 2,
-      transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+      width: '100%',
+      maxWidth: 280,
+      borderRadius: 3,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+      m: 1,
+      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       "&:hover": {
-        transform: "scale(1.05)",
-        boxShadow: 5,
+        transform: "translateY(-8px)",
+        boxShadow: '0 8px 25px rgba(25, 118, 210, 0.25)',
       },
     }}
   >
     {/* Vehicle Image */}
     <Box sx={{ 
-      height: 180, 
-      bgcolor: '#f5f5f5',
+      height: 160, 
+      bgcolor: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: '8px 8px 0 0'
+      borderRadius: '12px 12px 0 0',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
       {vehicle.image ? (
         <img
@@ -84,30 +87,44 @@ const VehicleCard = memo(({ vehicle, onEdit, onDelete }) => (
       </Box>
     </Box>
 
-    <CardContent sx={{ p: 2.5 }}>
-      <Typography variant="h6" fontWeight="bold">
+    <CardContent sx={{ p: 2, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <Typography variant="h6" fontWeight="bold" sx={{ 
+        color: '#1976d2', 
+        mb: 1.5, 
+        fontSize: '1.1rem',
+        textAlign: 'center' 
+      }}>
         {vehicle.vehicleType}
       </Typography>
       
-      <Typography variant="body1" color="text.secondary">
-        License: {vehicle.licensePlate}
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        Capacity: {vehicle.loadCapacity} kg
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        Rate: LKR {vehicle.pricePerKm}/km
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        Location: {vehicle.district || vehicle.location}
-      </Typography>
+      <Box sx={{ flexGrow: 1, mb: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, fontSize: '0.875rem' }}>
+          <strong>License:</strong> {vehicle.licensePlate}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, fontSize: '0.875rem' }}>
+          <strong>Capacity:</strong> {vehicle.loadCapacity} kg
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, fontSize: '0.875rem' }}>
+          <strong>Rate:</strong> LKR {vehicle.pricePerKm}/km
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+          <strong>Location:</strong> {vehicle.district || vehicle.location}
+        </Typography>
+      </Box>
 
-      <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+      <Box sx={{ display: 'flex', gap: 1 }}>
         <Button
           variant="outlined"
           size="small"
           onClick={() => onEdit(vehicle)}
-          sx={{ flex: 1 }}
+          sx={{ 
+            flex: 1, 
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            py: 0.75
+          }}
         >
           Edit
         </Button>
@@ -116,7 +133,14 @@ const VehicleCard = memo(({ vehicle, onEdit, onDelete }) => (
           color="error"
           size="small"
           onClick={() => onDelete(vehicle._id)}
-          sx={{ flex: 1 }}
+          sx={{ 
+            flex: 1,
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            py: 0.75
+          }}
         >
           Delete
         </Button>
@@ -411,10 +435,10 @@ const EditListed = () => {
 
       {/* Loading State */}
       {loading ? (
-        <Grid container spacing={3} justifyContent="flex-start">
+        <Grid container spacing={2} justifyContent="flex-start">
           {/* Show skeleton cards while loading */}
-          {[1, 2, 3].map((index) => (
-            <Grid item xs={12} sm={6} md={4} key={index} sx={{ display: 'flex', justifyContent: 'center' }}>
+          {[1, 2, 3, 4].map((index) => (
+            <Grid item xs={12} sm={6} md={3} key={index} sx={{ display: 'flex', justifyContent: 'center' }}>
               <VehicleCardSkeleton />
             </Grid>
           ))}
@@ -433,9 +457,9 @@ const EditListed = () => {
               </Typography>
             </Paper>
           ) : (
-            <Grid container spacing={3} justifyContent="flex-start">
+            <Grid container spacing={2} justifyContent="flex-start">
               {vehicles.map((vehicle) => (
-                <Grid item xs={12} sm={6} md={4} key={vehicle._id} sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Grid item xs={12} sm={6} md={3} key={vehicle._id} sx={{ display: 'flex', justifyContent: 'center' }}>
                   <VehicleCard 
                     vehicle={vehicle}
                     onEdit={handleEdit}
@@ -452,128 +476,284 @@ const EditListed = () => {
       <Dialog 
         open={openDialog} 
         onClose={handleCloseDialog}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
         PaperProps={{
-          sx: { borderRadius: 3 }
+          sx: { 
+            borderRadius: 4,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+            overflow: 'hidden'
+          }
         }}
       >
         <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          backgroundColor: '#1976d2',
-          color: 'white'
+          background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+          color: 'white',
+          p: 3,
+          position: 'relative',
+          textAlign: 'center'
         }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {editingVehicle ? 'Edit Vehicle' : 'Add New Vehicle'}
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+            {editingVehicle ? '✏️ Edit Vehicle' : '🚛 Add New Vehicle'}
+          </Typography>
+          <Typography variant="body2" sx={{ opacity: 0.9, fontSize: '0.95rem' }}>
+            {editingVehicle ? 'Update your vehicle information' : 'Register a new vehicle to your fleet'}
           </Typography>
           <IconButton
             onClick={handleCloseDialog}
-            sx={{ color: 'white' }}
+            sx={{ 
+              position: 'absolute',
+              right: 16,
+              top: 16,
+              color: 'white',
+              bgcolor: 'rgba(255,255,255,0.1)',
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.2)',
+                transform: 'scale(1.1)'
+              }
+            }}
           >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 3 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
+        <DialogContent sx={{ p: 4, bgcolor: '#f8f9fa' }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Vehicle Type"
+                label="🚛 Vehicle Type"
                 value={formData.vehicleType}
                 onChange={(e) => handleInputChange('vehicleType', e.target.value)}
                 placeholder="e.g., Truck, Van, Lorry"
                 required
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    bgcolor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#1976d2',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#1976d2',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="License Plate"
+                label="🏷️ License Plate"
                 value={formData.licensePlate}
                 onChange={(e) => handleInputChange('licensePlate', e.target.value)}
                 placeholder="e.g., ABC-1234"
                 required
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    bgcolor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#1976d2',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#1976d2',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
               />
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Load Capacity (kg)"
+                label="⚖️ Load Capacity"
                 type="number"
                 value={formData.loadCapacity}
                 onChange={(e) => handleInputChange('loadCapacity', e.target.value)}
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">kg</InputAdornment>
+                  endAdornment: <InputAdornment position="end" sx={{ fontWeight: 600 }}>kg</InputAdornment>
                 }}
                 required
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    bgcolor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#1976d2',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#1976d2',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
               />
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Price per Km"
+                label="💰 Price per Km"
                 type="number"
+                step="0.01"
                 value={formData.pricePerKm}
                 onChange={(e) => handleInputChange('pricePerKm', e.target.value)}
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">LKR</InputAdornment>
+                  startAdornment: <InputAdornment position="start" sx={{ fontWeight: 600 }}>LKR</InputAdornment>
                 }}
                 required
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    bgcolor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#1976d2',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#1976d2',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Location/District"
+                label="📍 Location/District"
                 value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="e.g., Colombo, Kandy"
+                placeholder="e.g., Colombo, Kandy, Galle"
                 required
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    bgcolor: 'white',
+                    '&:hover fieldset': {
+                      borderColor: '#1976d2',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#1976d2',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12}>
-              <Button
-                variant="outlined"
-                component="label"
-                fullWidth
-                startIcon={<CarIcon />}
-                sx={{ py: 1.5 }}
-              >
-                Upload Vehicle Image
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={(e) => handleInputChange('image', e.target.files[0])}
-                />
-              </Button>
-              {formData.image && (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Selected: {formData.image.name}
-                </Typography>
-              )}
+              <Box sx={{ 
+                border: '2px dashed #1976d2', 
+                borderRadius: 3, 
+                p: 3, 
+                textAlign: 'center',
+                bgcolor: 'white',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  borderColor: '#1565c0',
+                  bgcolor: '#f8f9fa'
+                }
+              }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  size="large"
+                  startIcon={<CarIcon sx={{ fontSize: 24 }} />}
+                  sx={{ 
+                    py: 2,
+                    px: 4,
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    borderWidth: 2,
+                    '&:hover': {
+                      borderWidth: 2,
+                      transform: 'scale(1.02)'
+                    }
+                  }}
+                >
+                  📷 Upload Vehicle Image
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => handleInputChange('image', e.target.files[0])}
+                  />
+                </Button>
+                {formData.image && (
+                  <Box sx={{ mt: 2, p: 2, bgcolor: '#e3f2fd', borderRadius: 2 }}>
+                    <Typography variant="body1" color="primary" sx={{ fontWeight: 600 }}>
+                      ✅ Selected: {formData.image.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Size: {(formData.image.size / 1024 / 1024).toFixed(2)} MB
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
             </Grid>
           </Grid>
         </DialogContent>
 
-        <DialogActions sx={{ p: 3, gap: 1 }}>
+        <DialogActions sx={{ 
+          p: 3, 
+          gap: 2, 
+          bgcolor: 'white',
+          borderTop: '1px solid #e0e0e0'
+        }}>
           <Button
             onClick={handleCloseDialog}
             variant="outlined"
-            sx={{ borderColor: '#666', color: '#666' }}
+            size="large"
+            sx={{ 
+              borderColor: '#666', 
+              color: '#666',
+              px: 4,
+              py: 1.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '1rem',
+              '&:hover': {
+                borderColor: '#999',
+                bgcolor: '#f5f5f5'
+              }
+            }}
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             variant="contained"
-            sx={{ backgroundColor: '#1976d2' }}
+            size="large"
+            sx={{ 
+              background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+              px: 4,
+              py: 1.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '1rem',
+              boxShadow: '0 4px 15px rgba(25, 118, 210, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
+                transform: 'translateY(-2px)'
+              },
+              '&:disabled': {
+                background: '#ccc',
+                color: '#999'
+              }
+            }}
             disabled={!formData.vehicleType || !formData.licensePlate || !formData.loadCapacity || !formData.pricePerKm || !formData.location}
           >
-            {editingVehicle ? 'Update Vehicle' : 'Add Vehicle'}
+            {editingVehicle ? '✅ Update Vehicle' : '🚛 Add Vehicle'}
           </Button>
         </DialogActions>
       </Dialog>

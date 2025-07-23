@@ -472,6 +472,7 @@ const ChatContainer = ({ currentUserId }) => {
             <Typography variant="body1" color="#6B7280" sx={{ textAlign: 'center', maxWidth: 400, mb: 3 }}>
               Choose a chat from the sidebar or use the search filters to find and start a new conversation
             </Typography>
+
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'center',
@@ -496,6 +497,7 @@ const ChatContainer = ({ currentUserId }) => {
                 Find Users
               </Button>
             </Box>
+
           </Box>
         )}
       </Paper>

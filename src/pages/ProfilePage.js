@@ -27,7 +27,7 @@ const ProfilePage = () => {
     const fetchProfile = async () => {
       if (isAuthenticated && user?.sub) {
         try {
-          const res = await axios.get(`/api/users/${user.sub}`);
+          const res = await axios.get(`http://localhost:5000/api/users/${user.sub}`);
           setProfile({
             name: res.data.name || "",
             email: res.data.email || user.email,
@@ -65,7 +65,7 @@ const ProfilePage = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(`/api/users/${user.sub}`, profile);
+      const response = await axios.put(`http://localhost:5000/api/users/${user.sub}`, profile);
       if (response.status === 200 || response.status === 204) {
         showSnackbar("Profile updated successfully!", "success");
         setEditing(false);

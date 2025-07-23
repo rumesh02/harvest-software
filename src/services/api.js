@@ -104,12 +104,12 @@ export const deleteVehicle = async (id) => {
 };
 
 export const getBookingsForTransporter = async (transporterId) => {
-  const res = await axios.get(`/api/bookings/transporter/${transporterId}`);
+  const res = await axios.get(`http://localhost:5000/api/bookings/transporter/${transporterId}`);
   return res.data;
 };
 
 export const getBookingsForMerchant = async (merchantId) => {
-  const res = await axios.get(`/api/bookings/merchant/${merchantId}`);
+  const res = await axios.get(`http://localhost:5000/api/bookings/merchant/${merchantId}`);
   return res.data;
 };
 

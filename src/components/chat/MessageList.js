@@ -200,8 +200,9 @@ const MessageList = ({
 }) => {
   const messagesEndRef = useRef(null);
 
-  // Get current user role for theming
+  // Use current user's role for general theming
   const currentUserRole = localStorage.getItem('userRole') || 'default';
+  const targetUserRole = targetUser?.role || 'default'; // For reference
   const roleColors = useMemo(() => ({
     ...getRoleColor(currentUserRole),
     role: currentUserRole
@@ -211,6 +212,9 @@ const MessageList = ({
     messagesCount: messages.length,
     currentUserId,
     targetUser: targetUser?.name,
+    targetUserRole: targetUserRole,
+    currentUserRole: currentUserRole,
+    roleColors: roleColors,
     typing,
     loading 
   });

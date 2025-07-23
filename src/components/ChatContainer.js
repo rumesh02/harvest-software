@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import ModernChatBox from './ModernChatBox';
 import RecentChats from './RecentChats';
@@ -6,60 +6,34 @@ import ChatFilterBar from './ChatFilterBar';
 import FilteredUserList from './FilteredUserList';
 import ChatNotificationSystem from './ChatNotificationSystem';
 import useRecentChats from '../hooks/useRecentChats';
+import { getRoleColor } from '../utils/roleColors';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Box, 
   Typography, 
   Paper, 
-  Divider,
   Badge,
-  IconButton,
-  Tooltip,
   Snackbar,
   Alert,
   Button,
-  Fab,
   Tabs,
   Tab
 } from '@mui/material';
 import { 
-  Notifications as NotificationsIcon,
   Chat as ChatIcon,
-  Add as AddIcon,
-  Search as SearchIcon,
   People as PeopleIcon
 } from '@mui/icons-material';
 import io from 'socket.io-client';
 import './ChatContainer.css';
-import { styled } from '@mui/material/styles';
 
 const socket = io('http://localhost:5000');
-
-// Custom styled badge for WhatsApp-like notification
-const BlueBadge = styled(Badge)(({ theme }) => ({
-  '& .MuiBadge-badge': {
-    backgroundColor: '#3EC6FF', // WhatsApp blue
-    color: '#fff',
-    minWidth: 22,
-    height: 22,
-    fontWeight: 700,
-    fontSize: '0.95rem',
-    top: 2,
-    right: 2,
-    border: `2px solid ${theme.palette.background.paper}`,
-    boxShadow: '0 0 0 2px #222',
-    zIndex: 1,
-  },
-}));
 
 const ChatContainer = ({ currentUserId }) => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const [chatUsers, setChatUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [refreshChats, setRefreshChats] = useState(0);
@@ -72,7 +46,11 @@ const ChatContainer = ({ currentUserId }) => {
   const [usersLoading, setUsersLoading] = useState(false);
 
   // Initialize recent chats hook
-  const { addNewChat, updateChatMessage, clearUnreadCount, isAPIAvailable } = useRecentChats();
+  const { addNewChat, isAPIAvailable } = useRecentChats();
+  
+  // Get current user role for theming
+  const currentUserRole = localStorage.getItem('userRole') || 'merchant';
+  const roleColors = useMemo(() => getRoleColor(currentUserRole), [currentUserRole]);
   
   // Debug the hook initialization
   useEffect(() => {
@@ -116,15 +94,6 @@ const ChatContainer = ({ currentUserId }) => {
     };
   }, [allUsers, addNewChat]);
 
-  // Fetch past chat users
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    axios.get(`http://localhost:5000/api/messages/contacts/${currentUserId}`)
-      .then(res => setChatUsers(res.data))
-      .catch(err => console.error('Failed to load chat contacts:', err));
-  }, [currentUserId]);
-
   // Fetch all users for dropdown
   useEffect(() => {
     setUsersLoading(true);
@@ -139,39 +108,15 @@ const ChatContainer = ({ currentUserId }) => {
       });
   }, []);
 
-  // Fetch initial unread count
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    const fetchUnreadCount = async () => {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/messages/unread/${currentUserId}`);
-        setUnreadCount(response.data.unreadCount);
-      } catch (error) {
-        console.error('Error fetching unread count:', error);
-      }
-    };
-
-    fetchUnreadCount();
-  }, [currentUserId]);
-
   // Listen for new messages
   useEffect(() => {
     if (!currentUserId) return;
 
     socket.on('receiveMessage', (message) => {
       if (message.receiverId === currentUserId) {
-        // Increment unread count
-        setUnreadCount(prev => prev + 1);
-        
         // Show notification
         setNotificationMessage(`New message from ${message.senderName || 'Someone'}`);
         setShowNotification(true);
-        
-        // Refresh chat users list
-        axios.get(`http://localhost:5000/api/messages/contacts/${currentUserId}`)
-          .then(res => setChatUsers(res.data))
-          .catch(err => console.error('Failed to refresh chat contacts:', err));
       }
     });
 
@@ -246,20 +191,6 @@ const ChatContainer = ({ currentUserId }) => {
       }
     }
   }, [location.search, allUsers, currentUserId, addNewChat, navigate, location.pathname]);
-
-  const startNewChat = (e) => {
-    const selectedId = e.target.value;
-    const user = allUsers.find((u) => u.auth0Id === selectedId);
-    if (user) {
-      setSelectedUser(user);
-      setOpenedFromNotification(false); // Reset notification flag for normal selection
-    }
-  };
-
-  const handleSelectUser = (user) => {
-    setSelectedUser(user);
-    setOpenedFromNotification(false); // Reset notification flag for normal selection
-  };
 
   const handleChatSelect = (chat) => {
     console.log('📱 ChatContainer - handleChatSelect called:', {
@@ -431,6 +362,7 @@ const ChatContainer = ({ currentUserId }) => {
           searchTerm={searchTerm}
           selectedRole={selectedRole}
           onClearFilters={handleClearFilters}
+          roleColors={roleColors}
         />
 
         {/* Tab Navigation */}
@@ -448,7 +380,7 @@ const ChatContainer = ({ currentUserId }) => {
                 fontSize: '14px',
               },
               '& .MuiTabs-indicator': {
-                backgroundColor: '#D97706',
+                backgroundColor: roleColors.primary,
               },
             }}
           >
@@ -457,8 +389,8 @@ const ChatContainer = ({ currentUserId }) => {
               label="Recent Chats" 
               iconPosition="start"
               sx={{ 
-                color: activeTab === 0 ? '#D97706' : '#6B7280',
-                '&.Mui-selected': { color: '#D97706' }
+                color: activeTab === 0 ? roleColors.primary : '#6B7280',
+                '&.Mui-selected': { color: roleColors.primary }
               }}
             />
             <Tab 
@@ -466,8 +398,8 @@ const ChatContainer = ({ currentUserId }) => {
               label="Find Users" 
               iconPosition="start"
               sx={{ 
-                color: activeTab === 1 ? '#D97706' : '#6B7280',
-                '&.Mui-selected': { color: '#D97706' }
+                color: activeTab === 1 ? roleColors.primary : '#6B7280',
+                '&.Mui-selected': { color: roleColors.primary }
               }}
             />
           </Tabs>
@@ -540,48 +472,31 @@ const ChatContainer = ({ currentUserId }) => {
             <Typography variant="body1" color="#6B7280" sx={{ textAlign: 'center', maxWidth: 400, mb: 3 }}>
               Choose a chat from the sidebar or use the search filters to find and start a new conversation
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<PeopleIcon />}
-              onClick={() => setActiveTab(1)}
-              sx={{
-                backgroundColor: '#D97706',
-                '&:hover': {
-                  backgroundColor: '#B45309',
-                },
-                borderRadius: '12px',
-                px: 3,
-                py: 1.5,
-                textTransform: 'none',
-                fontWeight: 600,
-              }}
-            >
-              Find Users to Chat
-            </Button>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+              width: '100%'
+            }}>
+              <Button
+                variant="contained"
+                startIcon={<PeopleIcon />}
+                onClick={() => setActiveTab(1)}
+                sx={{
+                  backgroundColor: roleColors.primary,
+                  '&:hover': {
+                    backgroundColor: roleColors.dark,
+                  },
+                  borderRadius: '12px',
+                  px: 3,
+                  py: 1.5,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                Find Users
+              </Button>
+            </Box>
           </Box>
-        )}
-
-        {/* Quick Access Floating Button */}
-        {selectedUser && activeTab === 0 && (
-          <Fab
-            color="primary"
-            aria-label="find users"
-            onClick={() => setActiveTab(1)}
-            sx={{
-              position: 'absolute',
-              bottom: 24,
-              right: 24,
-              backgroundColor: '#D97706',
-              '&:hover': {
-                backgroundColor: '#B45309',
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.2s ease',
-              zIndex: 1,
-            }}
-          >
-            <PeopleIcon />
-          </Fab>
         )}
       </Paper>
 

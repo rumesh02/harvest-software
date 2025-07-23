@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth0 } from "@auth0/auth0-react";
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FaGoogle } from "react-icons/fa";
 import {
   Box,
@@ -13,14 +13,12 @@ import {
   Stack,
   Zoom,
 } from '@mui/material';
-import { green, grey, teal } from '@mui/material/colors';
-const mint = '#CFFFE5';
+import { green, grey } from '@mui/material/colors';
 
 function LoginPage() {
   const { loginWithRedirect, logout, isAuthenticated, user, getAccessTokenSilently, isLoading } = useAuth0();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
 
   // If already authenticated, redirect to appropriate dashboard
   useEffect(() => {
@@ -98,9 +96,8 @@ function LoginPage() {
           />
           <img
             src={`${process.env.PUBLIC_URL}/Images/pexels.jpg`}
-            alt="Login page image"
+            alt="Farm landscape with green fields"
             style={{ height: '100vh', width: '50vw', objectFit: 'cover', transition: 'filter 0.7s', borderRadius: '0px', position: 'relative', zIndex: 2 }}
-            onLoad={() => setImgLoaded(true)}
           />
         </Box>
       </Fade>
@@ -135,7 +132,17 @@ function LoginPage() {
                     variant="contained"
                     color="error"
                     fullWidth
-                    sx={{ mt: 2, fontWeight: 600, borderRadius: 2, textTransform: 'none' }}
+                    sx={{ 
+                      mt: 2, 
+                      fontWeight: 600, 
+                      borderRadius: 2, 
+                      textTransform: 'none',
+                      py: 1.5,
+                      fontSize: 16,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
                     onClick={() => logout({ returnTo: window.location.origin })}
                   >
                     Logout
@@ -143,12 +150,24 @@ function LoginPage() {
                 </Stack>
               </Box>
             ) : (
-              <Box component="form" noValidate>
+              <Box component="form" noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Button
                   type="button"
                   variant="contained"
                   fullWidth
-                  sx={{ mb: 2, backgroundColor: green[600], fontWeight: 600, fontSize: 17, borderRadius: 2, textTransform: 'none', boxShadow: 1, '&:hover': { backgroundColor: green[700] } }}
+                  sx={{ 
+                    backgroundColor: green[600], 
+                    fontWeight: 600, 
+                    fontSize: 16, 
+                    borderRadius: 2, 
+                    textTransform: 'none', 
+                    boxShadow: 1,
+                    py: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    '&:hover': { backgroundColor: green[700] } 
+                  }}
                   onClick={() => loginWithRedirect()}
                 >
                   Sign in
@@ -157,8 +176,25 @@ function LoginPage() {
                   type="button"
                   variant="outlined"
                   fullWidth
-                  startIcon={<FaGoogle size={18} />}
-                  sx={{ mb: 2, color: grey[700], borderColor: grey[400], fontWeight: 600, fontSize: 17, borderRadius: 2, textTransform: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, '&:hover': { borderColor: green[600], color: green[700] } }}
+                  startIcon={<FaGoogle size={16} />}
+                  sx={{ 
+                    color: grey[700], 
+                    borderColor: grey[400], 
+                    fontWeight: 600, 
+                    fontSize: 16, 
+                    borderRadius: 2, 
+                    textTransform: 'none', 
+                    py: 1.5,
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    gap: 1,
+                    '&:hover': { 
+                      borderColor: green[600], 
+                      color: green[700],
+                      backgroundColor: 'rgba(76, 175, 80, 0.04)'
+                    } 
+                  }}
                   onClick={() => loginWithRedirect({ connection: "google-oauth2" })}
                 >
                   Sign in with Google

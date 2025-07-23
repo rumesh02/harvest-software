@@ -22,7 +22,8 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-  Rating
+  Rating,
+  CircularProgress
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
@@ -46,6 +47,7 @@ const BrowseListing = () => {
   const [fetchedProducts, setFetchedProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [districtFilter, setDistrictFilter] = useState("All Districts");
+  const [typeFilter, setTypeFilter] = useState("All Types");
   const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -61,13 +63,22 @@ const BrowseListing = () => {
   const [farmerInfo, setFarmerInfo] = useState(null);
   const [loadingFarmer, setLoadingFarmer] = useState(false);
   const [districts, setDistricts] = useState(["All Districts"]);
+  const [productTypes, setProductTypes] = useState(["All Types"]);
 
-  // Fetch available districts on component mount
+  // Enhanced search states
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [popularTerms, setPopularTerms] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [totalResults, setTotalResults] = useState(0);
+  const [searchPerformance, setSearchPerformance] = useState(null);
+
+  // Fetch available districts and product types on component mount
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/products/districts");
-        const availableDistricts = response.data || [];
+        const availableDistricts = (response.data || []).filter(district => district != null && district !== "");
         setDistricts(["All Districts", ...availableDistricts]);
       } catch (error) {
         console.error("Error fetching districts:", error);
@@ -82,8 +93,71 @@ const BrowseListing = () => {
       }
     };
 
+    const fetchProductTypes = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/products/types");
+        const availableTypes = (response.data || []).filter(type => type != null && type !== "");
+        setProductTypes(["All Types", ...availableTypes]);
+      } catch (error) {
+        console.error("Error fetching product types:", error);
+        // Fallback to common product types
+        setProductTypes(["All Types", "Fruit", "Vegetable", "Grain", "Spice", "Herb"]);
+      }
+    };
+
+    const fetchPopularTerms = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/products/search/popular");
+        // Filter out null/undefined values and ensure proper structure
+        const terms = (response.data || []).filter(term => 
+          term != null && 
+          (typeof term === 'string' || (term.term && typeof term.term === 'string'))
+        );
+        setPopularTerms(terms);
+      } catch (error) {
+        console.error("Error fetching popular terms:", error);
+        setPopularTerms([]);
+      }
+    };
+
     fetchDistricts();
+    fetchProductTypes();
+    fetchPopularTerms();
   }, []);
+
+  // Fetch search suggestions with debouncing
+  const fetchSearchSuggestions = useCallback(async (query) => {
+    if (!query || query.length < 2) {
+      setSearchSuggestions([]);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const response = await axios.get(`http://localhost:5000/api/products/search/suggestions?q=${encodeURIComponent(query)}`);
+      // Filter out null, undefined, and empty values
+      const suggestions = (response.data || []).filter(item => item != null && item !== "");
+      setSearchSuggestions(suggestions);
+    } catch (error) {
+      console.error("Error fetching search suggestions:", error);
+      setSearchSuggestions([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  // Debounced search suggestions
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim()) {
+        fetchSearchSuggestions(searchQuery.trim());
+      } else {
+        setSearchSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, fetchSearchSuggestions]);
 
   const updateProductInList = useCallback((productId, updatedProduct) => {
     setFetchedProducts(prev => prev.map(p => (p._id === productId ? { ...p, ...updatedProduct } : p)));
@@ -92,26 +166,45 @@ const BrowseListing = () => {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
+      const startTime = performance.now();
+      
       const params = new URLSearchParams({ page, limit: 8, sort: 'desc', sortBy: 'listedDate' });
       if (searchQuery.trim()) params.append("search", searchQuery.trim());
       if (districtFilter !== "All Districts") params.append("district", districtFilter);
+      if (typeFilter !== "All Types") params.append("type", typeFilter);
       if (maxPrice && maxPrice > 0) params.append("maxPrice", maxPrice);
 
       const res = await axios.get(`http://localhost:5000/api/products?${params}`);
+      const endTime = performance.now();
+      
       if (res.data?.products) {
         setFetchedProducts(res.data.products);
         setTotalPages(res.data.totalPages || 1);
+        setTotalResults(res.data.total || 0);
+        
+        // Track search performance
+        setSearchPerformance({
+          searchTime: (endTime - startTime).toFixed(2),
+          resultCount: res.data.total || 0,
+          isTextSearch: res.data.isTextSearch || false,
+          searchTerm: res.data.searchTerm,
+          filterType: res.data.filterType
+        });
       } else {
         setFetchedProducts([]);
         setTotalPages(1);
+        setTotalResults(0);
+        setSearchPerformance(null);
       }
     } catch (err) {
       console.error("Error fetching products:", err);
       setFetchedProducts([]);
+      setTotalResults(0);
+      setSearchPerformance(null);
     } finally {
       setLoading(false);
     }
-  }, [page, searchQuery, districtFilter, maxPrice]);
+  }, [page, searchQuery, districtFilter, typeFilter, maxPrice]);
 
   useEffect(() => {
     fetchProducts();
@@ -122,7 +215,7 @@ const BrowseListing = () => {
       setPage(1);
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, districtFilter, maxPrice]);
+  }, [searchQuery, districtFilter, typeFilter, maxPrice]);
 
   useEffect(() => {
     fetchProducts();
@@ -463,48 +556,214 @@ const BrowseListing = () => {
           Search &amp; Filter Products
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'space-between' }}>
-          <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300 }}>
-            <TextField
-              label="Search"
-              placeholder="Product name..."
-              variant="outlined"
-              size="small"
-              fullWidth
+          <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300, position: 'relative' }}>
+            <Autocomplete
+              freeSolo
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: '#000' }} fontSize="small" />
-                  </InputAdornment>
-                ),
+              onChange={(event, newValue) => {
+                setSearchQuery(newValue || "");
+                setShowSuggestions(false);
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  height: 40,
-                  '& fieldset': {
-                    borderColor: '#000',
-                    borderWidth: 2,
-                  },
-                  '&:hover fieldset': { borderColor: '#222' },
-                  '&.Mui-focused fieldset': { borderColor: '#222' }
-                },
-                '& .MuiInputLabel-outlined': {
-                  color: '#000',
-                  fontWeight: 600,
-                  background: '#fff',
-                  px: 0.5,
-                  margin: 0
+              onInputChange={(event, newInputValue) => {
+                setSearchQuery(newInputValue);
+              }}
+              options={searchSuggestions.filter(item => item != null && item !== "")}
+              size="small"
+              loading={searchLoading}
+              open={showSuggestions && searchSuggestions.length > 0}
+              onOpen={() => setShowSuggestions(true)}
+              onClose={() => setShowSuggestions(false)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Search Products"
+                  placeholder="Enter product name..."
+                  variant="outlined"
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <>
+                        <InputAdornment position="start">
+                          <SearchIcon sx={{ color: '#000' }} fontSize="small" />
+                        </InputAdornment>
+                        {params.InputProps.startAdornment}
+                      </>
+                    ),
+                    endAdornment: (
+                      <>
+                        {searchLoading && <CircularProgress color="inherit" size={20} />}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      height: 40,
+                      '& fieldset': {
+                        borderColor: '#000',
+                        borderWidth: 2,
+                      },
+                      '&:hover fieldset': { borderColor: '#222' },
+                      '&.Mui-focused fieldset': { borderColor: '#222' }
+                    },
+                    '& .MuiInputLabel-outlined': {
+                      color: '#000',
+                      fontWeight: 600,
+                      background: '#fff',
+                      px: 0.5,
+                      margin: 0
+                    }
+                  }}
+                />
+              )}
+              renderOption={(props, option) => {
+                // Safety check for null or undefined options
+                if (!option) return null;
+                return (
+                  <li {...props}>
+                    <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} fontSize="small" />
+                    {option}
+                  </li>
+                );
+              }}
+            />
+          </Box>
+          <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300, position: 'relative' }}>
+            <Autocomplete
+              value={typeFilter}
+              onChange={(event, newValue) => setTypeFilter(newValue || "All Types")}
+              options={productTypes.filter(type => type != null && type !== "")}
+              size="small"
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Product Type"
+                  placeholder="Select type..."
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <>
+                        <InputAdornment position="start">
+                          <EmojiNatureIcon sx={{ color: '#000' }} fontSize="small" />
+                        </InputAdornment>
+                        {params.InputProps.startAdornment}
+                      </>
+                    )
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      height: 40,
+                      '& fieldset': {
+                        borderColor: '#000',
+                        borderWidth: 2,
+                      },
+                      '&:hover fieldset': { borderColor: '#222' },
+                      '&.Mui-focused fieldset': { borderColor: '#222' }
+                    },
+                    '& .MuiInputLabel-outlined': {
+                      color: '#000',
+                      fontWeight: 600,
+                      background: '#fff',
+                      px: 0.5,
+                      margin: 0
+                    }
+                  }}
+                />
+              )}
+              renderOption={(props, option) => {
+                // Check if this option is in popularTerms to show with special styling
+                const termText = typeof option === 'string' ? option : option?.term;
+                const isPopular = popularTerms.some(term => {
+                  const popularTermText = typeof term === 'string' ? term : term?.term;
+                  return popularTermText === termText;
+                });
+
+                if (isPopular && option !== "All Types") {
+                  // Get color scheme for popular terms
+                  const getTypeColor = (type) => {
+                    const lowerType = type.toLowerCase();
+                    if (lowerType.includes('vegetable') || lowerType.includes('herb') || lowerType.includes('leafy')) {
+                      return { icon: '🥬', color: '#2e7d32', bg: '#e8f5e8' };
+                    } else if (lowerType.includes('fruit') || lowerType.includes('berry')) {
+                      return { icon: '🍎', color: '#f57c00', bg: '#fff8e1' };
+                    } else if (lowerType.includes('grain') || lowerType.includes('cereal') || lowerType.includes('rice')) {
+                      return { icon: '🌾', color: '#7b1fa2', bg: '#f3e5f5' };
+                    } else if (lowerType.includes('spice') || lowerType.includes('seasoning')) {
+                      return { icon: '🌶️', color: '#c2185b', bg: '#fce4ec' };
+                    } else {
+                      return { icon: '🌱', color: '#616161', bg: '#f5f5f5' };
+                    }
+                  };
+
+                  const colors = getTypeColor(termText);
+
+                  return (
+                    <li {...props} style={{ 
+                      ...props.style, 
+                      padding: '8px 12px',
+                      backgroundColor: typeFilter === termText ? colors.bg : 'transparent'
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                        <span style={{ fontSize: '16px' }}>{colors.icon}</span>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: colors.color, 
+                            fontWeight: typeFilter === termText ? 700 : 600,
+                            flex: 1
+                          }}
+                        >
+                          {option}
+                        </Typography>
+                        <Chip
+                          label="Popular"
+                          size="small"
+                          sx={{
+                            fontSize: '10px',
+                            height: 20,
+                            backgroundColor: colors.color + '20',
+                            color: colors.color,
+                            fontWeight: 500,
+                            '& .MuiChip-label': { px: 1 }
+                          }}
+                        />
+                      </Box>
+                    </li>
+                  );
                 }
+
+                // Regular option styling
+                return (
+                  <li {...props} style={{ 
+                    ...props.style, 
+                    padding: '8px 12px',
+                    backgroundColor: typeFilter === option ? '#f5f5f5' : 'transparent'
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <EmojiNatureIcon sx={{ color: '#666', fontSize: 16 }} />
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#333',
+                          fontWeight: typeFilter === option ? 600 : 400
+                        }}
+                      >
+                        {option}
+                      </Typography>
+                    </Box>
+                  </li>
+                );
               }}
+              disableClearable
             />
           </Box>
           <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300 }}>
             <Autocomplete
               value={districtFilter}
               onChange={(event, newValue) => setDistrictFilter(newValue || "All Districts")}
-              options={districts}
+              options={districts.filter(district => district != null && district !== "")}
               size="small"
               renderInput={(params) => (
                 <TextField
@@ -546,6 +805,7 @@ const BrowseListing = () => {
               disableClearable
             />
           </Box>
+          
           <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300 }}>
             <TextField
               label="Max Price"
@@ -584,13 +844,14 @@ const BrowseListing = () => {
               }}
             />
           </Box>
-          <Box sx={{ flex: '1 1 120px', minWidth: 120, maxWidth: 200, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ flex: '1 1 120px', minWidth: 120, maxWidth: 200, display: 'flex', justifyContent: 'center' }}>
             <Button
               variant="contained"
               fullWidth={false}
               onClick={() => {
                 setSearchQuery("");
                 setDistrictFilter("All Districts");
+                setTypeFilter("All Types");
                 setMaxPrice("");
                 setPage(1);
               }}
@@ -602,10 +863,9 @@ const BrowseListing = () => {
                 backgroundColor: '#000',
                 color: '#fff',
                 boxShadow: 'none',
-                width: '50%',
-                minWidth: 60,
-                maxWidth: 100,
-                margin: '0 auto',
+                width: '70%',
+                minWidth: 80,
+                maxWidth: 120,
                 '&:hover': {
                   backgroundColor: '#222',
                   color: '#fff',
@@ -619,50 +879,81 @@ const BrowseListing = () => {
         </Box>
 
         {/* Active Filters */}
-        {(searchQuery || districtFilter !== "All Districts" || maxPrice) && (
+        {(searchQuery || districtFilter !== "All Districts" || typeFilter !== "All Types" || maxPrice) && (
           <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               {searchQuery && (
                 <Chip
-                  label={searchQuery}
+                  label={`Search: "${searchQuery}"`}
                   onDelete={() => setSearchQuery("")}
                   size="small"
                   sx={{
-                    borderColor: '#000', // black border
-                    color: '#000',        // black text
-                    backgroundColor: '#fff', // white background
-                    fontWeight: 600
+                    borderColor: '#000',
+                    color: '#000',
+                    backgroundColor: '#fff',
+                    '&:hover': { backgroundColor: '#f5f5f5' }
                   }}
-                  variant="outlined"
                 />
               )}
               {districtFilter !== "All Districts" && (
                 <Chip
-                  label={districtFilter}
+                  label={`District: ${districtFilter}`}
                   onDelete={() => setDistrictFilter("All Districts")}
                   size="small"
                   sx={{
                     borderColor: '#000',
                     color: '#000',
                     backgroundColor: '#fff',
-                    fontWeight: 600
+                    '&:hover': { backgroundColor: '#f5f5f5' }
                   }}
-                  variant="outlined"
+                />
+              )}
+              {typeFilter !== "All Types" && (
+                <Chip
+                  label={`Type: ${typeFilter}`}
+                  onDelete={() => setTypeFilter("All Types")}
+                  size="small"
+                  sx={{
+                    borderColor: '#000',
+                    color: '#000',
+                    backgroundColor: '#fff',
+                    '&:hover': { backgroundColor: '#f5f5f5' }
+                  }}
                 />
               )}
               {maxPrice && (
                 <Chip
-                  label={`Max: Rs.${maxPrice}`}
+                  label={`Max Price: Rs. ${maxPrice}`}
                   onDelete={() => setMaxPrice("")}
                   size="small"
                   sx={{
                     borderColor: '#000',
                     color: '#000',
                     backgroundColor: '#fff',
-                    fontWeight: 600
+                    '&:hover': { backgroundColor: '#f5f5f5' }
                   }}
-                  variant="outlined"
                 />
+              )}
+            </Stack>
+          </Box>
+        )}
+
+        {/* Search Results Summary */}
+        {(searchQuery || districtFilter !== "All Districts" || typeFilter !== "All Types" || maxPrice) && !loading && (
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+              <Typography variant="body2" color="text.secondary">
+                Found <strong>{totalResults}</strong> products
+                {searchQuery && ` for "${searchQuery}"`}
+                {typeFilter !== "All Types" && ` of type "${typeFilter}"`}
+                {districtFilter !== "All Districts" && ` in ${districtFilter}`}
+                {maxPrice && ` under Rs. ${maxPrice}`}
+              </Typography>
+              {searchPerformance && (
+                <Typography variant="caption" color="text.secondary">
+                  Search completed in {searchPerformance.searchTime}ms
+                  {searchPerformance.isTextSearch && " (Smart Search)"}
+                </Typography>
               )}
             </Stack>
           </Box>
@@ -681,8 +972,8 @@ const BrowseListing = () => {
       {/* Section Caption for Products Grid */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', mb: 2, mt: 2 }}>
         <EmojiNatureIcon sx={{ color: '#43a047', fontSize: 32, mr: 1 }} />
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#222' }}>
-          Fresh Harvest Products
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#43a047' }}>
+          Fresh Harvest
         </Typography>
       </Box>
 

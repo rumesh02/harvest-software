@@ -545,7 +545,7 @@ const ChatContainer = ({ currentUserId }) => {
               startIcon={<PeopleIcon />}
               onClick={() => setActiveTab(1)}
               sx={{
-                backgroundColor: '#D97706',
+                backgroundColor: '#7292d8ff',
                 '&:hover': {
                   backgroundColor: '#B45309',
                 },

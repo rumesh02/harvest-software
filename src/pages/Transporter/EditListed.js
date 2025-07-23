@@ -174,19 +174,6 @@ export default function EditListed() {
               <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
                 You haven't listed any vehicles yet. Start by adding your first vehicle!
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                sx={{
-                  backgroundColor: '#1565c0',
-                  '&:hover': {
-                    backgroundColor: '#1976d2'
-                  }
-                }}
-                onClick={() => navigate("/transporter/add-vehicle")}
-              >
-                Add Vehicle
-              </Button>
             </CardContent>
           </Card>
         ) : (

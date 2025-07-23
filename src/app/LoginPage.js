@@ -112,7 +112,8 @@ function LoginPage() {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              p: 4
+              p: 2,
+              spacing: 2
             }}
           >
             <FaLeaf size={70} color="white" />
@@ -120,14 +121,16 @@ function LoginPage() {
               variant="h2"
               fontWeight={700}
               color="white"
-              sx={{ mt: 3, textAlign: 'center', letterSpacing: 1 }}
+
+              sx={{  mb: 15, textAlign: 'center', letterSpacing: 1 }}
             >
               Farm-to-Market
             </Typography>
             <Typography
               variant="body1"
               color="white"
-              sx={{ mt: 2, textAlign: 'center', maxWidth: 400, opacity: 0.9 }}
+
+              sx={{ mb: 30, mt: -10, textAlign: 'center', maxWidth: 400, opacity: 0.9 }}
             >
               Your sustainable farming management platform
             </Typography>

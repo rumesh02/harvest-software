@@ -691,118 +691,78 @@ const BrowseListing = () => {
                   }}
                 />
               )}
+              renderOption={(props, option) => {
+                // Check if this option is in popularTerms to show with special styling
+                const termText = typeof option === 'string' ? option : option?.term;
+                const isPopular = popularTerms.some(term => {
+                  const popularTermText = typeof term === 'string' ? term : term?.term;
+                  return popularTermText === termText;
+                });
+
+                if (isPopular && option !== "All Types") {
+                  // Get color scheme for popular terms
+                  const getTypeColor = (type) => {
+                    const lowerType = type.toLowerCase();
+                    if (lowerType.includes('vegetable') || lowerType.includes('herb') || lowerType.includes('leafy')) {
+                      return { icon: '🥬', color: '#2e7d32' };
+                    } else if (lowerType.includes('fruit') || lowerType.includes('berry')) {
+                      return { icon: '🍎', color: '#f57c00' };
+                    } else if (lowerType.includes('grain') || lowerType.includes('cereal') || lowerType.includes('rice')) {
+                      return { icon: '🌾', color: '#7b1fa2' };
+                    } else if (lowerType.includes('spice') || lowerType.includes('seasoning')) {
+                      return { icon: '🌶️', color: '#c2185b' };
+                    } else {
+                      return { icon: '🌱', color: '#616161' };
+                    }
+                  };
+
+                  const colors = getTypeColor(termText);
+
+                  return (
+                    <li {...props} style={{ ...props.style, padding: '8px 12px' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                        <span style={{ fontSize: '16px' }}>{colors.icon}</span>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: colors.color, 
+                            fontWeight: 600,
+                            flex: 1
+                          }}
+                        >
+                          {option}
+                        </Typography>
+                        <Chip
+                          label="Popular"
+                          size="small"
+                          sx={{
+                            fontSize: '10px',
+                            height: 20,
+                            backgroundColor: colors.color + '20',
+                            color: colors.color,
+                            fontWeight: 500,
+                            '& .MuiChip-label': { px: 1 }
+                          }}
+                        />
+                      </Box>
+                    </li>
+                  );
+                }
+
+                // Regular option styling
+                return (
+                  <li {...props} style={{ ...props.style, padding: '8px 12px' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <EmojiNatureIcon sx={{ color: '#666', fontSize: 16 }} />
+                      <Typography variant="body2" sx={{ color: '#333' }}>
+                        {option}
+                      </Typography>
+                    </Box>
+                  </li>
+                );
+              }}
               disableClearable
             />
-            
-            {/* Enhanced Popular Product Types */}
-            {typeFilter === "All Types" && popularTerms.length > 0 && (
-              <Box sx={{ 
-                mt: 1.5, 
-                p: 2, 
-                backgroundColor: '#f8fffe', 
-                borderRadius: 2, 
-                border: '1px solid #e0f2f1',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-              }}>
-                
-                <Typography 
-                  variant="caption" 
-                  color="text.secondary" 
-                  sx={{ mb: 1, display: 'block', fontSize: '0.7rem' }}
-                >
-                  👆 Click on a type to filter products
-                </Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {popularTerms.slice(0, 6).map((term, index) => {
-                    // Handle both string and object formats
-                    const termText = typeof term === 'string' ? term : term?.term;
-                    if (!termText) return null;
-                    
-                    // Get color scheme based on product type
-                    const getTypeColor = (type) => {
-                      const lowerType = type.toLowerCase();
-                      if (lowerType.includes('vegetable') || lowerType.includes('herb') || lowerType.includes('leafy')) {
-                        return {
-                          bg: '#e8f5e8',
-                          color: '#2e7d32',
-                          hoverBg: '#c8e6c9',
-                          icon: '🥬'
-                        };
-                      } else if (lowerType.includes('fruit') || lowerType.includes('berry')) {
-                        return {
-                          bg: '#fff8e1',
-                          color: '#f57c00',
-                          hoverBg: '#ffecb3',
-                          icon: '🍎'
-                        };
-                      } else if (lowerType.includes('grain') || lowerType.includes('cereal') || lowerType.includes('rice')) {
-                        return {
-                          bg: '#f3e5f5',
-                          color: '#7b1fa2',
-                          hoverBg: '#e1bee7',
-                          icon: '🌾'
-                        };
-                      } else if (lowerType.includes('spice') || lowerType.includes('seasoning')) {
-                        return {
-                          bg: '#fce4ec',
-                          color: '#c2185b',
-                          hoverBg: '#f8bbd9',
-                          icon: '🌶️'
-                        };
-                      } else {
-                        return {
-                          bg: '#f5f5f5',
-                          color: '#616161',
-                          hoverBg: '#eeeeee',
-                          icon: '🌱'
-                        };
-                      }
-                    };
-                    
-                    const colors = getTypeColor(termText);
-                    
-                    return (
-                      <Chip
-                        key={index}
-                        label={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <span style={{ fontSize: '12px' }}>{colors.icon}</span>
-                            {termText}
-                          </Box>
-                        }
-                        size="small"
-                        variant="filled"
-                        onClick={() => setTypeFilter(termText)}
-                        sx={{
-                          fontSize: '0.75rem',
-                          height: 28,
-                          cursor: 'pointer',
-                          backgroundColor: colors.bg,
-                          color: colors.color,
-                          fontWeight: 500,
-                          border: `1px solid ${colors.color}20`,
-                          '&:hover': { 
-                            backgroundColor: colors.hoverBg,
-                            transform: 'translateY(-1px)',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                          },
-                          transition: 'all 0.2s ease'
-                        }}
-                      />
-                    );
-                  }).filter(Boolean)}
-                </Stack>
-                {popularTerms.length > 6 && (
-                  <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
-                    sx={{ mt: 1, display: 'block', textAlign: 'center', fontSize: '0.65rem' }}
-                  >
-                    And {popularTerms.length - 6} more types available...
-                  </Typography>
-                )}
-              </Box>
-            )}
           </Box>
           <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300 }}>
             <Autocomplete

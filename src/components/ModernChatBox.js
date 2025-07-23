@@ -1,14 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Paper,
   Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
-  CircularProgress,
   Snackbar,
   Alert
 } from '@mui/material';
@@ -61,7 +55,8 @@ const ModernChatBox = ({ targetUser, currentUserId, targetUserId, onClose, fromN
       name: targetUser.name,
       auth0Id: targetUser.auth0Id,
       id: targetUser.id,
-      _id: targetUser._id
+      _id: targetUser._id,
+      role: targetUser.role // Added role logging
     } : null
   });
 

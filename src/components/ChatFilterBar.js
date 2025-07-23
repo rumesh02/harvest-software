@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getRoleColor } from '../utils/roleColors';
 import {
   Box,
   TextField,
@@ -18,17 +19,17 @@ import {
 import { styled } from '@mui/material/styles';
 import './ChatFilterBar.css';
 
-const StyledFilterBar = styled(Paper)(({ theme }) => ({
+const StyledFilterBar = styled(Paper)(({ theme, rolecolors }) => ({
   padding: '16px',
   margin: '0',
-  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backgroundColor: rolecolors?.light || 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(10px)',
   borderRadius: '0',
-  borderBottom: '1px solid #E5E7EB',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+  borderBottom: `1px solid ${rolecolors?.primary || '#E5E7EB'}30`,
+  boxShadow: `0 2px 8px ${rolecolors?.primary || 'rgba(0,0,0,0.05)'}20`,
 }));
 
-const StyledSearchField = styled(TextField)(({ theme }) => ({
+const StyledSearchField = styled(TextField)(({ theme, rolecolors }) => ({
   '& .MuiOutlinedInput-root': {
     backgroundColor: 'white',
     borderRadius: '12px',
@@ -37,10 +38,10 @@ const StyledSearchField = styled(TextField)(({ theme }) => ({
       borderColor: '#E5E7EB',
     },
     '&:hover fieldset': {
-      borderColor: '#D97706',
+      borderColor: rolecolors?.primary || '#D97706',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#D97706',
+      borderColor: rolecolors?.primary || '#D97706',
       borderWidth: '2px',
     },
   },
@@ -88,25 +89,13 @@ const RoleIcon = ({ role }) => {
   }
 };
 
-const getRoleColor = (role) => {
-  switch (role?.toLowerCase()) {
-    case 'farmer':
-      return '#059669';
-    case 'merchant':
-      return '#dc2626';
-    case 'transporter':
-      return '#2563eb';
-    default:
-      return '#6b7280';
-  }
-};
-
 const ChatFilterBar = ({ 
   onSearchChange, 
   onRoleFilter, 
   searchTerm, 
   selectedRole,
-  onClearFilters 
+  onClearFilters,
+  roleColors 
 }) => {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm || '');
   const roles = ['farmer', 'merchant', 'transporter'];
@@ -141,28 +130,29 @@ const ChatFilterBar = ({
   const hasActiveFilters = localSearchTerm || selectedRole;
 
   return (
-    <StyledFilterBar elevation={0}>
+    <StyledFilterBar elevation={0} rolecolors={roleColors}>
       {/* Search Field */}
       <StyledSearchField
         fullWidth
         placeholder="Search users by name, role, or email..."
         value={localSearchTerm}
         onChange={(e) => setLocalSearchTerm(e.target.value)}
+        rolecolors={roleColors}
         size="small"
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon sx={{ color: '#6B7280', fontSize: 20 }} />
+              <SearchIcon sx={{ color: roleColors?.primary || '#6B7280', fontSize: 20 }} />
             </InputAdornment>
           ),
           endAdornment: localSearchTerm && (
             <InputAdornment position="end">
               <ClearIcon 
                 sx={{ 
-                  color: '#6B7280', 
+                  color: roleColors?.primary || '#6B7280', 
                   fontSize: 18, 
                   cursor: 'pointer',
-                  '&:hover': { color: '#374151' }
+                  '&:hover': { color: roleColors?.dark || '#374151' }
                 }} 
                 onClick={() => setLocalSearchTerm('')}
               />
@@ -182,7 +172,7 @@ const ChatFilterBar = ({
           <Typography 
             variant="caption" 
             sx={{ 
-              color: '#6B7280', 
+              color: roleColors?.dark || '#6B7280', 
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.5px'
@@ -196,11 +186,11 @@ const ChatFilterBar = ({
                 variant="caption"
                 onClick={handleClearAll}
                 sx={{
-                  color: '#D97706',
+                  color: roleColors?.primary || '#D97706',
                   cursor: 'pointer',
                   fontWeight: 600,
                   '&:hover': {
-                    color: '#B45309',
+                    color: roleColors?.dark || '#B45309',
                     textDecoration: 'underline',
                   },
                 }}
@@ -218,7 +208,7 @@ const ChatFilterBar = ({
               icon={<RoleIcon role={role} />}
               label={role}
               onClick={() => handleRoleClick(role)}
-              rolecolor={getRoleColor(role)}
+              rolecolor={getRoleColor(role).primary}
               className={selectedRole === role ? 'active' : ''}
               size="small"
             />
@@ -264,7 +254,7 @@ const ChatFilterBar = ({
                 sx={{
                   fontSize: '11px',
                   height: '24px',
-                  backgroundColor: `${getRoleColor(selectedRole)}15`,
+                  backgroundColor: `${getRoleColor(selectedRole).primary}15`,
                   color: getRoleColor(selectedRole),
                   '& .MuiChip-icon': {
                     color: getRoleColor(selectedRole),

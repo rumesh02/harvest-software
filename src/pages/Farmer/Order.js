@@ -144,7 +144,7 @@ const OrderPage = () => {
       }
     };
     fetchBids();
-    const interval = setInterval(fetchBids, 30000);
+    const interval = setInterval(fetchBids, 90000);
     return () => clearInterval(interval);
   }, []);
 

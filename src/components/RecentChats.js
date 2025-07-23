@@ -28,6 +28,10 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
   const intervalRef = useRef(null);
   const mountedRef = useRef(true);
 
+  // Get current user role for theming
+  const currentUserRole = localStorage.getItem('userRole') || 'merchant';
+  const currentUserRoleColors = getRoleColor(currentUserRole);
+
   // Get role icon component
   const getRoleIcon = (role) => {
     const iconProps = { sx: { fontSize: 14 } };
@@ -63,6 +67,33 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
       console.error('Error saving to localStorage:', error);
     }
   }, [userId, STORAGE_KEY]);
+
+  // Merge API and localStorage chats
+  const mergeChats = useCallback((apiChats, localChats) => {
+    const chatMap = new Map();
+    
+    // Ensure inputs are arrays
+    const safeLocalChats = Array.isArray(localChats) ? localChats : [];
+    const safeApiChats = Array.isArray(apiChats) ? apiChats : [];
+    
+    // Add local chats first (fallback data)
+    safeLocalChats.forEach(chat => {
+      if (chat && chat.userId) {
+        chatMap.set(chat.userId, { ...chat, source: 'local' });
+      }
+    });
+    
+    // Override with API chats (more recent data)
+    safeApiChats.forEach(chat => {
+      if (chat && chat.userId) {
+        chatMap.set(chat.userId, { ...chat, source: 'api' });
+      }
+    });
+    
+    // Convert back to array and sort by lastMessageTime
+    return Array.from(chatMap.values())
+      .sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
+  }, []);
 
   // Fetch recent chats from API
   const fetchRecentChats = useCallback(async () => {
@@ -134,34 +165,7 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
         setLoading(false);
       }
     }
-  }, [userId, loadFromLocalStorage, saveToLocalStorage]);
-
-  // Merge API and localStorage chats
-  const mergeChats = useCallback((apiChats, localChats) => {
-    const chatMap = new Map();
-    
-    // Ensure inputs are arrays
-    const safeLocalChats = Array.isArray(localChats) ? localChats : [];
-    const safeApiChats = Array.isArray(apiChats) ? apiChats : [];
-    
-    // Add local chats first (fallback data)
-    safeLocalChats.forEach(chat => {
-      if (chat && chat.userId) {
-        chatMap.set(chat.userId, { ...chat, source: 'local' });
-      }
-    });
-    
-    // Override with API chats (more recent data)
-    safeApiChats.forEach(chat => {
-      if (chat && chat.userId) {
-        chatMap.set(chat.userId, { ...chat, source: 'api' });
-      }
-    });
-    
-    // Convert back to array and sort by lastMessageTime
-    return Array.from(chatMap.values())
-      .sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
-  }, []);
+  }, [userId, loadFromLocalStorage, saveToLocalStorage, mergeChats]);
 
   // Add new chat to the list
   const addNewChat = useCallback((newChat) => {
@@ -382,7 +386,7 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
   if (loading && recentChats.length === 0) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-        <CircularProgress size={20} sx={{ color: '#D97706' }} />
+        <CircularProgress size={20} sx={{ color: currentUserRoleColors.primary }} />
       </Box>
     );
   }
@@ -440,10 +444,10 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
                 py: 1.5, 
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                backgroundColor: chat.unreadCount > 0 ? 'rgba(217, 119, 6, 0.05)' : 'transparent',
-                borderLeft: chat.unreadCount > 0 ? '3px solid #D97706' : '3px solid transparent',
+                backgroundColor: chat.unreadCount > 0 ? `${currentUserRoleColors.primary}08` : 'transparent',
+                borderLeft: chat.unreadCount > 0 ? `3px solid ${currentUserRoleColors.primary}` : '3px solid transparent',
                 '&:hover': { 
-                  bgcolor: '#FFF8EC',
+                  bgcolor: `${currentUserRoleColors.primary}10`,
                   transform: 'translateX(4px)'
                 }
               }}
@@ -457,7 +461,7 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
                   max={99}
                   sx={{
                     '& .MuiBadge-badge': {
-                      backgroundColor: '#D97706',
+                      backgroundColor: currentUserRoleColors.primary,
                       color: 'white',
                       fontWeight: 600,
                       fontSize: '0.75rem'
@@ -470,7 +474,7 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
                     sx={{ 
                       width: 44, 
                       height: 44,
-                      bgcolor: chat.unreadCount > 0 ? '#D97706' : getRoleColor(chat.role).primary,
+                      bgcolor: chat.unreadCount > 0 ? currentUserRoleColors.primary : getRoleColor(chat.role).primary,
                       border: `2px solid ${getRoleColor(chat.role).primary}`,
                       fontSize: '16px',
                       fontWeight: 600
@@ -538,7 +542,7 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
                   <Typography 
                     variant="caption" 
                     sx={{ 
-                      color: chat.unreadCount > 0 ? '#D97706' : '#6B7280',
+                      color: chat.unreadCount > 0 ? currentUserRoleColors.primary : '#6B7280',
                       fontWeight: chat.unreadCount > 0 ? 600 : 400,
                       display: 'block',
                       overflow: 'hidden',
@@ -567,7 +571,7 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
       
       {loading && recentChats.length > 0 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 1 }}>
-          <CircularProgress size={16} sx={{ color: '#D97706' }} />
+          <CircularProgress size={16} sx={{ color: currentUserRoleColors.primary }} />
         </Box>
       )}
     </Box>

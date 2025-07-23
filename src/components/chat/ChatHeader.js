@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -16,29 +16,49 @@ import {
   Button
 } from '@mui/material';
 import {
-  Phone as PhoneIcon,
-  VideoCall as VideoIcon,
   MoreVert as MoreIcon,
-  Info as InfoIcon,
   ClearAll as ClearIcon,
   Warning as WarningIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { formatTime } from '../../utils/chatUtils';
+import { getRoleColor } from '../../utils/roleColors';
 
-const StyledChatHeader = styled(Box)(({ theme }) => ({
+const StyledChatHeader = styled(Box)(({ theme, rolecolors }) => ({
   display: 'flex',
   alignItems: 'center',
-  padding: '12px 16px',
-  backgroundColor: '#ffffff',
-  borderBottom: '1px solid #e5e7eb',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  padding: '16px 20px',
+  background: rolecolors?.primary || '#1976d2',
+  borderBottom: `2px solid ${rolecolors?.dark || '#1976d2'}`,
+  boxShadow: `0 4px 12px ${rolecolors?.primary || '#1976d2'}30`,
+  borderRadius: '16px 16px 0 0',
   zIndex: 10,
+  position: 'relative',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '2px',
+    background: rolecolors?.dark || '#1565c0',
+  }
 }));
 
 const ChatHeader = ({ targetUser, isOnline, lastSeen, onClose, onClearChat, currentUserId }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+
+  // Get current user role for header theming
+  const currentUserRole = localStorage.getItem('userRole') || 'default';
+  const roleColors = useMemo(() => ({
+    ...getRoleColor(currentUserRole),
+    role: currentUserRole
+  }), [currentUserRole]);
+
+  // Get target user role color for avatar
+  const targetUserRole = targetUser?.role || 'default';
+  const targetRoleColors = useMemo(() => getRoleColor(targetUserRole), [targetUserRole]);
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -61,59 +81,94 @@ const ChatHeader = ({ targetUser, isOnline, lastSeen, onClose, onClearChat, curr
   };
 
   return (
-    <StyledChatHeader>
+    <StyledChatHeader rolecolors={roleColors}>
       <Avatar
         src={targetUser?.picture}
         alt={targetUser?.name}
         sx={{ 
-          width: 40, 
-          height: 40, 
+          width: 48, 
+          height: 48, 
           mr: 2,
-          border: '2px solid #10b981'
+          border: `3px solid ${targetRoleColors.primary}`,
+          boxShadow: `0 4px 12px ${targetRoleColors.primary}40`,
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            transform: 'scale(1.05)',
+            boxShadow: `0 6px 16px ${targetRoleColors.primary}60`,
+          }
         }}
       >
         {targetUser?.name?.charAt(0).toUpperCase()}
       </Avatar>
       
       <Box sx={{ flex: 1 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#1f2937' }}>
+        <Typography variant="subtitle1" sx={{ 
+          fontWeight: 600, 
+          color: 'white',
+          fontSize: '1.1rem',
+          textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+        }}>
           {targetUser?.name}
         </Typography>
-        <Typography variant="caption" sx={{ color: '#6b7280' }}>
-          {isOnline ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Badge
-                variant="dot"
-                sx={{
-                  '& .MuiBadge-badge': {
-                    backgroundColor: '#10b981',
-                    width: 8,
-                    height: 8,
-                  },
-                }}
-              />
-              Online
-            </Box>
-          ) : (
-            `Last seen ${lastSeen ? formatTime(lastSeen) : 'recently'}`
-          )}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Typography variant="caption" sx={{ 
+            color: 'rgba(255,255,255,0.9)',
+            fontSize: '0.85rem',
+            textShadow: '0 1px 1px rgba(0,0,0,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5
+          }}>
+            {isOnline ? (
+              <>
+                <Badge
+                  variant="dot"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      backgroundColor: '#4ade80',
+                      width: 8,
+                      height: 8,
+                      boxShadow: '0 0 0 2px white',
+                    },
+                  }}
+                />
+                Online
+              </>
+            ) : (
+              `Last seen ${lastSeen ? formatTime(lastSeen) : 'recently'}`
+            )}
+          </Typography>
+          
+          {/* Role Badge */}
+          <Box sx={{
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            color: 'white',
+            px: 1.5,
+            py: 0.3,
+            borderRadius: 2,
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            textTransform: 'capitalize',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.3)'
+          }}>
+            {targetUserRole}
+          </Box>
+        </Box>
       </Box>
 
       <Box sx={{ display: 'flex', gap: 1 }}>
-        <Tooltip title="Voice call">
-          <IconButton sx={{ color: '#6b7280' }}>
-            <PhoneIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Video call">
-          <IconButton sx={{ color: '#6b7280' }}>
-            <VideoIcon />
-          </IconButton>
-        </Tooltip>
         <Tooltip title="More options">
           <IconButton 
-            sx={{ color: '#6b7280' }}
+            sx={{ 
+              color: 'white',
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(10px)',
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                transform: 'scale(1.05)',
+              }
+            }}
             onClick={(e) => setAnchorEl(e.currentTarget)}
           >
             <MoreIcon />
@@ -125,12 +180,23 @@ const ChatHeader = ({ targetUser, isOnline, lastSeen, onClose, onClearChat, curr
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: `0 8px 32px ${roleColors.primary}30`,
+            border: `1px solid ${roleColors.light}`,
+          }
+        }}
       >
-        <MenuItem onClick={handleMenuClose}>
-          <InfoIcon sx={{ mr: 1 }} />
-          Chat Info
-        </MenuItem>
-        <MenuItem onClick={handleClearChatClick} sx={{ color: '#EF4444' }}>
+        <MenuItem 
+          onClick={handleClearChatClick} 
+          sx={{ 
+            color: '#EF4444',
+            '&:hover': {
+              backgroundColor: '#fee2e2',
+            }
+          }}
+        >
           <ClearIcon sx={{ mr: 1 }} />
           Clear My Chat History
         </MenuItem>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { styled } from '@mui/material/styles';
 import {
   Box,
@@ -13,20 +13,22 @@ import {
 import {
   Send as SendIcon,
   AttachFile as AttachIcon,
-  EmojiEmotions as EmojiIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
+import { getRoleColor } from '../../utils/roleColors';
 
-const InputContainer = styled(Box)(({ theme }) => ({
+const InputContainer = styled(Box)(({ theme, rolecolors }) => ({
   display: 'flex',
   alignItems: 'flex-end',
   padding: '12px 16px',
   backgroundColor: '#ffffff',
-  borderTop: '1px solid #e5e7eb',
+  borderTop: `1.5px solid ${rolecolors?.light || '#e0e7ef'}`,
+  borderRadius: '0 0 16px 16px',
+  boxShadow: `0 0px 8px ${rolecolors?.primary || '#1976d2'}15`,
   gap: '8px',
 }));
 
-const MessageTextField = styled(TextField)(({ theme }) => ({
+const MessageTextField = styled(TextField)(({ theme, rolecolors }) => ({
   flex: 1,
   '& .MuiOutlinedInput-root': {
     borderRadius: '20px',
@@ -37,11 +39,12 @@ const MessageTextField = styled(TextField)(({ theme }) => ({
       borderColor: '#e5e7eb',
     },
     '&:hover fieldset': {
-      borderColor: '#d1d5db',
+      borderColor: rolecolors?.secondary || '#d1d5db',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#10b981',
-      borderWidth: '1px',
+      borderColor: rolecolors?.primary || '#10b981',
+      borderWidth: '2px',
+      boxShadow: `0 0 0 3px ${rolecolors?.primary || '#10b981'}20`,
     },
   },
   '& .MuiInputBase-input': {
@@ -51,19 +54,26 @@ const MessageTextField = styled(TextField)(({ theme }) => ({
   },
 }));
 
-const SendButton = styled(IconButton)(({ theme, hastext }) => ({
-  backgroundColor: hastext ? '#10b981' : '#e5e7eb',
+const SendButton = styled(IconButton)(({ theme, hastext, rolecolors }) => ({
+  background: hastext ? rolecolors?.primary || '#1976d2' : '#e5e7eb',
   color: hastext ? 'white' : '#9ca3af',
-  width: '40px',
-  height: '40px',
-  transition: 'all 0.2s ease',
+  width: '44px',
+  height: '44px',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: hastext ? `0 4px 12px ${rolecolors?.primary || '#10b981'}40` : 'none',
   '&:hover': {
-    backgroundColor: hastext ? '#059669' : '#d1d5db',
-    transform: hastext ? 'scale(1.1)' : 'none',
+    background: hastext ? rolecolors?.dark || '#1565c0' : '#d1d5db',
+    transform: hastext ? 'scale(1.05) translateY(-1px)' : 'none',
+    boxShadow: hastext ? `0 8px 20px ${rolecolors?.primary || '#10b981'}50` : 'none',
+  },
+  '&:active': {
+    transform: hastext ? 'scale(0.95)' : 'none',
   },
   '&:disabled': {
     backgroundColor: '#e5e7eb',
     color: '#9ca3af',
+    transform: 'none',
+    boxShadow: 'none',
   },
 }));
 
@@ -84,6 +94,13 @@ const MessageInput = ({
 }) => {
   const [input, setInput] = useState('');
   const typingTimeoutRef = useRef(null);
+
+  // Get current user role for theming
+  const currentUserRole = localStorage.getItem('userRole') || 'default';
+  const roleColors = useMemo(() => ({
+    ...getRoleColor(currentUserRole),
+    role: currentUserRole
+  }), [currentUserRole]);
 
   // Handle input changes with typing indicator
   const handleInputChange = (e) => {
@@ -138,12 +155,28 @@ const MessageInput = ({
     <Box>
       {/* File Preview Area */}
       {selectedFiles.length > 0 && (
-        <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderTop: '1px solid #e5e7eb' }}>
+        <Box sx={{ 
+          p: 2, 
+          backgroundColor: roleColors.light, 
+          borderTop: `1px solid ${roleColors.secondary}`, 
+          borderLeft: `3px solid ${roleColors.primary}` 
+        }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: roleColors.primary }}>
               {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected
             </Typography>
-            <IconButton size="small" onClick={() => onClearFiles && onClearFiles()}>
+            <IconButton 
+              size="small" 
+              onClick={() => onClearFiles && onClearFiles()}
+              sx={{
+                color: roleColors.dark,
+                backgroundColor: 'white',
+                '&:hover': {
+                  backgroundColor: roleColors.light,
+                  color: roleColors.primary,
+                }
+              }}
+            >
               <CloseIcon />
             </IconButton>
           </Box>
@@ -151,8 +184,16 @@ const MessageInput = ({
           {/* Upload Progress */}
           {isUploading && (
             <Box sx={{ mb: 2 }}>
-              <LinearProgress variant="determinate" value={uploadProgress} />
-              <Typography variant="caption" sx={{ color: '#6b7280' }}>
+              <LinearProgress 
+                variant="determinate" 
+                value={uploadProgress} 
+                sx={{
+                  '& .MuiLinearProgress-bar': {
+                    backgroundColor: roleColors.primary,
+                  }
+                }}
+              />
+              <Typography variant="caption" sx={{ color: roleColors.dark }}>
                 Uploading... {uploadProgress}%
               </Typography>
             </Box>
@@ -167,6 +208,17 @@ const MessageInput = ({
                 onDelete={() => onRemoveFile && onRemoveFile(index)}
                 variant="outlined"
                 size="small"
+                sx={{
+                  borderColor: roleColors.secondary,
+                  color: roleColors.dark,
+                  backgroundColor: 'white',
+                  '& .MuiChip-deleteIcon': {
+                    color: roleColors.primary,
+                    '&:hover': {
+                      color: roleColors.dark,
+                    }
+                  }
+                }}
               />
             ))}
           </Box>
@@ -174,15 +226,24 @@ const MessageInput = ({
       )}
 
       {/* Input Container */}
-      <InputContainer>
+      <InputContainer rolecolors={roleColors}>
         <Tooltip title={isUploading ? `Uploading... ${uploadProgress}%` : "Attach file"}>
           <IconButton 
-            sx={{ color: isUploading ? '#D97706' : '#6b7280' }}
+            sx={{ 
+              color: isUploading ? roleColors.secondary : '#6b7280',
+              backgroundColor: 'white',
+              border: `1px solid ${isUploading ? roleColors.light : '#e5e7eb'}`,
+              '&:hover': {
+                backgroundColor: roleColors.light,
+                color: roleColors.primary,
+                borderColor: roleColors.secondary,
+              }
+            }}
             onClick={() => onTriggerFileSelect && onTriggerFileSelect()}
             disabled={isUploading || disabled}
           >
             {isUploading ? (
-              <CircularProgress size={20} sx={{ color: '#D97706' }} />
+              <CircularProgress size={20} sx={{ color: roleColors.primary }} />
             ) : (
               <AttachIcon />
             )}
@@ -190,6 +251,7 @@ const MessageInput = ({
         </Tooltip>
         
         <MessageTextField
+          rolecolors={roleColors}
           multiline
           maxRows={4}
           placeholder={isUploading ? `Uploading file... ${uploadProgress}%` : "Type a message..."}
@@ -201,12 +263,9 @@ const MessageInput = ({
           disabled={isUploading || disabled}
         />
         
-        <IconButton sx={{ color: '#6b7280' }} disabled={disabled}>
-          <EmojiIcon />
-        </IconButton>
-        
         <SendButton 
           hastext={hasContent ? 1 : 0}
+          rolecolors={roleColors}
           onClick={handleSend}
           disabled={!hasContent || disabled}
         >

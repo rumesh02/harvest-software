@@ -13,13 +13,92 @@
   margin-bottom: 20px;
 }
 
-/* Grid layout */
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust for responsiveness */
-  gap: 20px;
-  justify-content: center;
-  padding: 20px;
+/* Bootstrap Card consistent sizing */
+.vehicle-card {
+  height: 380px !important;
+  width: 100% !important;
+  max-width: 280px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.vehicle-card:hover {
+  transform: translateY(-8px) !important;
+  box-shadow: 0 12px 40px rgba(21, 101, 192, 0.2) !important;
+  border-color: #1976d2 !important;
+}
+
+.vehicle-card .card-img-top {
+  height: 160px !important;
+  flex-shrink: 0 !important;
+  object-fit: cover !important;
+}
+
+.vehicle-card .card-body {
+  height: 140px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+.vehicle-card .card-title {
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Vehicle details sections */
+.vehicle-details-section {
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Responsive Grid Layout */
+@media (max-width: 1200px) {
+  .vehicle-card {
+    max-width: 320px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .vehicle-card {
+    max-width: 350px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .vehicle-card {
+    max-width: 100% !important;
+  }
+}
+
+/* Button Consistency */
+.vehicle-card .btn {
+  font-size: 11px !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+}
+
+/* Price Badge Consistency */
+.price-badge {
+  min-width: 60px !important;
+  text-align: center !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
 }
 
 /* Compact Card styling */
@@ -30,10 +109,13 @@
   text-align: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: box-shadow 0.2s;
-  width: 200px;
-  min-width: 180px;
+  width: 280px;
+  height: 380px;
+  min-width: 280px;
   margin: auto;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .card:hover {

@@ -102,27 +102,11 @@ const MerchantDashboard = () => {
   const fetchFarmerReviews = async (farmerId) => {
     try {
       setReviewsLoading(true);
-      console.log('Fetching reviews for farmer auth0Id:', farmerId);
-      
       const response = await axios.get(`http://localhost:5000/api/reviews/farmer/${farmerId}`);
-      console.log('Farmer reviews response:', response.data);
-      
-      const reviews = response.data.reviews || [];
-      console.log(`Found ${reviews.length} reviews for farmer`);
-      setFarmerReviews(reviews);
-      
+      setFarmerReviews(response.data.reviews || []);
     } catch (error) {
       console.error('Error fetching farmer reviews:', error);
-      console.error('Error details:', error.response?.data);
-      
-      // Check if it's a 404 (farmer not found) vs other errors
-      if (error.response?.status === 404) {
-        console.log('Farmer not found, setting empty reviews');
-        setFarmerReviews([]);
-      } else {
-        console.error('Unexpected error fetching reviews');
-        setFarmerReviews([]);
-      }
+      setFarmerReviews([]);
     } finally {
       setReviewsLoading(false);
     }
@@ -130,17 +114,8 @@ const MerchantDashboard = () => {
 
   // Handle farmer click to open review modal
   const handleFarmerClick = (farmer) => {
-    console.log('Farmer clicked:', farmer);
     setSelectedFarmer(farmer);
     setReviewModalOpen(true);
-    // Fetch reviews for the selected farmer using auth0Id
-    if (farmer.auth0Id) {
-      console.log('Fetching reviews for farmer auth0Id:', farmer.auth0Id);
-      fetchFarmerReviews(farmer.auth0Id);
-    } else {
-      console.error('No auth0Id found in farmer object:', farmer);
-      console.log('Available farmer ID fields:', { id: farmer.id, _id: farmer._id, farmerId: farmer.farmerId, auth0Id: farmer.auth0Id });
-    }
   };
 
   // Handle closing review modal

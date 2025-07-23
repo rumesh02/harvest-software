@@ -22,16 +22,15 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-  Rating,
-  CircularProgress
+  Rating
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import EmojiNatureIcon from "@mui/icons-material/EmojiNature";
-import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import CloseIcon from "@mui/icons-material/Close";
 import ChatIcon from "@mui/icons-material/Chat";
 import axios from "axios";
@@ -47,7 +46,6 @@ const BrowseListing = () => {
   const [fetchedProducts, setFetchedProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [districtFilter, setDistrictFilter] = useState("All Districts");
-  const [typeFilter, setTypeFilter] = useState("All Types");
   const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -63,135 +61,13 @@ const BrowseListing = () => {
   const [farmerInfo, setFarmerInfo] = useState(null);
   const [loadingFarmer, setLoadingFarmer] = useState(false);
   const [districts, setDistricts] = useState(["All Districts"]);
-  const [productTypes, setProductTypes] = useState(["All Types"]);
 
-  // Enhanced search states
-  const [searchSuggestions, setSearchSuggestions] = useState([]);
-  const [popularTerms, setPopularTerms] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [totalResults, setTotalResults] = useState(0);
-  const [searchPerformance, setSearchPerformance] = useState(null);
-
-  // Progressive filtering states
-  const [filteredDistricts, setFilteredDistricts] = useState(["All Districts"]);
-  const [filteredTypes, setFilteredTypes] = useState(["All Types"]);
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000, avg: 0 });
-  const [isFiltering, setIsFiltering] = useState(false);
-
-  // Progressive filtering functions
-  const updateFilteredOptions = useCallback(async () => {
-    if (isFiltering) return; // Prevent concurrent updates
-    
-    setIsFiltering(true);
-    try {
-      // Build current filter params (excluding the filter being updated)
-      const getCurrentFilters = (exclude = []) => {
-        const params = new URLSearchParams();
-        if (!exclude.includes('search') && searchQuery.trim()) {
-          params.append('search', searchQuery.trim());
-        }
-        if (!exclude.includes('type') && typeFilter !== "All Types") {
-          params.append('type', typeFilter);
-        }
-        if (!exclude.includes('district') && districtFilter !== "All Districts") {
-          params.append('district', districtFilter);
-        }
-        if (!exclude.includes('maxPrice') && maxPrice && maxPrice > 0) {
-          params.append('maxPrice', maxPrice);
-        }
-        return params;
-      };
-
-      // Update available districts based on other filters
-      const districtParams = getCurrentFilters(['district']);
-      const districtResponse = await axios.get(`http://localhost:5000/api/products/filter/districts?${districtParams}`);
-      const availableDistricts = (districtResponse.data || [])
-        .filter(d => d.district && d.district.trim())
-        .map(d => d.district);
-      setFilteredDistricts(["All Districts", ...availableDistricts]);
-
-      // Update available types based on other filters
-      const typeParams = getCurrentFilters(['type']);
-      const typeResponse = await axios.get(`http://localhost:5000/api/products/filter/types?${typeParams}`);
-      const availableTypes = (typeResponse.data || [])
-        .filter(t => t.type && t.type.trim())
-        .map(t => t.type);
-      setFilteredTypes(["All Types", ...availableTypes]);
-
-      // Update price range based on other filters
-      const priceParams = getCurrentFilters(['maxPrice']);
-      const priceResponse = await axios.get(`http://localhost:5000/api/products/filter/price-range?${priceParams}`);
-      if (priceResponse.data && priceResponse.data.maxPrice > 0) {
-        setPriceRange({
-          min: priceResponse.data.minPrice || 0,
-          max: priceResponse.data.maxPrice || 1000,
-          avg: priceResponse.data.avgPrice || 0
-        });
-      }
-
-    } catch (error) {
-      console.error("Error updating filtered options:", error);
-      // Fallback to default options if API fails
-      setFilteredDistricts(districts);
-      setFilteredTypes(productTypes);
-    } finally {
-      setIsFiltering(false);
-    }
-  }, [searchQuery, typeFilter, districtFilter, maxPrice, districts, productTypes, isFiltering]);
-
-  // Update filtered options when any filter changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      updateFilteredOptions();
-    }, 300); // Debounce to avoid too many API calls
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, typeFilter, districtFilter, maxPrice, updateFilteredOptions]);
-
-  // Fetch search suggestions with progressive filtering
-  const fetchFilteredSearchSuggestions = useCallback(async (query) => {
-    if (!query || query.length < 2) {
-      setSearchSuggestions([]);
-      return;
-    }
-
-    try {
-      setSearchLoading(true);
-      const params = new URLSearchParams({ search: query });
-      
-      // Add current filters to get contextual suggestions
-      if (typeFilter !== "All Types") {
-        params.append('type', typeFilter);
-      }
-      if (districtFilter !== "All Districts") {
-        params.append('district', districtFilter);
-      }
-      if (maxPrice && maxPrice > 0) {
-        params.append('maxPrice', maxPrice);
-      }
-
-      const response = await axios.get(`http://localhost:5000/api/products/filter/names?${params}`);
-      const suggestions = (response.data || [])
-        .filter(item => item.name && item.name.trim())
-        .map(item => item.name)
-        .slice(0, 10); // Limit suggestions
-      
-      setSearchSuggestions(suggestions);
-    } catch (error) {
-      console.error("Error fetching filtered search suggestions:", error);
-      setSearchSuggestions([]);
-    } finally {
-      setSearchLoading(false);
-    }
-  }, [typeFilter, districtFilter, maxPrice]);
-
-  // Fetch available districts and product types on component mount
+  // Fetch available districts on component mount
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/products/districts");
-        const availableDistricts = (response.data || []).filter(district => district != null && district !== "");
+        const availableDistricts = response.data || [];
         setDistricts(["All Districts", ...availableDistricts]);
       } catch (error) {
         console.error("Error fetching districts:", error);
@@ -206,50 +82,8 @@ const BrowseListing = () => {
       }
     };
 
-    const fetchProductTypes = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/products/types");
-        const availableTypes = (response.data || []).filter(type => type != null && type !== "");
-        setProductTypes(["All Types", ...availableTypes]);
-      } catch (error) {
-        console.error("Error fetching product types:", error);
-        // Fallback to common product types
-        setProductTypes(["All Types", "Fruit", "Vegetable", "Grain", "Spice", "Herb"]);
-      }
-    };
-
-    const fetchPopularTerms = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/products/search/popular");
-        // Filter out null/undefined values and ensure proper structure
-        const terms = (response.data || []).filter(term => 
-          term != null && 
-          (typeof term === 'string' || (term.term && typeof term.term === 'string'))
-        );
-        setPopularTerms(terms);
-      } catch (error) {
-        console.error("Error fetching popular terms:", error);
-        setPopularTerms([]);
-      }
-    };
-
     fetchDistricts();
-    fetchProductTypes();
-    fetchPopularTerms();
   }, []);
-
-  // Debounced search suggestions with progressive filtering
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchQuery.trim()) {
-        fetchFilteredSearchSuggestions(searchQuery.trim());
-      } else {
-        setSearchSuggestions([]);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, fetchFilteredSearchSuggestions]);
 
   const updateProductInList = useCallback((productId, updatedProduct) => {
     setFetchedProducts(prev => prev.map(p => (p._id === productId ? { ...p, ...updatedProduct } : p)));
@@ -258,45 +92,26 @@ const BrowseListing = () => {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const startTime = performance.now();
-      
       const params = new URLSearchParams({ page, limit: 8, sort: 'desc', sortBy: 'listedDate' });
       if (searchQuery.trim()) params.append("search", searchQuery.trim());
       if (districtFilter !== "All Districts") params.append("district", districtFilter);
-      if (typeFilter !== "All Types") params.append("type", typeFilter);
       if (maxPrice && maxPrice > 0) params.append("maxPrice", maxPrice);
 
       const res = await axios.get(`http://localhost:5000/api/products?${params}`);
-      const endTime = performance.now();
-      
       if (res.data?.products) {
         setFetchedProducts(res.data.products);
         setTotalPages(res.data.totalPages || 1);
-        setTotalResults(res.data.total || 0);
-        
-        // Track search performance
-        setSearchPerformance({
-          searchTime: (endTime - startTime).toFixed(2),
-          resultCount: res.data.total || 0,
-          isTextSearch: res.data.isTextSearch || false,
-          searchTerm: res.data.searchTerm,
-          filterType: res.data.filterType
-        });
       } else {
         setFetchedProducts([]);
         setTotalPages(1);
-        setTotalResults(0);
-        setSearchPerformance(null);
       }
     } catch (err) {
       console.error("Error fetching products:", err);
       setFetchedProducts([]);
-      setTotalResults(0);
-      setSearchPerformance(null);
     } finally {
       setLoading(false);
     }
-  }, [page, searchQuery, districtFilter, typeFilter, maxPrice]);
+  }, [page, searchQuery, districtFilter, maxPrice]);
 
   useEffect(() => {
     fetchProducts();
@@ -307,7 +122,7 @@ const BrowseListing = () => {
       setPage(1);
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, districtFilter, typeFilter, maxPrice]);
+  }, [searchQuery, districtFilter, maxPrice]);
 
   useEffect(() => {
     fetchProducts();
@@ -648,192 +463,40 @@ const BrowseListing = () => {
           Search &amp; Filter Products
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'space-between' }}>
-          <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300, position: 'relative' }}>
-            <Autocomplete
-              value={typeFilter}
-              onChange={(event, newValue) => setTypeFilter(newValue || "All Types")}
-              options={filteredTypes.filter(type => type != null && type !== "")}
-              size="small"
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Product Type"
-                  placeholder="Select type..."
-                  InputProps={{
-                    ...params.InputProps,
-                    startAdornment: (
-                      <>
-                        <InputAdornment position="start">
-                          <EmojiNatureIcon sx={{ color: '#000' }} fontSize="small" />
-                        </InputAdornment>
-                        {params.InputProps.startAdornment}
-                      </>
-                    )
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      height: 40,
-                      '& fieldset': {
-                        borderColor: '#000',
-                        borderWidth: 2,
-                      },
-                      '&:hover fieldset': { borderColor: '#222' },
-                      '&.Mui-focused fieldset': { borderColor: '#222' }
-                    },
-                    '& .MuiInputLabel-outlined': {
-                      color: '#000',
-                      fontWeight: 600,
-                      background: '#fff',
-                      px: 0.5,
-                      margin: 0
-                    }
-                  }}
-                />
-              )}
-              renderOption={(props, option) => {
-                // Check if this option is in popularTerms to show with special styling
-                const termText = typeof option === 'string' ? option : option?.term;
-                const isPopular = popularTerms.some(term => {
-                  const popularTermText = typeof term === 'string' ? term : term?.term;
-                  return popularTermText === termText;
-                });
-
-                if (isPopular && option !== "All Types") {
-                  // Get color scheme for popular terms
-                  const getTypeColor = (type) => {
-                    const lowerType = type.toLowerCase();
-                    if (lowerType.includes('vegetable') || lowerType.includes('herb') || lowerType.includes('leafy')) {
-                      return { icon: '🥬', color: '#2e7d32' };
-                    } else if (lowerType.includes('fruit') || lowerType.includes('berry')) {
-                      return { icon: '🍎', color: '#f57c00' };
-                    } else if (lowerType.includes('grain') || lowerType.includes('cereal') || lowerType.includes('rice')) {
-                      return { icon: '🌾', color: '#7b1fa2' };
-                    } else if (lowerType.includes('spice') || lowerType.includes('seasoning')) {
-                      return { icon: '🌶️', color: '#c2185b' };
-                    } else {
-                      return { icon: '🌱', color: '#616161' };
-                    }
-                  };
-
-                  const colors = getTypeColor(termText);
-
-                  return (
-                    <li {...props} style={{ ...props.style, padding: '8px 12px' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        <span style={{ fontSize: '16px' }}>{colors.icon}</span>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            color: colors.color, 
-                            fontWeight: 600,
-                            flex: 1
-                          }}
-                        >
-                          {option}
-                        </Typography>
-                        <Chip
-                          label="Popular"
-                          size="small"
-                          sx={{
-                            fontSize: '10px',
-                            height: 20,
-                            backgroundColor: colors.color + '20',
-                            color: colors.color,
-                            fontWeight: 500,
-                            '& .MuiChip-label': { px: 1 }
-                          }}
-                        />
-                      </Box>
-                    </li>
-                  );
-                }
-
-                // Regular option styling
-                return (
-                  <li {...props} style={{ ...props.style, padding: '8px 12px' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <EmojiNatureIcon sx={{ color: '#666', fontSize: 16 }} />
-                      <Typography variant="body2" sx={{ color: '#333' }}>
-                        {option}
-                      </Typography>
-                    </Box>
-                  </li>
-                );
-              }}
-              disableClearable
-            />
-          </Box>
           <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300 }}>
-            <Autocomplete
-              freeSolo
-              value={searchQuery}
-              onChange={(event, newValue) => {
-                setSearchQuery(newValue || "");
-                setShowSuggestions(false);
-              }}
-              onInputChange={(event, newInputValue) => {
-                setSearchQuery(newInputValue);
-              }}
-              options={searchSuggestions.filter(item => item != null && item !== "")}
+            <TextField
+              label="Search"
+              placeholder="Product name..."
+              variant="outlined"
               size="small"
-              loading={searchLoading}
-              open={showSuggestions && searchSuggestions.length > 0}
-              onOpen={() => setShowSuggestions(true)}
-              onClose={() => setShowSuggestions(false)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Search Products"
-                  placeholder="Enter product name..."
-                  variant="outlined"
-                  InputProps={{
-                    ...params.InputProps,
-                    startAdornment: (
-                      <>
-                        <InputAdornment position="start">
-                          <SearchIcon sx={{ color: '#000' }} fontSize="small" />
-                        </InputAdornment>
-                        {params.InputProps.startAdornment}
-                      </>
-                    ),
-                    endAdornment: (
-                      <>
-                        {searchLoading && <CircularProgress color="inherit" size={20} />}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      height: 40,
-                      '& fieldset': {
-                        borderColor: '#000',
-                        borderWidth: 2,
-                      },
-                      '&:hover fieldset': { borderColor: '#222' },
-                      '&.Mui-focused fieldset': { borderColor: '#222' }
-                    },
-                    '& .MuiInputLabel-outlined': {
-                      color: '#000',
-                      fontWeight: 600,
-                      background: '#fff',
-                      px: 0.5,
-                      margin: 0
-                    }
-                  }}
-                />
-              )}
-              renderOption={(props, option) => {
-                // Safety check for null or undefined options
-                if (!option) return null;
-                return (
-                  <li {...props}>
-                    <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} fontSize="small" />
-                    {option}
-                  </li>
-                );
+              fullWidth
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: '#000' }} fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  height: 40,
+                  '& fieldset': {
+                    borderColor: '#000',
+                    borderWidth: 2,
+                  },
+                  '&:hover fieldset': { borderColor: '#222' },
+                  '&.Mui-focused fieldset': { borderColor: '#222' }
+                },
+                '& .MuiInputLabel-outlined': {
+                  color: '#000',
+                  fontWeight: 600,
+                  background: '#fff',
+                  px: 0.5,
+                  margin: 0
+                }
               }}
             />
           </Box>
@@ -841,7 +504,7 @@ const BrowseListing = () => {
             <Autocomplete
               value={districtFilter}
               onChange={(event, newValue) => setDistrictFilter(newValue || "All Districts")}
-              options={filteredDistricts.filter(district => district != null && district !== "")}
+              options={districts}
               size="small"
               renderInput={(params) => (
                 <TextField
@@ -883,7 +546,6 @@ const BrowseListing = () => {
               disableClearable
             />
           </Box>
-          
           <Box sx={{ flex: '1 1 180px', minWidth: 150, maxWidth: 300 }}>
             <TextField
               label="Max Price"
@@ -896,7 +558,7 @@ const BrowseListing = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <MonetizationOnIcon sx={{ color: '#000' }} fontSize="small" />
+                    <AttachMoneyIcon sx={{ color: '#000' }} fontSize="small" />
                   </InputAdornment>
                 ),
               }}
@@ -922,14 +584,13 @@ const BrowseListing = () => {
               }}
             />
           </Box>
-          <Box sx={{ flex: '1 1 120px', minWidth: 120, maxWidth: 200, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ flex: '1 1 120px', minWidth: 120, maxWidth: 200, display: 'flex', alignItems: 'center' }}>
             <Button
               variant="contained"
               fullWidth={false}
               onClick={() => {
                 setSearchQuery("");
                 setDistrictFilter("All Districts");
-                setTypeFilter("All Types");
                 setMaxPrice("");
                 setPage(1);
               }}
@@ -941,9 +602,10 @@ const BrowseListing = () => {
                 backgroundColor: '#000',
                 color: '#fff',
                 boxShadow: 'none',
-                width: '70%',
-                minWidth: 80,
-                maxWidth: 120,
+                width: '50%',
+                minWidth: 60,
+                maxWidth: 100,
+                margin: '0 auto',
                 '&:hover': {
                   backgroundColor: '#222',
                   color: '#fff',
@@ -957,81 +619,50 @@ const BrowseListing = () => {
         </Box>
 
         {/* Active Filters */}
-        {(searchQuery || districtFilter !== "All Districts" || typeFilter !== "All Types" || maxPrice) && (
+        {(searchQuery || districtFilter !== "All Districts" || maxPrice) && (
           <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               {searchQuery && (
                 <Chip
-                  label={`Search: "${searchQuery}"`}
+                  label={searchQuery}
                   onDelete={() => setSearchQuery("")}
                   size="small"
                   sx={{
-                    borderColor: '#000',
-                    color: '#000',
-                    backgroundColor: '#fff',
-                    '&:hover': { backgroundColor: '#f5f5f5' }
+                    borderColor: '#000', // black border
+                    color: '#000',        // black text
+                    backgroundColor: '#fff', // white background
+                    fontWeight: 600
                   }}
+                  variant="outlined"
                 />
               )}
               {districtFilter !== "All Districts" && (
                 <Chip
-                  label={`District: ${districtFilter}`}
+                  label={districtFilter}
                   onDelete={() => setDistrictFilter("All Districts")}
                   size="small"
                   sx={{
                     borderColor: '#000',
                     color: '#000',
                     backgroundColor: '#fff',
-                    '&:hover': { backgroundColor: '#f5f5f5' }
+                    fontWeight: 600
                   }}
-                />
-              )}
-              {typeFilter !== "All Types" && (
-                <Chip
-                  label={`Type: ${typeFilter}`}
-                  onDelete={() => setTypeFilter("All Types")}
-                  size="small"
-                  sx={{
-                    borderColor: '#000',
-                    color: '#000',
-                    backgroundColor: '#fff',
-                    '&:hover': { backgroundColor: '#f5f5f5' }
-                  }}
+                  variant="outlined"
                 />
               )}
               {maxPrice && (
                 <Chip
-                  label={`Max Price: Rs. ${maxPrice}`}
+                  label={`Max: Rs.${maxPrice}`}
                   onDelete={() => setMaxPrice("")}
                   size="small"
                   sx={{
                     borderColor: '#000',
                     color: '#000',
                     backgroundColor: '#fff',
-                    '&:hover': { backgroundColor: '#f5f5f5' }
+                    fontWeight: 600
                   }}
+                  variant="outlined"
                 />
-              )}
-            </Stack>
-          </Box>
-        )}
-
-        {/* Search Results Summary */}
-        {(searchQuery || districtFilter !== "All Districts" || typeFilter !== "All Types" || maxPrice) && !loading && (
-          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap">
-              <Typography variant="body2" color="text.secondary">
-                Found <strong>{totalResults}</strong> products
-                {searchQuery && ` for "${searchQuery}"`}
-                {typeFilter !== "All Types" && ` of type "${typeFilter}"`}
-                {districtFilter !== "All Districts" && ` in ${districtFilter}`}
-                {maxPrice && ` under Rs. ${maxPrice}`}
-              </Typography>
-              {searchPerformance && (
-                <Typography variant="caption" color="text.secondary">
-                  Search completed in {searchPerformance.searchTime}ms
-                  {searchPerformance.isTextSearch && " (Smart Search)"}
-                </Typography>
               )}
             </Stack>
           </Box>
@@ -1050,8 +681,8 @@ const BrowseListing = () => {
       {/* Section Caption for Products Grid */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', mb: 2, mt: 2 }}>
         <EmojiNatureIcon sx={{ color: '#43a047', fontSize: 32, mr: 1 }} />
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#43a047' }}>
-          Fresh Harvest
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#222' }}>
+          Fresh Harvest Products
         </Typography>
       </Box>
 

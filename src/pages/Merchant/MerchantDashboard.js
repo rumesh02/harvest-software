@@ -34,7 +34,8 @@ import {
   Person as PersonIcon,
   Star as StarIcon,
   Close as CloseIcon,
-  CalendarToday as CalendarIcon
+  CalendarToday as CalendarIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -52,11 +53,105 @@ const MerchantDashboard = () => {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [farmerReviews, setFarmerReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [cacheAge, setCacheAge] = useState(0);
   const { user } = useAuth0();
+
+  // Cache management functions
+  const getCacheKey = useCallback(() => {
+    return user?.sub ? `merchant_dashboard_${user.sub}` : null;
+  }, [user?.sub]);
+
+  const getCachedData = useCallback(() => {
+    try {
+      const cacheKey = getCacheKey();
+      if (!cacheKey) return null;
+      
+      const cached = localStorage.getItem(cacheKey);
+      if (!cached) return null;
+      
+      const parsedCache = JSON.parse(cached);
+      const cacheAge = Date.now() - parsedCache.timestamp;
+      const cacheAgeMinutes = Math.floor(cacheAge / (1000 * 60));
+      
+      // Cache expires after 1 hour (3600000 ms) or you can set it to never expire by removing this check
+      // if (cacheAge > 3600000) {
+      //   localStorage.removeItem(cacheKey);
+      //   return null;
+      // }
+      
+      console.log(`Loading dashboard data from cache (${cacheAgeMinutes} minutes old)`);
+      return parsedCache.data;
+    } catch (error) {
+      console.error('Error reading cache:', error);
+      return null;
+    }
+  }, [getCacheKey]);
+
+  const setCachedData = useCallback((data) => {
+    try {
+      const cacheKey = getCacheKey();
+      if (!cacheKey) return;
+      
+      const cacheObject = {
+        data: data,
+        timestamp: Date.now(),
+        userId: user?.sub
+      };
+      
+      localStorage.setItem(cacheKey, JSON.stringify(cacheObject));
+      console.log('Dashboard data cached successfully');
+    } catch (error) {
+      console.error('Error caching data:', error);
+    }
+  }, [getCacheKey, user?.sub]);
+
+  const clearCache = useCallback(() => {
+    try {
+      const cacheKey = getCacheKey();
+      if (cacheKey) {
+        localStorage.removeItem(cacheKey);
+        console.log('Dashboard cache cleared');
+      }
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+    }
+  }, [getCacheKey]);
 
   const fetchDashboardData = useCallback(async () => {
     try {
       if (!user?.sub) return;
+      
+      // Check if data is already loaded and cached
+      if (dataLoaded) {
+        console.log('Dashboard data already loaded, skipping fetch');
+        return;
+      }
+      
+      // Try to load from cache first
+      const cachedData = getCachedData();
+      if (cachedData) {
+        console.log('Loading dashboard data from cache');
+        setDashboardData(cachedData);
+        setDataLoaded(true);
+        setLoading(false);
+        setError(null);
+        
+        // Calculate and set cache age
+        const cacheKey = getCacheKey();
+        if (cacheKey) {
+          const cached = localStorage.getItem(cacheKey);
+          if (cached) {
+            const parsedCache = JSON.parse(cached);
+            const ageMinutes = Math.floor((Date.now() - parsedCache.timestamp) / (1000 * 60));
+            setCacheAge(ageMinutes);
+          }
+        }
+        return;
+      }
+      
+      console.log('No cached data found, fetching from server...');
+      setLoading(true);
       
       // First, test if the backend is reachable
       try {
@@ -71,7 +166,6 @@ const MerchantDashboard = () => {
       
       // Encode the merchantId properly
       const encodedMerchantId = encodeURIComponent(user.sub);
-
       const url = `http://localhost:5000/api/merchant/dashboard/${encodedMerchantId}`;
       console.log('Fetching dashboard data from:', url);
       
@@ -81,9 +175,14 @@ const MerchantDashboard = () => {
       console.log('Full dashboard response:', response.data);
       console.log('Monthly data received:', response.data.monthlyData);
       
+      // Cache the new data
+      setCachedData(response.data);
+      
       setDashboardData(response.data);
-      console.log('Dashboard data received:', response.data);
-      console.log('Monthly data:', response.data.monthlyData);
+      setDataLoaded(true);
+      setError(null);
+      setCacheAge(0); // Fresh data
+      console.log('Dashboard data fetched and cached successfully');
       
     } catch (error) {
       console.error('Error details:', error.response?.data || error.message);
@@ -92,11 +191,48 @@ const MerchantDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.sub]);
+  }, [user?.sub, dataLoaded, getCachedData, setCachedData]);
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  // Clear cache and reset state when user changes or logs out
+  useEffect(() => {
+    const currentUserId = user?.sub;
+    const cachedUserId = localStorage.getItem('current_merchant_user');
+    
+    if (currentUserId && currentUserId !== cachedUserId) {
+      // User has changed, clear old cache
+      console.log('User changed, clearing old cache');
+      clearCache();
+      setDataLoaded(false);
+      setDashboardData({
+        PendingPayments: "Rs. 0",
+        PendingBids: 0,
+        totalOrders: 0,
+        monthlyData: [],
+        topFarmers: []
+      });
+      localStorage.setItem('current_merchant_user', currentUserId);
+    } else if (!currentUserId && cachedUserId) {
+      // User logged out, clear cache
+      console.log('User logged out, clearing cache');
+      clearCache();
+      localStorage.removeItem('current_merchant_user');
+      setDataLoaded(false);
+    }
+  }, [user?.sub, clearCache]);
+
+  // Function to manually refresh data (for testing or manual refresh)
+  const refreshData = useCallback(() => {
+    console.log('Manual refresh triggered');
+    clearCache();
+    setDataLoaded(false);
+    setLoading(true);
+    setCacheAge(0);
+    fetchDashboardData();
+  }, [clearCache, fetchDashboardData]);
 
   // Function to fetch reviews for a specific farmer
   const fetchFarmerReviews = async (farmerId) => {
@@ -125,17 +261,18 @@ const MerchantDashboard = () => {
     setFarmerReviews([]);
   };
 
-  // Format the monthly data to ensure it has proper names and values
+  // Format the monthly data to ensure it has proper names and values for bid activity
   const formattedMonthlyData = (dashboardData.monthlyData || []).map(item => ({
     name: item.name || item.month || '',
-    // Try multiple property names that might contain the revenue data
-    revenue: typeof item.revenue === 'number' ? item.revenue : 
-             typeof item.amount === 'number' ? item.amount :
-             typeof item.value === 'number' ? item.value : 0,
+    totalBids: item.totalBids || 0,
+    acceptedBids: item.acceptedBids || 0,
+    rejectedBids: item.rejectedBids || 0,
+    pendingBids: item.pendingBids || 0,
+    successRate: item.successRate || 0
   }));
 
   // After formatting, add a log
-  console.log('Formatted monthly data for chart:', formattedMonthlyData);
+  console.log('Formatted monthly bid data for chart:', formattedMonthlyData);
 
   const { PendingPayments, PendingBids, totalOrders, topFarmers, monthlyData } = dashboardData;
 
@@ -170,6 +307,7 @@ const MerchantDashboard = () => {
   // Custom tooltip component for the chart
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload;
       return (
         <Box
           sx={{
@@ -185,8 +323,22 @@ const MerchantDashboard = () => {
             {label}
           </Typography>
           <Typography variant="body2" sx={{ color: '#d97706', fontWeight: 500 }}>
-            Purchase Cost: Rs. {payload[0].value?.toLocaleString() || 0}
+            Total Bids: {data.totalBids || 0}
           </Typography>
+          <Typography variant="body2" sx={{ color: '#22c55e', fontWeight: 500 }}>
+            Accepted: {data.acceptedBids || 0}
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#ef4444', fontWeight: 500 }}>
+            Rejected: {data.rejectedBids || 0}
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#6b7280', fontWeight: 500 }}>
+            Pending: {data.pendingBids || 0}
+          </Typography>
+          {data.totalBids > 0 && (
+            <Typography variant="body2" sx={{ color: '#92400e', fontWeight: 600, mt: 0.5 }}>
+              Success Rate: {data.successRate}%
+            </Typography>
+          )}
         </Box>
       );
     }
@@ -229,8 +381,7 @@ const MerchantDashboard = () => {
               size="small" 
               onClick={() => {
                 setError(null);
-                setLoading(true);
-                fetchDashboardData();
+                refreshData();
               }}
               sx={{ fontWeight: 600 }}
             >
@@ -240,6 +391,11 @@ const MerchantDashboard = () => {
         >
           {error}
         </Alert>
+        <Box sx={{ textAlign: 'center', mt: 2 }}>
+          <Typography variant="caption" color="text.secondary">
+            Data is cached locally once loaded successfully
+          </Typography>
+        </Box>
       </Box>
     );
   }
@@ -256,7 +412,7 @@ const MerchantDashboard = () => {
         px: { xs: 2, md: 3 }
       }}>
         {/* Header Section */}
-        <Box sx={{ mb: { xs: 2, md: 3 }, textAlign: 'center' }}>
+        <Box sx={{ mb: { xs: 2, md: 3 }, textAlign: 'center', position: 'relative' }}>
           <Typography
             variant="h5"
             sx={{
@@ -268,9 +424,32 @@ const MerchantDashboard = () => {
           >
             Merchant Dashboard
           </Typography>
-          <Typography variant="body2" color="#92400e" sx={{ fontWeight: 400, fontSize: { xs: 15, md: 16 } }}>
-            Track your purchases and business analytics
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+            <Typography variant="body2" color="#92400e" sx={{ fontWeight: 400, fontSize: { xs: 15, md: 16 } }}>
+              Track your purchases and business analytics
+            </Typography>
+            
+          </Box>
+          {/* Refresh Button */}
+          <IconButton
+            onClick={refreshData}
+            disabled={loading}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              color: '#92400e',
+              bgcolor: 'rgba(146, 64, 14, 0.1)',
+              '&:hover': {
+                bgcolor: 'rgba(146, 64, 14, 0.2)',
+                transform: 'rotate(180deg)'
+              },
+              transition: 'all 0.3s ease'
+            }}
+            title="Refresh dashboard data"
+          >
+            <RefreshIcon />
+          </IconButton>
         </Box>
 
         {/* Enhanced Stats Cards */}
@@ -385,10 +564,10 @@ const MerchantDashboard = () => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 700, color: '#92400e', mb: 0.5, fontSize: { xs: 15, md: 17 } }}>
-                    Monthly Purchase Analytics
+                    Monthly Bid Activity
                   </Typography>
                   <Typography variant="body2" color="#92400e" sx={{ fontSize: { xs: 12, md: 13 } }}>
-                    Track your harvest purchase costs over time
+                    Track your bidding trends and success rates
                   </Typography>
                 </Box>
                 <Avatar 
@@ -399,7 +578,7 @@ const MerchantDashboard = () => {
                     boxShadow: '0 2px 8px rgba(217, 119, 6, 0.12)'
                   }}
                 >
-                  <TrendingIcon fontSize="small" />
+                  <BidsIcon fontSize="small" />
                 </Avatar>
               </Box>
               <Box sx={{ height: 240, mt: 1.5 }}>
@@ -417,22 +596,28 @@ const MerchantDashboard = () => {
                       axisLine={false}
                       tickLine={false}
                       tick={{ fill: '#92400e', fontSize: 11, fontWeight: 500 }}
-                      tickFormatter={(value) => `Rs. ${value.toLocaleString()}`}
-                      label={{ value: 'Purchase Cost (Rs.)', angle: -90, position: 'insideLeft', fill: '#d97706', fontSize: 11 }}
-                      ticks={[2500, 5000, 7500, 10000]}
+                      tickFormatter={(value) => `${value}`}
+                      label={{ value: 'Number of Bids', angle: -90, position: 'insideLeft', fill: '#d97706', fontSize: 11 }}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar 
-                      dataKey="revenue" 
+                      dataKey="totalBids" 
                       fill="#d97706"
                       radius={[5, 5, 0, 0]}
+                      barSize={18}
+                    />
+                    <Bar 
+                      dataKey="acceptedBids" 
+                      fill="#22c55e"
+                      radius={[3, 3, 0, 0]}
                       barSize={18}
                     />
                   </BarChart>
                 </ResponsiveContainer>
                 {/* Chart legend */}
                 <Box sx={{ mt: 0.5, textAlign: 'right' }}>
-                  <Typography variant="caption" color="#d97706" sx={{ fontSize: 11 }}>● Purchase Cost</Typography>
+                  <Typography variant="caption" color="#d97706" sx={{ fontSize: 11, mr: 2 }}>● Total Bids</Typography>
+                  <Typography variant="caption" color="#22c55e" sx={{ fontSize: 11 }}>● Accepted Bids</Typography>
                 </Box>
               </Box>
             </Paper>

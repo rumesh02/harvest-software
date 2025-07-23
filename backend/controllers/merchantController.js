@@ -36,23 +36,47 @@ const merchantController = {
         status: { $in: ['confirmed', 'processing'] }
       });
 
-      // Calculate monthly purchase data
-      const monthlyDataArr = Array(12).fill(0);
-      let totalPurchaseAmount = 0;
+      // Calculate monthly bid activity data (much more relevant for merchants)
+      const monthlyBidActivity = Array(12).fill(null).map(() => ({
+        totalBids: 0,
+        acceptedBids: 0,
+        rejectedBids: 0,
+        pendingBids: 0
+      }));
 
-      confirmedBids.forEach(bid => {
+      // Get all bids for current year
+      const allBids = await Bid.find({
+        merchantId,
+        createdAt: {
+          $gte: new Date(currentYear, 0, 1),
+          $lte: new Date(currentYear, 11, 31, 23, 59, 59)
+        }
+      });
+
+      allBids.forEach(bid => {
         const bidDate = new Date(bid.createdAt);
-        const amount = bid.amount || 0;
         if (bidDate.getFullYear() === currentYear) {
-          monthlyDataArr[bidDate.getMonth()] += amount;
-          totalPurchaseAmount += amount;
+          const monthIndex = bidDate.getMonth();
+          monthlyBidActivity[monthIndex].totalBids += 1;
+          
+          if (bid.status === 'Accepted') {
+            monthlyBidActivity[monthIndex].acceptedBids += 1;
+          } else if (bid.status === 'Rejected') {
+            monthlyBidActivity[monthIndex].rejectedBids += 1;
+          } else if (bid.status === 'Pending') {
+            monthlyBidActivity[monthIndex].pendingBids += 1;
+          }
         }
       });
 
       // Format monthly data for chart
-      const monthlyData = monthlyDataArr.map((amount, index) => ({
+      const monthlyData = monthlyBidActivity.map((activity, index) => ({
         name: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index],
-        revenue: amount
+        totalBids: activity.totalBids,
+        acceptedBids: activity.acceptedBids,
+        rejectedBids: activity.rejectedBids,
+        pendingBids: activity.pendingBids,
+        successRate: activity.totalBids > 0 ? Math.round((activity.acceptedBids / activity.totalBids) * 100) : 0
       }));
 
       // Calculate pending payments total

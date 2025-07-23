@@ -43,7 +43,7 @@ const AdminSidebar = () => {
           fontSize: "17px",
           fontWeight: "bold",
           margin: 0,
-          color: "#1976d2"
+          color: "#000000ff"
         }}>Admin Panel</h2>
       </div>
       <nav style={{ flex: 1 }}>
@@ -59,7 +59,7 @@ const AdminSidebar = () => {
               color: location.pathname === item.path ? "#1976d2" : "#333",
               background: location.pathname === item.path ? "rgba(25, 118, 210, 0.08)" : "transparent",
               fontWeight: location.pathname === item.path ? "bold" : "normal",
-              borderLeft: location.pathname === item.path ? "4px solid #1976d2" : "4px solid transparent"
+              borderLeft: location.pathname === item.path ? "4px solid #000000ff" : "4px solid transparent"
             }}
           >
             <span style={{ marginRight: 12 }}>{item.icon}</span>

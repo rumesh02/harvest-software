@@ -50,31 +50,31 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Enhanced stat card data with admin colors
+  // Enhanced stat card data with purple colors
   const getUserStatCards = () => [
     {
       title: "Farmers",
       value: counts.farmers,
       icon: <People fontSize="small" />,
-      bgColor: "#e8f5e8",
-      color: "#2e7d32",
-      iconBg: "#c8e6c9"
+      bgColor: "#e1bee7",
+      color: "#7b1fa2",
+      iconBg: "#ce93d8"
     },
     {
       title: "Merchants", 
       value: counts.merchants,
       icon: <ShoppingCart fontSize="small" />,
-      bgColor: "#e3f2fd",
-      color: "#1565c0",
-      iconBg: "#bbdefb"
+      bgColor: "#e1bee7",
+      color: "#7b1fa2",
+      iconBg: "#ce93d8"
     },
     {
       title: "Transporters",
       value: counts.transporters,
       icon: <LocalShipping fontSize="small" />,
-      bgColor: "#fff8e1",
-      color: "#ef6c00",
-      iconBg: "#ffcc02"
+      bgColor: "#e1bee7",
+      color: "#7b1fa2",
+      iconBg: "#ce93d8"
     }
   ];
 
@@ -86,41 +86,41 @@ const AdminDashboard = () => {
         title: "Total Users (excl. Admin)",
         value: analytics.platformStats?.totalUsers || 0,
         icon: <People fontSize="small" />,
-        bgColor: "#e8f5e8",
-        color: "#2e7d32",
-        iconBg: "#c8e6c9"
+        bgColor: "#e1bee7",
+        color: "#7b1fa2",
+        iconBg: "#ce93d8"
       },
       {
         title: "Successful Deals",
         value: analytics.platformStats?.totalConfirmedBids || 0,
         icon: <TrendingUp fontSize="small" />,
-        bgColor: "#fce4ec",
-        color: "#c2185b",
-        iconBg: "#f8bbd9"
+        bgColor: "#e1bee7",
+      color: "#7b1fa2",
+      iconBg: "#ce93d8"
       },
       {
         title: "Total Listings",
         value: analytics.platformStats?.totalListings || 0,
         icon: <AttachMoney fontSize="small" />,
-        bgColor: "#f3e5f5",
-        color: "#7b1fa2",
-        iconBg: "#ce93d8"
+      bgColor: "#e1bee7",
+      color: "#7b1fa2",
+      iconBg: "#ce93d8"
       },
       {
         title: "Total Bookings",
         value: analytics.platformStats?.totalBookings || 0,
         icon: <LocalShipping fontSize="small" />,
-        bgColor: "#fff3e0",
-        color: "#ef6c00",
-        iconBg: "#ffb74d"
+       bgColor: "#e1bee7",
+      color: "#7b1fa2",
+      iconBg: "#ce93d8"
       },
       {
         title: "Success Rate",
         value: `${Math.round(((analytics.platformStats?.totalConfirmedBids || 0) / (analytics.platformStats?.totalBookings || 1)) * 100)}%`,
         icon: <Analytics fontSize="small" />,
-        bgColor: "#e1f5fe",
-        color: "#0277bd",
-        iconBg: "#81d4fa"
+        bgColor: "#e1bee7",
+      color: "#7b1fa2",
+      iconBg: "#ce93d8"
       }
     ];
   };
@@ -199,9 +199,9 @@ const AdminDashboard = () => {
       py: 3
     }}>
       <Box sx={{ 
-        maxWidth: 1400, 
+        maxWidth: '98%', 
         mx: "auto", 
-        px: { xs: 2, md: 3 }
+        px: { xs: 0.5, md: 1 }
       }}>
         {/* Header Section */}
         <Box sx={{ mb: { xs: 2, md: 3 }, textAlign: 'center' }}>
@@ -227,9 +227,9 @@ const AdminDashboard = () => {
         </Box>
 
         {/* User Count Cards */}
-        <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mb: { xs: 2, md: 4 } }}>
+        <Grid container spacing={{ xs: 0.5, md: 0.5 }} sx={{ mb: { xs: 2, md: 4 } }}>
           {getUserStatCards().map((card, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+            <Grid item xs={12} sm={4} md={4} key={index}>
               <Card 
                 elevation={0}
                 sx={{ 
@@ -241,30 +241,33 @@ const AdminDashboard = () => {
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   position: 'relative',
                   overflow: 'hidden',
+                  minHeight: '120px',
+                  width: '100%',
+                  mx: 0.5,
                   "&:hover": {
                     transform: "translateY(-2px)",
                     boxShadow: "0 4px 16px rgba(123, 31, 162, 0.13)"
                   }
                 }}
               >
-                <CardContent sx={{ p: { xs: 2, md: 3 }, pt: { xs: 2.5, md: 3.5 } }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <CardContent sx={{ p: { xs: 3, md: 4 }, pt: { xs: 3, md: 4 }, height: '100%', display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <Box sx={{ flex: 1 }}>
                       <Typography 
                         variant="subtitle2" 
                         color={card.color}
                         gutterBottom
-                        sx={{ fontWeight: 500, mb: 1, fontSize: { xs: 15, md: 16 } }}
+                        sx={{ fontWeight: 600, mb: 1.5, fontSize: { xs: 16, md: 18 } }}
                       >
                         {card.title}
                       </Typography>
                       <Typography 
-                        variant="h6" 
+                        variant="h4" 
                         component="div" 
                         sx={{ 
                           fontWeight: 700,
                           color: card.color,
-                          fontSize: { xs: 22, md: 26 }
+                          fontSize: { xs: 28, md: 32 }
                         }}
                       >
                         {card.value}
@@ -274,10 +277,10 @@ const AdminDashboard = () => {
                       sx={{ 
                         background: card.iconBg,
                         color: card.color,
-                        width: 44,
-                        height: 44,
+                        width: { xs: 50, md: 56 },
+                        height: { xs: 50, md: 56 },
                         boxShadow: '0 1.5px 6px rgba(123, 31, 162, 0.10)',
-                        fontSize: 24
+                        fontSize: { xs: 26, md: 30 }
                       }}
                     >
                       {card.icon}
@@ -315,7 +318,7 @@ const AdminDashboard = () => {
             </Box>
 
             {/* Platform Statistics Cards */}
-            <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mb: { xs: 2, md: 4 } }}>
+            <Grid container spacing={{ xs: 1, md: 1 }} sx={{ mb: { xs: 2, md: 4 } }}>
               {getPlatformStatCards().map((card, index) => (
                 <Grid item xs={12} sm={6} md={2.4} key={index}>
                   <Card 
@@ -400,37 +403,40 @@ const AdminDashboard = () => {
               </Typography>
             </Box>
 
-            <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mb: { xs: 2, md: 4 } }}>
+            <Grid container spacing={{ xs: 0.2, md: 0.5 }} sx={{ mb: { xs: 2, md: 4 } }}>
               {/* Top Farmers */}
-              <Grid item xs={12} md={4}>
+              <Grid item xs={4} md={4}>
                 <Paper 
                   elevation={0}
                   sx={{ 
-                    p: 3, 
+                    p: { xs: 1.5, md: 3 }, 
                     height: '100%',
                     background: 'rgba(255,255,255,0.9)',
                     border: "1px solid #E5E7EB",
                     borderRadius: 3,
                     backdropFilter: 'blur(10px)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                    width: '100%',
+                    maxWidth: '100%',
+                    overflow: 'hidden'
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 1.5, md: 2 } }}>
                     <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#2e7d32', mb: 0.5, fontSize: { xs: 15, md: 17 } }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#7b1fa2', mb: 0.5, fontSize: { xs: 13, md: 17 } }}>
                         Top Farmers
                       </Typography>
-                      <Typography variant="body2" color="#2e7d32" sx={{ fontSize: { xs: 12, md: 13 } }}>
+                      <Typography variant="body2" color="#7b1fa2" sx={{ fontSize: { xs: 10, md: 13 } }}>
                         Leading by successful sales
                       </Typography>
                     </Box>
                     <Avatar 
                       sx={{ 
-                        background: '#c8e6c9',
-                        color: '#2e7d32',
-                        width: 40,
-                        height: 40,
-                        boxShadow: '0 2px 8px rgba(46, 125, 50, 0.12)'
+                        background: '#ce93d8',
+                        color: '#7b1fa2',
+                        width: { xs: 32, md: 40 },
+                        height: { xs: 32, md: 40 },
+                        boxShadow: '0 2px 8px rgba(123, 31, 162, 0.12)'
                       }}
                     >
                       <People fontSize="small" />
@@ -440,24 +446,24 @@ const AdminDashboard = () => {
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell sx={{ fontWeight: 600, color: '#2e7d32', fontSize: 12 }}>Name</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600, color: '#2e7d32', fontSize: 12 }}>Sales</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600, color: '#2e7d32', fontSize: 12 }}>Value</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: '#7b1fa2', fontSize: { xs: 10, md: 12 } }}>Name</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600, color: '#7b1fa2', fontSize: { xs: 10, md: 12 } }}>Sales</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600, color: '#7b1fa2', fontSize: { xs: 10, md: 12 } }}>Value</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {analytics.topFarmers?.slice(0, 5).map((farmer, index) => (
-                          <TableRow key={index} sx={{ '&:hover': { bgcolor: '#f1f8e9' } }}>
-                            <TableCell sx={{ fontSize: 13, fontWeight: 500 }}>{farmer.name}</TableCell>
-                            <TableCell align="right" sx={{ fontSize: 13 }}>
+                          <TableRow key={index} sx={{ '&:hover': { bgcolor: '#f3e5f5' } }}>
+                            <TableCell sx={{ fontSize: { xs: 11, md: 13 }, fontWeight: 500, padding: { xs: '4px', md: '8px' } }}>{farmer.name}</TableCell>
+                            <TableCell align="right" sx={{ fontSize: { xs: 11, md: 13 }, padding: { xs: '4px', md: '8px' } }}>
                               <Chip 
                                 label={farmer.successfulTransactions} 
                                 size="small" 
-                                sx={{ bgcolor: '#e8f5e8', color: '#2e7d32', fontWeight: 600 }} 
+                                sx={{ bgcolor: '#e1bee7', color: '#7b1fa2', fontWeight: 600, fontSize: { xs: 9, md: 11 } }} 
                               />
                             </TableCell>
-                            <TableCell align="right" sx={{ fontSize: 13, fontWeight: 500 }}>
-                              LKR {farmer.totalValue?.toFixed(0) || 'N/A'}
+                            <TableCell align="right" sx={{ fontSize: { xs: 11, md: 13 }, fontWeight: 500, padding: { xs: '4px', md: '8px' } }}>
+                              RS: {farmer.totalValue?.toFixed(0) || 'N/A'}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -468,35 +474,38 @@ const AdminDashboard = () => {
               </Grid>
 
               {/* Top Merchants */}
-              <Grid item xs={12} md={4}>
+              <Grid item xs={4} md={4}>
                 <Paper 
                   elevation={0}
                   sx={{ 
-                    p: 3, 
+                    p: { xs: 1.5, md: 3 }, 
                     height: '100%',
                     background: 'rgba(255,255,255,0.9)',
                     border: "1px solid #E5E7EB",
                     borderRadius: 3,
                     backdropFilter: 'blur(10px)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                    width: '100%',
+                    maxWidth: '100%',
+                    overflow: 'hidden'
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 1.5, md: 2 } }}>
                     <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1565c0', mb: 0.5, fontSize: { xs: 15, md: 17 } }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#7b1fa2', mb: 0.5, fontSize: { xs: 13, md: 17 } }}>
                         Top Merchants
                       </Typography>
-                      <Typography variant="body2" color="#1565c0" sx={{ fontSize: { xs: 12, md: 13 } }}>
+                      <Typography variant="body2" color="#7b1fa2" sx={{ fontSize: { xs: 10, md: 13 } }}>
                         Leading by purchases
                       </Typography>
                     </Box>
                     <Avatar 
                       sx={{ 
-                        background: '#bbdefb',
-                        color: '#1565c0',
-                        width: 40,
-                        height: 40,
-                        boxShadow: '0 2px 8px rgba(21, 101, 192, 0.12)'
+                        background: '#ce93d8',
+                        color: '#7b1fa2',
+                        width: { xs: 32, md: 40 },
+                        height: { xs: 32, md: 40 },
+                        boxShadow: '0 2px 8px rgba(123, 31, 162, 0.12)'
                       }}
                     >
                       <ShoppingCart fontSize="small" />
@@ -506,24 +515,24 @@ const AdminDashboard = () => {
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell sx={{ fontWeight: 600, color: '#1565c0', fontSize: 12 }}>Name</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600, color: '#1565c0', fontSize: 12 }}>Purchases</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600, color: '#1565c0', fontSize: 12 }}>Value</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: '#7b1fa2', fontSize: { xs: 10, md: 12 } }}>Name</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600, color: '#7b1fa2', fontSize: { xs: 10, md: 12 } }}>Purchases</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600, color: '#7b1fa2', fontSize: { xs: 10, md: 12 } }}>Value</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {analytics.topMerchants?.slice(0, 5).map((merchant, index) => (
-                          <TableRow key={index} sx={{ '&:hover': { bgcolor: '#e3f2fd' } }}>
-                            <TableCell sx={{ fontSize: 13, fontWeight: 500 }}>{merchant.name}</TableCell>
-                            <TableCell align="right" sx={{ fontSize: 13 }}>
+                          <TableRow key={index} sx={{ '&:hover': { bgcolor: '#f3e5f5' } }}>
+                            <TableCell sx={{ fontSize: { xs: 11, md: 13 }, fontWeight: 500, padding: { xs: '4px', md: '8px' } }}>{merchant.name}</TableCell>
+                            <TableCell align="right" sx={{ fontSize: { xs: 11, md: 13 }, padding: { xs: '4px', md: '8px' } }}>
                               <Chip 
                                 label={merchant.successfulTransactions} 
                                 size="small" 
-                                sx={{ bgcolor: '#e3f2fd', color: '#1565c0', fontWeight: 600 }} 
+                                sx={{ bgcolor: '#e1bee7', color: '#7b1fa2', fontWeight: 600, fontSize: { xs: 9, md: 11 } }} 
                               />
                             </TableCell>
-                            <TableCell align="right" sx={{ fontSize: 13, fontWeight: 500 }}>
-                              LKR {merchant.totalValue?.toFixed(0) || 'N/A'}
+                            <TableCell align="right" sx={{ fontSize: { xs: 11, md: 13 }, fontWeight: 500, padding: { xs: '4px', md: '8px' } }}>
+                              RS: {merchant.totalValue?.toFixed(0) || 'N/A'}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -534,35 +543,38 @@ const AdminDashboard = () => {
               </Grid>
 
               {/* Top Drivers */}
-              <Grid item xs={12} md={4}>
+              <Grid item xs={4} md={4}>
                 <Paper 
                   elevation={0}
                   sx={{ 
-                    p: 3, 
+                    p: { xs: 1.5, md: 3 }, 
                     height: '100%',
                     background: 'rgba(255,255,255,0.9)',
                     border: "1px solid #E5E7EB",
                     borderRadius: 3,
                     backdropFilter: 'blur(10px)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                    width: '100%',
+                    maxWidth: '100%',
+                    overflow: 'hidden'
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 1.5, md: 2 } }}>
                     <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#ef6c00', mb: 0.5, fontSize: { xs: 15, md: 17 } }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#7b1fa2', mb: 0.5, fontSize: { xs: 13, md: 17 } }}>
                         Top Drivers
                       </Typography>
-                      <Typography variant="body2" color="#ef6c00" sx={{ fontSize: { xs: 12, md: 13 } }}>
+                      <Typography variant="body2" color="#7b1fa2" sx={{ fontSize: { xs: 10, md: 13 } }}>
                         Leading by bookings
                       </Typography>
                     </Box>
                     <Avatar 
                       sx={{ 
-                        background: '#ffcc02',
-                        color: '#ef6c00',
-                        width: 40,
-                        height: 40,
-                        boxShadow: '0 2px 8px rgba(239, 108, 0, 0.12)'
+                        background: '#ce93d8',
+                        color: '#7b1fa2',
+                        width: { xs: 32, md: 40 },
+                        height: { xs: 32, md: 40 },
+                        boxShadow: '0 2px 8px rgba(123, 31, 162, 0.12)'
                       }}
                     >
                       <LocalShipping fontSize="small" />
@@ -572,23 +584,23 @@ const AdminDashboard = () => {
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell sx={{ fontWeight: 600, color: '#ef6c00', fontSize: 12 }}>Name</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600, color: '#ef6c00', fontSize: 12 }}>Bookings</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600, color: '#ef6c00', fontSize: 12 }}>Clients</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: '#7b1fa2', fontSize: { xs: 10, md: 12 } }}>Name</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600, color: '#7b1fa2', fontSize: { xs: 10, md: 12 } }}>Bookings</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600, color: '#7b1fa2', fontSize: { xs: 10, md: 12 } }}>Clients</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {analytics.topDrivers?.slice(0, 5).map((driver, index) => (
-                          <TableRow key={index} sx={{ '&:hover': { bgcolor: '#fff8e1' } }}>
-                            <TableCell sx={{ fontSize: 13, fontWeight: 500 }}>{driver.name}</TableCell>
-                            <TableCell align="right" sx={{ fontSize: 13 }}>
+                          <TableRow key={index} sx={{ '&:hover': { bgcolor: '#f3e5f5' } }}>
+                            <TableCell sx={{ fontSize: { xs: 11, md: 13 }, fontWeight: 500, padding: { xs: '4px', md: '8px' } }}>{driver.name}</TableCell>
+                            <TableCell align="right" sx={{ fontSize: { xs: 11, md: 13 }, padding: { xs: '4px', md: '8px' } }}>
                               <Chip 
                                 label={driver.bookingCount} 
                                 size="small" 
-                                sx={{ bgcolor: '#fff3e0', color: '#ef6c00', fontWeight: 600 }} 
+                                sx={{ bgcolor: '#e1bee7', color: '#7b1fa2', fontWeight: 600, fontSize: { xs: 9, md: 11 } }} 
                               />
                             </TableCell>
-                            <TableCell align="right" sx={{ fontSize: 13, fontWeight: 500 }}>
+                            <TableCell align="right" sx={{ fontSize: { xs: 11, md: 13 }, fontWeight: 500, padding: { xs: '4px', md: '8px' } }}>
                               {driver.merchantCount}
                             </TableCell>
                           </TableRow>
@@ -623,7 +635,7 @@ const AdminDashboard = () => {
               </Typography>
             </Box>
 
-            <Grid container spacing={{ xs: 2.5, md: 4 }}>
+            <Grid container spacing={{ xs: 1, md: 1 }}>
               <Grid item xs={12}>
                 <Paper 
                   elevation={0}
@@ -638,20 +650,20 @@ const AdminDashboard = () => {
                 >
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#4caf50', mb: 0.5 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#7b1fa2', mb: 0.5 }}>
                         Product Demand Analytics
                       </Typography>
-                      <Typography variant="body2" color="#4caf50">
+                      <Typography variant="body2" color="#7b1fa2">
                         Real-time bidding trends and market insights
                       </Typography>
                     </Box>
                     <Avatar 
                       sx={{ 
-                        background: '#c8e6c9',
-                        color: '#4caf50',
+                        background: '#ce93d8',
+                        color: '#7b1fa2',
                         width: 48,
                         height: 48,
-                        boxShadow: '0 2px 8px rgba(76, 175, 80, 0.12)'
+                        boxShadow: '0 2px 8px rgba(123, 31, 162, 0.12)'
                       }}
                     >
                       <AttachMoney />
@@ -660,11 +672,11 @@ const AdminDashboard = () => {
                   <TableContainer>
                     <Table>
                       <TableHead>
-                        <TableRow sx={{ bgcolor: '#f8f9fa' }}>
-                          <TableCell sx={{ fontWeight: 700, color: '#4caf50', fontSize: 14 }}>Product</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 700, color: '#4caf50', fontSize: 14 }}>Total Bids</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 700, color: '#4caf50', fontSize: 14 }}>Bidders</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 700, color: '#4caf50', fontSize: 14 }}>Avg Bid</TableCell>
+                        <TableRow sx={{ bgcolor: '#f3e5f5' }}>
+                          <TableCell sx={{ fontWeight: 700, color: '#7b1fa2', fontSize: 14 }}>Product</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 700, color: '#7b1fa2', fontSize: 14 }}>Total Bids</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 700, color: '#7b1fa2', fontSize: 14 }}>Bidders</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 700, color: '#7b1fa2', fontSize: 14 }}>Avg Bid</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -672,7 +684,7 @@ const AdminDashboard = () => {
                           <TableRow 
                             key={index} 
                             sx={{ 
-                              '&:hover': { bgcolor: '#f1f8e9' },
+                              '&:hover': { bgcolor: '#f3e5f5' },
                               '&:nth-of-type(even)': { bgcolor: '#fafafa' }
                             }}
                           >
@@ -683,7 +695,7 @@ const AdminDashboard = () => {
                                     width: 8,
                                     height: 8,
                                     borderRadius: '50%',
-                                    background: 'linear-gradient(45deg, #4caf50, #8bc34a)'
+                                    background: 'linear-gradient(45deg, #7b1fa2, #9c27b0)'
                                   }}
                                 />
                                 {product._id}
@@ -694,8 +706,8 @@ const AdminDashboard = () => {
                                 label={product.totalBids} 
                                 size="small" 
                                 sx={{ 
-                                  bgcolor: '#e8f5e8', 
-                                  color: '#2e7d32', 
+                                  bgcolor: '#e1bee7', 
+                                  color: '#7b1fa2', 
                                   fontWeight: 600,
                                   fontSize: 12
                                 }} 
@@ -704,8 +716,8 @@ const AdminDashboard = () => {
                             <TableCell align="right" sx={{ fontSize: 14, fontWeight: 500 }}>
                               {product.uniqueBidders}
                             </TableCell>
-                            <TableCell align="right" sx={{ fontSize: 14, fontWeight: 600, color: '#4caf50' }}>
-                              LKR {product.averageBidAmount?.toFixed(0) || 'N/A'}
+                            <TableCell align="right" sx={{ fontSize: 14, fontWeight: 600, color: '#7b1fa2' }}>
+                              RS: {product.averageBidAmount?.toFixed(0) || 'N/A'}
                             </TableCell>
                           </TableRow>
                         ))}

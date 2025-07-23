@@ -440,7 +440,7 @@ const TransporterDashboard = ({ user }) => {
                     Top Drivers
                   </Typography>
                   <Typography variant="body2" color="#1565c0" sx={{ fontSize: { xs: 12, md: 13 } }}>
-                    Your most active transport partners
+                    Most active transport partners
                   </Typography>
                 </Box>
                 <Avatar 

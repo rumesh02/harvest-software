@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { getRoleColor } from '../utils/roleColors';
 import { 
   Box, 
   Typography, 
@@ -35,16 +36,6 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
       case 'merchant': return <BusinessIcon {...iconProps} />;
       case 'transporter': return <TruckIcon {...iconProps} />;
       default: return <PersonIcon {...iconProps} />;
-    }
-  };
-
-  // Get role color
-  const getRoleColor = (role) => {
-    switch (role?.toLowerCase()) {
-      case 'farmer': return '#059669';
-      case 'merchant': return '#dc2626';
-      case 'transporter': return '#2563eb';
-      default: return '#6b7280';
     }
   };
 
@@ -479,8 +470,8 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
                     sx={{ 
                       width: 44, 
                       height: 44,
-                      bgcolor: chat.unreadCount > 0 ? '#D97706' : getRoleColor(chat.role),
-                      border: `2px solid ${getRoleColor(chat.role)}`,
+                      bgcolor: chat.unreadCount > 0 ? '#D97706' : getRoleColor(chat.role).primary,
+                      border: `2px solid ${getRoleColor(chat.role).primary}`,
                       fontSize: '16px',
                       fontWeight: 600
                     }}
@@ -518,11 +509,11 @@ const RecentChats = ({ userId, onChatSelect, refreshTrigger }) => {
                             height: '18px',
                             fontSize: '0.7rem',
                             fontWeight: 600,
-                            backgroundColor: `${getRoleColor(chat.role)}15`,
-                            color: getRoleColor(chat.role),
+                            backgroundColor: `${getRoleColor(chat.role).primary}15`,
+                            color: getRoleColor(chat.role).primary,
                             textTransform: 'capitalize',
                             '& .MuiChip-icon': {
-                              color: getRoleColor(chat.role),
+                              color: getRoleColor(chat.role).primary,
                               fontSize: '12px',
                             },
                           }}

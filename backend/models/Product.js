@@ -28,4 +28,23 @@ const productSchema = new mongoose.Schema({
 
 }, { collection: 'products' }); // Explicitly specify collection name
 
+// Create text index for efficient search
+productSchema.index({ 
+  name: 'text', 
+  description: 'text', 
+  type: 'text' 
+}, {
+  weights: {
+    name: 10,        // Give name highest priority
+    type: 5,         // Type medium priority
+    description: 1   // Description lowest priority
+  },
+  name: 'product_text_index'
+});
+
+// Create compound index for common queries
+productSchema.index({ farmerID: 1, listedDate: -1 });
+productSchema.index({ price: 1, listedDate: -1 });
+productSchema.index({ type: 1, listedDate: -1 });
+
 module.exports = mongoose.model("Product", productSchema);

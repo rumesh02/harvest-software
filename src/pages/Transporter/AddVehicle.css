@@ -84,9 +84,11 @@
   margin-bottom: 25px;
 }
 
-/* Input Fields */
-input,
-.text-field {
+/* Input Fields - scoped to add-vehicle container only */
+.add-vehicle-container input,
+.add-vehicle-page input,
+.add-vehicle-container .text-field,
+.add-vehicle-page .text-field {
   width: 100%;
   padding: 12px 16px;
   border: 2px solid #e2e8f0;
@@ -96,22 +98,28 @@ input,
   transition: all 0.3s ease;
 }
 
-input:focus,
-.text-field:focus {
+.add-vehicle-container input:focus,
+.add-vehicle-page input:focus,
+.add-vehicle-container .text-field:focus,
+.add-vehicle-page .text-field:focus {
   outline: none;
   border-color: #667eea;
   background: white;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-input:hover,
-.text-field:hover {
+.add-vehicle-container input:hover,
+.add-vehicle-page input:hover,
+.add-vehicle-container .text-field:hover,
+.add-vehicle-page .text-field:hover {
   border-color: #cbd5e0;
 }
 
-/* Label */
-label,
-.field-label {
+/* Label - scoped to add-vehicle container only */
+.add-vehicle-container label,
+.add-vehicle-page label,
+.add-vehicle-container .field-label,
+.add-vehicle-page .field-label {
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 12px;
@@ -241,9 +249,11 @@ label,
   color: #2d3748;
 }
 
-/* Buttons */
-button,
-.submit-button {
+/* Buttons - scoped to add-vehicle container only */
+.add-vehicle-container button,
+.add-vehicle-page button,
+.add-vehicle-container .submit-button,
+.add-vehicle-page .submit-button {
   color: white;
   background-color: #1565c0;
   padding: 12px 24px;
@@ -258,14 +268,17 @@ button,
   align-self: flex-start;
 }
 
-button:hover:not(:disabled),
-.submit-button:hover {
+.add-vehicle-container button:hover:not(:disabled),
+.add-vehicle-page button:hover:not(:disabled),
+.add-vehicle-container .submit-button:hover,
+.add-vehicle-page .submit-button:hover {
   transform: translateY(-2px);
-
 }
 
-button:disabled,
-.submit-button:disabled {
+.add-vehicle-container button:disabled,
+.add-vehicle-page button:disabled,
+.add-vehicle-container .submit-button:disabled,
+.add-vehicle-page .submit-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
@@ -315,8 +328,10 @@ button:disabled,
     padding: 15px;
   }
 
-  input,
-  button {
+  .add-vehicle-container input,
+  .add-vehicle-page input,
+  .add-vehicle-container button,
+  .add-vehicle-page button {
     font-size: 14px;
   }
 

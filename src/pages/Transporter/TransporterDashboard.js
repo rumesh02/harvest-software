@@ -41,31 +41,49 @@ const TransporterDashboard = ({ user }) => {
     topDrivers: []
   });
   const [vehicleCount, setVehicleCount] = useState(0);
-  const [loadingVehicles, setLoadingVehicles] = useState(true);
-  const [loadingDrivers, setLoadingDrivers] = useState(true);
-  const [loading, setLoading] = useState(true);
+  const [loadingVehicles, setLoadingVehicles] = useState(false);
+  const [loadingDrivers, setLoadingDrivers] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchDashboard = async () => {
-      if (!user || !user.sub) return;
+      if (!user?.sub) {
+        console.log("User or user.sub not available yet, skipping dashboard fetch");
+        return;
+      }
+      
       try {
         setLoading(true);
         const res = await api.get(`/dashboard/transporter/${user.sub}`);
         console.log("Dashboard data:", res.data);
-        setDashboardData(res.data);
+        setDashboardData(prev => ({
+          ...prev,
+          totalBookings: res.data.totalBookings || 0,
+          monthlyData: res.data.monthlyData || []
+        }));
       } catch (err) {
         console.error("Dashboard fetch error:", err);
+        // Set default values on error
+        setDashboardData(prev => ({
+          ...prev,
+          totalBookings: 0,
+          monthlyData: []
+        }));
       } finally {
         setLoading(false);
       }
     };
 
     const fetchVehicleCount = async () => {
-      if (!user || !user.sub) return;
+      if (!user?.sub) {
+        console.log("User or user.sub not available yet, skipping vehicle count fetch");
+        return;
+      }
+      
       try {
         setLoadingVehicles(true);
         const vehicles = await getVehicles(user.sub);
-        setVehicleCount(vehicles.length);
+        setVehicleCount(vehicles?.length || 0);
       } catch (err) {
         console.error("Vehicle count fetch error:", err);
         setVehicleCount(0);
@@ -75,38 +93,55 @@ const TransporterDashboard = ({ user }) => {
     };
 
     const fetchTopDrivers = async () => {
-      if (!user || !user.sub) return;
+      if (!user?.sub) {
+        console.log("User or user.sub not available yet, skipping top drivers fetch");
+        return;
+      }
+      
       try {
         setLoadingDrivers(true);
         
-        // 🚛 Use the new Top Transporters API endpoint
+        // 🚛 Use the new Top Transporters API endpoint with better error handling
+        console.log("Attempting to fetch top transporters...");
         const response = await api.get('/dashboard/top-transporters', {
           params: {
             limit: 10
-            // Removed status filter to include all bookings regardless of status
-          }
+          },
+          timeout: 10000 // 10 second timeout
         });
         
-        console.log("Fetched top transporters:", response.data);
+        console.log("Top transporters API response:", response.data);
         
-        if (response.data.success && response.data.data.topTransporters) {
+        if (response.data?.success && response.data?.data?.topTransporters) {
+          const topTransporters = response.data.data.topTransporters;
+          console.log(`Successfully loaded ${topTransporters.length} top transporters`);
           setDashboardData(prev => ({ 
             ...prev, 
-            topDrivers: response.data.data.topTransporters 
+            topDrivers: topTransporters 
           }));
         } else {
-          console.log("No top transporters found in response");
-          setDashboardData(prev => ({ ...prev, topDrivers: [] }));
+          console.log("No top transporters found in API response, trying fallback");
+          throw new Error("Invalid API response structure");
         }
         
       } catch (err) {
-        console.error("Top transporters fetch error:", err);
+        console.error("Top transporters API error:", err.message);
+        console.log("Attempting fallback method...");
+        
         // Fallback to the existing implementation if new API fails
         try {
-          const bookingsRes = await api.get(`/bookings/transporter/${user.sub}`);
-          const bookings = bookingsRes.data.bookings || bookingsRes.data || [];
+          const bookingsRes = await api.get(`/bookings/transporter/${user.sub}`, {
+            timeout: 10000
+          });
+          const bookings = bookingsRes.data?.bookings || bookingsRes.data || [];
           
-          console.log("Fallback: Fetched bookings for transporter:", bookings);
+          console.log(`Fallback: Processing ${bookings.length} bookings for transporter`);
+          
+          if (bookings.length === 0) {
+            console.log("No bookings found, setting empty top drivers list");
+            setDashboardData(prev => ({ ...prev, topDrivers: [] }));
+            return;
+          }
           
           // Group bookings by driver and count them
           const driverBookingCounts = {};
@@ -145,10 +180,12 @@ const TransporterDashboard = ({ user }) => {
             .sort((a, b) => b.bookingCount - a.bookingCount)
             .slice(0, 10); // Get top 10 drivers
           
+          console.log(`Fallback: Found ${topDriversArray.length} drivers`);
           setDashboardData(prev => ({ ...prev, topDrivers: topDriversArray }));
           
         } catch (fallbackErr) {
-          console.error("Fallback drivers fetch error:", fallbackErr);
+          console.error("Fallback drivers fetch error:", fallbackErr.message);
+          // Set empty array as final fallback
           setDashboardData(prev => ({ ...prev, topDrivers: [] }));
         }
       } finally {
@@ -156,9 +193,19 @@ const TransporterDashboard = ({ user }) => {
       }
     };
 
-    fetchDashboard();
-    fetchVehicleCount();
-    fetchTopDrivers();
+    // Only fetch data if user is available
+    if (user?.sub) {
+      console.log("User available, fetching dashboard data for:", user.sub);
+      fetchDashboard();
+      fetchVehicleCount();
+      fetchTopDrivers();
+    } else {
+      console.log("User not available yet, waiting...");
+      // Set loading states to false if user is not available
+      setLoading(false);
+      setLoadingVehicles(false);
+      setLoadingDrivers(false);
+    }
   }, [user]);
 
   // Enhanced stat card data matching farmer dashboard style
@@ -205,7 +252,10 @@ const TransporterDashboard = ({ user }) => {
   // Check if we have any data to display
   const hasData = dashboardData.totalBookings > 0 || vehicleCount > 0 || (dashboardData.monthlyData && dashboardData.monthlyData.length > 0);
 
-  if (loading && loadingVehicles && loadingDrivers) {
+  // Show loading only if all three are still loading AND user is available
+  const isLoading = user?.sub && (loading || loadingVehicles || loadingDrivers);
+
+  if (isLoading) {
     return (
       <Box sx={{ 
         display: 'flex', 
@@ -218,6 +268,25 @@ const TransporterDashboard = ({ user }) => {
           <CircularProgress size={60} sx={{ color: '#1976d2', mb: 2 }} />
           <Typography variant="h6" color="text.secondary">
             Loading Dashboard...
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
+
+  // If user is not available, show a message
+  if (!user?.sub) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '50vh',
+        background: '#f9f9f9'
+      }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary">
+            Please log in to view your dashboard
           </Typography>
         </Box>
       </Box>

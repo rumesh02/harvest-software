@@ -428,20 +428,7 @@ const MerchantDashboard = () => {
             <Typography variant="body2" color="#92400e" sx={{ fontWeight: 400, fontSize: { xs: 15, md: 16 } }}>
               Track your purchases and business analytics
             </Typography>
-            {dataLoaded && (
-              <Chip
-                size="small"
-                label={cacheAge === 0 ? "Fresh" : `Cached ${cacheAge}m ago`}
-                sx={{
-                  background: cacheAge === 0 ? '#22c55e' : '#3b82f6',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: 10,
-                  height: 20,
-                  '& .MuiChip-label': { px: 1 }
-                }}
-              />
-            )}
+            
           </Box>
           {/* Refresh Button */}
           <IconButton

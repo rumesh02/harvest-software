@@ -38,7 +38,7 @@ const AdminSidebar = () => {
         marginBottom: "32px",
         paddingLeft: "24px"
       }}>
-        <img src="/images/logo.png" alt="Logo" width={32} height={32} />
+        <img src="/NewLogo.png" alt="Logo" width={32} height={32} />
         <h2 style={{
           fontSize: "17px",
           fontWeight: "bold",

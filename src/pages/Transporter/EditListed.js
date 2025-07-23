@@ -455,9 +455,12 @@ const EditListed = () => {
               <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
                 You have no vehicles listed on the platform
               </Typography>
+
             </Paper>
           ) : (
-            <Grid container spacing={2} justifyContent="flex-start">
+
+            <Grid container spacing={3} justifyContent="flex-start">
+
               {vehicles.map((vehicle) => (
                 <Grid item xs={12} sm={6} md={3} key={vehicle._id} sx={{ display: 'flex', justifyContent: 'center' }}>
                   <VehicleCard 

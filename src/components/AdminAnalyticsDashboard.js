@@ -47,7 +47,7 @@ const AdminAnalyticsDashboard = () => {
     
     try {
       const token = localStorage.getItem('token'); // Adjust based on your auth implementation
-      const response = await axios.get('/api/admin/analytics', {
+      const response = await axios.get('http://localhost:5000/api/admin/analytics', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

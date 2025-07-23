@@ -150,11 +150,10 @@ function LoginPage() {
                 </Stack>
               </Box>
             ) : (
-              <Box component="form" noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box component="form" noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 2, px: 1 }}>
                 <Button
                   type="button"
                   variant="contained"
-                  fullWidth
                   sx={{ 
                     backgroundColor: green[600], 
                     fontWeight: 600, 
@@ -163,6 +162,9 @@ function LoginPage() {
                     textTransform: 'none', 
                     boxShadow: 1,
                     py: 1.5,
+                    px: 4,
+                    minWidth: '280px',
+                    width: '100%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -175,7 +177,6 @@ function LoginPage() {
                 <Button
                   type="button"
                   variant="outlined"
-                  fullWidth
                   startIcon={<FaGoogle size={16} />}
                   sx={{ 
                     color: grey[700], 
@@ -185,6 +186,9 @@ function LoginPage() {
                     borderRadius: 2, 
                     textTransform: 'none', 
                     py: 1.5,
+                    px: 4,
+                    minWidth: '280px',
+                    width: '100%',
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',

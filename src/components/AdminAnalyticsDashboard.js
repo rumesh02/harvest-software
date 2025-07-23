@@ -1,39 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  Avatar,
-  Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  CircularProgress,
-  Alert,
-  Divider,
-  LinearProgress,
-  IconButton,
-  Tooltip
-} from '@mui/material';
-import {
-  TrendingUp,
-  People,
-  ShoppingCart,
-  LocalShipping,
-  Agriculture,
-  Store,
-  Refresh,
-  Assessment,
-  Star,
-  Timeline
-} from '@mui/icons-material';
 import axios from 'axios';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import './AdminAnalyticsDashboard.css';
 
 const AdminAnalyticsDashboard = () => {
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -46,7 +15,7 @@ const AdminAnalyticsDashboard = () => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('token'); // Adjust based on your auth implementation
+      const token = localStorage.getItem('token');
       const response = await axios.get('http://localhost:5000/api/admin/analytics', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -73,94 +42,85 @@ const AdminAnalyticsDashboard = () => {
     fetchAnalytics();
   }, []);
 
-  const StatCard = ({ title, value, icon, color, subtitle }) => (
-    <Card sx={{ height: '100%', background: `linear-gradient(135deg, ${color}20, ${color}10)` }}>
-      <CardContent>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box>
-            <Typography variant="h4" fontWeight="bold" color={color}>
-              {value}
-            </Typography>
-            <Typography variant="h6" color="text.primary" gutterBottom>
-              {title}
-            </Typography>
+  const StatCard = ({ title, value, icon, subtitle }) => (
+    <div className="card purple-card h-100">
+      <div className="card-body">
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+            <h4 className="text-purple fw-bold mb-1">{value}</h4>
+            <h6 className="card-title mb-1">{title}</h6>
             {subtitle && (
-              <Typography variant="body2" color="text.secondary">
-                {subtitle}
-              </Typography>
+              <small className="text-muted">{subtitle}</small>
             )}
-          </Box>
-          <Avatar sx={{ bgcolor: color, width: 56, height: 56 }}>
-            {icon}
-          </Avatar>
-        </Box>
-      </CardContent>
-    </Card>
+          </div>
+          <div className="avatar-purple">
+            <i className={`bi ${icon} fs-2`}></i>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 
-  const TopPerformerCard = ({ title, data, icon, color, type }) => (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
-        <Box display="flex" alignItems="center" mb={2}>
-          <Avatar sx={{ bgcolor: color, mr: 2 }}>
-            {icon}
-          </Avatar>
-          <Typography variant="h6" fontWeight="bold">
-            {title}
-          </Typography>
-        </Box>
+  const TopPerformerCard = ({ title, data, icon, type }) => (
+    <div className="card purple-card h-100">
+      <div className="card-body">
+        <div className="d-flex align-items-center mb-3">
+          <div className="avatar-purple me-3">
+            <i className={`bi ${icon}`}></i>
+          </div>
+          <h6 className="text-purple fw-bold mb-0">{title}</h6>
+        </div>
         
         {data && data.length > 0 ? (
-          <Box>
+          <div>
             {data.map((item, index) => (
-              <Box key={index} mb={2}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                  <Typography variant="body1" fontWeight="500">
+              <div key={index} className="mb-3">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-medium">
                     {index + 1}. {item[`${type}Name`] || 'Unknown'}
-                  </Typography>
-                  <Chip 
-                    label={`${item.totalTransactions || item.totalBookings} ${type === 'transporter' ? 'bookings' : 'transactions'}`}
-                    size="small" 
-                    color="primary"
-                  />
-                </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={((item.totalTransactions || item.totalBookings) / (data[0].totalTransactions || data[0].totalBookings)) * 100}
-                  sx={{ height: 6, borderRadius: 3, bgcolor: `${color}20` }}
-                />
-              </Box>
+                  </span>
+                  <span className="badge purple-badge">
+                    {item.totalTransactions || item.totalBookings} {type === 'transporter' ? 'bookings' : 'transactions'}
+                  </span>
+                </div>
+                <div className="progress purple-progress">
+                  <div 
+                    className="progress-bar" 
+                    style={{
+                      width: `${((item.totalTransactions || item.totalBookings) / (data[0].totalTransactions || data[0].totalBookings)) * 100}%`
+                    }}
+                  ></div>
+                </div>
+              </div>
             ))}
-          </Box>
+          </div>
         ) : (
-          <Typography color="text.secondary">No data available</Typography>
+          <p className="text-muted">No data available</p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 
   const ProductDemandTable = ({ products }) => (
-    <Card>
-      <CardContent>
-        <Box display="flex" alignItems="center" mb={2}>
-          <ShoppingCart sx={{ mr: 1, color: '#ff9800' }} />
-          <Typography variant="h6" fontWeight="bold">
-            Most Demanded Products
-          </Typography>
-        </Box>
+    <div className="card purple-card">
+      <div className="card-body">
+        <div className="d-flex align-items-center mb-3">
+          <i className="bi bi-cart3 text-purple me-2"></i>
+          <h6 className="text-purple fw-bold mb-0">Most Demanded Products</h6>
+        </div>
         
-        <TableContainer component={Paper} elevation={0}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell><strong>Rank</strong></TableCell>
-                <TableCell><strong>Product Name</strong></TableCell>
-                <TableCell align="center"><strong>Total Bids</strong></TableCell>
-                <TableCell align="center"><strong>Accepted Bids</strong></TableCell>
-                <TableCell align="center"><strong>Success Rate</strong></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
+        <div className="table-responsive">
+          <table className="table table-hover">
+            <thead className="table-light">
+              <tr>
+                <th className="text-purple fw-bold">Rank</th>
+                <th className="text-purple fw-bold">Product Name</th>
+                <th className="text-center text-purple fw-bold">Total Bids</th>
+                <th className="text-center text-purple fw-bold">Accepted Bids</th>
+                <th className="text-center text-purple fw-bold">Success Rate</th>
+              </tr>
+            </thead>
+            <tbody>
               {products && products.length > 0 ? (
                 products.map((product, index) => {
                   const successRate = product.totalBids > 0 
@@ -168,201 +128,193 @@ const AdminAnalyticsDashboard = () => {
                     : 0;
                   
                   return (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Box display="flex" alignItems="center">
-                          {index < 3 && <Star sx={{ color: '#ffd700', mr: 1 }} />}
+                    <tr key={index}>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          {index < 3 && <i className="bi bi-star-fill text-purple me-2"></i>}
                           {index + 1}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography fontWeight="500">
-                          {product.productName}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip label={product.totalBids} color="primary" size="small" />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip label={product.acceptedBids} color="success" size="small" />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip 
-                          label={`${successRate}%`} 
-                          color={successRate > 70 ? 'success' : successRate > 40 ? 'warning' : 'error'}
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="fw-medium">{product.productName}</span>
+                      </td>
+                      <td className="text-center">
+                        <span className="badge purple-badge">{product.totalBids}</span>
+                      </td>
+                      <td className="text-center">
+                        <span className="badge purple-badge-light">{product.acceptedBids}</span>
+                      </td>
+                      <td className="text-center">
+                        <span className={`badge ${successRate > 70 ? 'purple-badge-dark' : successRate > 40 ? 'purple-badge' : 'purple-badge-light'}`}>
+                          {successRate}%
+                        </span>
+                      </td>
+                    </tr>
                   );
                 })
               ) : (
-                <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    <Typography color="text.secondary">No product data available</Typography>
-                  </TableCell>
-                </TableRow>
+                <tr>
+                  <td colSpan="5" className="text-center text-muted">
+                    No product data available
+                  </td>
+                </tr>
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </CardContent>
-    </Card>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <Box textAlign="center">
-          <CircularProgress size={60} />
-          <Typography variant="h6" mt={2}>Loading Analytics...</Typography>
-        </Box>
-      </Box>
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
+        <div className="text-center">
+          <div className="spinner-border text-purple" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <h6 className="mt-3">Loading Analytics...</h6>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Box p={3}>
-        <Alert severity="error" action={
-          <IconButton color="inherit" onClick={fetchAnalytics}>
-            <Refresh />
-          </IconButton>
-        }>
+      <div className="container-fluid p-3">
+        <div className="alert alert-danger d-flex justify-content-between align-items-center" role="alert">
           {error}
-        </Alert>
-      </Box>
+          <button 
+            className="btn btn-outline-danger btn-sm" 
+            onClick={fetchAnalytics}
+          >
+            <i className="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box p={3}>
+    <div className="container-fluid p-4">
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Admin Analytics Dashboard
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 className="fw-bold mb-1">Admin Analytics Dashboard</h2>
+          <p className="text-muted mb-0">
             Comprehensive insights into platform performance and user activity
-          </Typography>
-        </Box>
-        <Tooltip title="Refresh Data">
-          <IconButton onClick={fetchAnalytics} color="primary">
-            <Refresh />
-          </IconButton>
-        </Tooltip>
-      </Box>
+          </p>
+        </div>
+        <button 
+          className="btn btn-outline-primary"
+          onClick={fetchAnalytics}
+          title="Refresh Data"
+        >
+          <i className="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
 
       {/* Platform Statistics */}
       {analyticsData?.platformStats && (
         <>
-          <Typography variant="h5" fontWeight="bold" mb={2} display="flex" alignItems="center">
-            <Assessment sx={{ mr: 1 }} />
-            Platform Overview
-          </Typography>
+          <div className="d-flex align-items-center mb-3">
+            <i className="bi bi-graph-up text-purple me-2 fs-5"></i>
+            <h5 className="fw-bold mb-0">Platform Overview</h5>
+          </div>
           
-          <Grid container spacing={3} mb={4}>
-            <Grid item xs={12} sm={6} md={2.4}>
+          <div className="row g-2 mb-4 platform-stats">
+            <div className="col-12 col-sm-6 col-md-2">
               <StatCard
                 title="Total Users"
                 value={analyticsData.platformStats.totalUsers}
-                icon={<People />}
-                color="#2196f3"
+                icon="bi-people"
               />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2.4}>
+            </div>
+            <div className="col-12 col-sm-6 col-md-2">
               <StatCard
                 title="Total Products"
                 value={analyticsData.platformStats.totalProducts}
-                icon={<Agriculture />}
-                color="#4caf50"
+                icon="bi-box-seam"
               />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2.4}>
+            </div>
+            <div className="col-12 col-sm-6 col-md-2">
               <StatCard
                 title="Total Bids"
                 value={analyticsData.platformStats.totalBids}
-                icon={<TrendingUp />}
-                color="#ff9800"
+                icon="bi-graph-up-arrow"
               />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2.4}>
+            </div>
+            <div className="col-12 col-sm-6 col-md-2">
               <StatCard
                 title="Accepted Bids"
                 value={analyticsData.platformStats.acceptedBids}
-                icon={<Star />}
-                color="#9c27b0"
+                icon="bi-star"
               />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2.4}>
+            </div>
+            <div className="col-12 col-sm-6 col-md-4">
               <StatCard
                 title="Success Rate"
                 value={`${analyticsData.platformStats.bidAcceptanceRate}%`}
-                icon={<Timeline />}
-                color="#f44336"
+                icon="bi-speedometer2"
                 subtitle="Bid acceptance rate"
               />
-            </Grid>
-          </Grid>
+            </div>
+          </div>
         </>
       )}
 
-      <Divider sx={{ my: 3 }} />
+      <hr className="my-4" />
 
       {/* Top Performers */}
-      <Typography variant="h5" fontWeight="bold" mb={2} display="flex" alignItems="center">
-        <Star sx={{ mr: 1 }} />
-        Top Performers
-      </Typography>
+      <div className="d-flex align-items-center mb-3">
+        <i className="bi bi-star text-purple me-2 fs-5"></i>
+        <h5 className="fw-bold mb-0">Top Performers</h5>
+      </div>
       
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} md={4}>
+      <div className="row g-1 mb-4">
+        <div className="col-12 col-md-4">
           <TopPerformerCard
             title="Top Farmers"
             data={analyticsData?.topPerformers?.farmers}
-            icon={<Agriculture />}
-            color="#4caf50"
+            icon="bi-box-seam"
             type="farmer"
           />
-        </Grid>
-        <Grid item xs={12} md={4}>
+        </div>
+        <div className="col-12 col-md-4">
           <TopPerformerCard
             title="Top Merchants"
             data={analyticsData?.topPerformers?.merchants}
-            icon={<Store />}
-            color="#2196f3"
+            icon="bi-shop"
             type="merchant"
           />
-        </Grid>
-        <Grid item xs={12} md={4}>
+        </div>
+        <div className="col-12 col-md-4">
           <TopPerformerCard
             title="Top Transporters"
             data={analyticsData?.topPerformers?.transporters}
-            icon={<LocalShipping />}
-            color="#ff9800"
+            icon="bi-truck"
             type="transporter"
           />
-        </Grid>
-      </Grid>
+        </div>
+      </div>
 
       {/* Product Demand Analysis */}
-      <Typography variant="h5" fontWeight="bold" mb={2} display="flex" alignItems="center">
-        <ShoppingCart sx={{ mr: 1 }} />
-        Product Demand Analysis
-      </Typography>
+      <div className="d-flex align-items-center mb-3">
+        <i className="bi bi-cart3 text-purple me-2 fs-5"></i>
+        <h5 className="fw-bold mb-0">Product Demand Analysis</h5>
+      </div>
       
       <ProductDemandTable products={analyticsData?.mostDemandedProducts} />
 
       {/* Footer */}
       {lastUpdated && (
-        <Box mt={3} textAlign="center">
-          <Typography variant="caption" color="text.secondary">
+        <div className="text-center mt-4">
+          <small className="text-muted">
             Last updated: {lastUpdated.toLocaleString()}
-          </Typography>
-        </Box>
+          </small>
+        </div>
       )}
-    </Box>
+    </div>
   );
 };
 

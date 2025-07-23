@@ -1,0 +1,230 @@
+/* AdminAnalyticsDashboard Custom Styles */
+
+/* Purple Color Palette */
+:root {
+  --purple-primary: #7b1fa2;
+  --purple-light: #e1bee7;
+  --purple-lighter: #f3e5f5;
+  --purple-dark: #4a148c;
+  --purple-medium: #9c27b0;
+  --purple-badge: #ce93d8;
+  --purple-badge-light: #ba68c8;
+  --purple-badge-dark: #ab47bc;
+}
+
+/* Text colors */
+.text-purple {
+  color: var(--purple-primary) !important;
+}
+
+/* Purple gradient cards */
+.purple-card {
+  background: linear-gradient(135deg, var(--purple-light), var(--purple-lighter)) !important;
+  border-radius: 12px !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.15) !important;
+  transition: all 0.3s ease !important;
+  min-height: 150px;
+  width: 100%;
+}
+
+.purple-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(156, 39, 176, 0.25) !important;
+}
+
+/* Avatar styling */
+.avatar-purple {
+  width: 56px;
+  height: 56px;
+  background-color: var(--purple-medium);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(156, 39, 176, 0.2);
+}
+
+.avatar-purple.me-3 {
+  width: 40px;
+  height: 40px;
+}
+
+/* Badge styles */
+.purple-badge {
+  background-color: var(--purple-badge) !important;
+  color: var(--purple-dark) !important;
+  font-weight: bold !important;
+}
+
+.purple-badge-light {
+  background-color: var(--purple-badge-light) !important;
+  color: var(--purple-dark) !important;
+  font-weight: bold !important;
+}
+
+.purple-badge-dark {
+  background-color: var(--purple-badge-dark) !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+/* Progress bar styling */
+.purple-progress {
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--purple-lighter);
+}
+
+.purple-progress .progress-bar {
+  background-color: var(--purple-medium) !important;
+  border-radius: 3px;
+}
+
+/* Loading spinner */
+.spinner-border.text-purple {
+  color: var(--purple-primary) !important;
+}
+
+/* Table styling */
+.table-hover tbody tr:hover {
+  background-color: rgba(243, 229, 245, 0.5) !important;
+}
+
+.table-light {
+  background-color: var(--purple-lighter) !important;
+}
+
+/* Button styling */
+.btn-outline-primary {
+  border-color: var(--purple-primary);
+  color: var(--purple-primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--purple-primary);
+  border-color: var(--purple-primary);
+}
+
+/* Custom card body padding */
+.purple-card .card-body {
+  padding: 1.5rem;
+  min-height: 120px;
+}
+
+/* Grid column sizing for wider cards */
+.row.g-2 {
+  --bs-gutter-x: 0.5rem;
+  --bs-gutter-y: 0.5rem;
+}
+
+/* Make platform overview cards wider */
+.platform-stats .col-md-2 {
+  flex: 0 0 auto;
+  width: 19.5%;
+}
+
+.platform-stats .col-md-4 {
+  flex: 0 0 auto;
+  width: 21%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .purple-card .card-body {
+    padding: 1rem;
+  }
+  
+  .avatar-purple {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .avatar-purple i {
+    font-size: 1.2rem;
+  }
+}
+
+/* Bootstrap Icons integration */
+.bi {
+  font-family: 'bootstrap-icons' !important;
+}
+
+/* Custom spacing for grid columns */
+.g-2 > * {
+  padding: 0.5rem;
+}
+
+.g-1 > * {
+  padding: 0.25rem;
+}
+
+/* Wider container for more space */
+.container-fluid {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  max-width: 98%;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+/* Alert styling */
+.alert-danger {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Table responsive wrapper */
+.table-responsive {
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem;
+}
+
+/* Card title styling */
+.card-title {
+  color: var(--purple-primary);
+  font-weight: 600;
+}
+
+/* Small text styling */
+.text-muted {
+  color: #6c757d !important;
+}
+
+/* Progress animation */
+.progress-bar {
+  transition: width 0.6s ease;
+}
+
+/* Hover effects for interactive elements */
+.btn:hover {
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* Container spacing */
+.container-fluid {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  max-width: 98%;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+/* Badge border radius */
+.badge {
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+}
+
+/* Icon sizing */
+.fs-2 {
+  font-size: 2rem !important;
+}
+
+.fs-5 {
+  font-size: 1.25rem !important;
+}

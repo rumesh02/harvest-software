@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import ModernChatBox from './ModernChatBox';
 import RecentChats from './RecentChats';
@@ -6,6 +6,7 @@ import ChatFilterBar from './ChatFilterBar';
 import FilteredUserList from './FilteredUserList';
 import ChatNotificationSystem from './ChatNotificationSystem';
 import useRecentChats from '../hooks/useRecentChats';
+import { getRoleColor } from '../utils/roleColors';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -70,6 +71,10 @@ const ChatContainer = ({ currentUserId }) => {
   const [selectedRole, setSelectedRole] = useState('');
   const [activeTab, setActiveTab] = useState(0); // 0 = Recent Chats, 1 = Find Users
   const [usersLoading, setUsersLoading] = useState(false);
+
+  // Get current user role for theming
+  const currentUserRole = localStorage.getItem('userRole') || 'default';
+  const roleColors = useMemo(() => getRoleColor(currentUserRole), [currentUserRole]);
 
   // Initialize recent chats hook
   const { addNewChat, updateChatMessage, clearUnreadCount, isAPIAvailable } = useRecentChats();
@@ -275,42 +280,41 @@ const ChatContainer = ({ currentUserId }) => {
       return;
     }
     
-    // Clear previous selection first to prevent state mixing
-    console.log('🔄 Clearing previous selected user before setting new one');
-    setSelectedUser(null);
+    const user = allUsers.find((u) => u.auth0Id === chat.userId);
+    console.log('👤 Found user in allUsers:', user);
     
-    // Small delay to ensure state is cleared
-    setTimeout(() => {
-      const user = allUsers.find((u) => u.auth0Id === chat.userId);
-      console.log('👤 Found user in allUsers:', user);
-      
-      if (user) {
-        // Double-check user is not the current user
-        if (user.auth0Id === currentUserId) {
-          console.error('❌ ERROR: Found user is the same as current user! Aborting selection.');
-          return;
-        }
-        
-        console.log('✅ Setting selected user:', {
-          selectedUserAuth0Id: user.auth0Id,
-          selectedUserName: user.name,
-          currentUserId: currentUserId
-        });
-        setSelectedUser(user);
-        setOpenedFromNotification(false); // Reset notification flag for normal selection
-      } else {
-        console.error('❌ User not found in allUsers for chat.userId:', chat.userId);
-        console.log('📋 Available users:', allUsers.map(u => ({ id: u.auth0Id, name: u.name })));
+    if (user) {
+      // Double-check user is not the current user
+      if (user.auth0Id === currentUserId) {
+        console.error('❌ ERROR: Found user is the same as current user! Aborting selection.');
+        return;
       }
-    }, 100);
+      
+      console.log('✅ Setting selected user:', {
+        selectedUserAuth0Id: user.auth0Id,
+        selectedUserName: user.name,
+        currentUserId: currentUserId
+      });
+      setSelectedUser(user);
+      setOpenedFromNotification(false); // Reset notification flag for normal selection
+    } else {
+      console.error('❌ User not found in allUsers for chat.userId:', chat.userId);
+      console.log('📋 Available users:', allUsers.map(u => ({ id: u.auth0Id, name: u.name })));
+    }
   };
 
-  const handleUserSearchSelect = (user) => {
+  const handleUserSearchSelect = async (user) => {
     console.log('🔵 User search select triggered:', user);
     console.log('🔵 addNewChat function available:', typeof addNewChat);
     
+    // Immediately set the selected user and switch to Recent Chats for faster UX
     setSelectedUser(user);
+    setActiveTab(0);
     setOpenedFromNotification(false); // Reset notification flag for normal selection
+    
+    // Clear search filters to hide the dropdown
+    setSearchTerm('');
+    setSelectedRole('');
     
     // Add to recent chats using the hook
     try {
@@ -329,28 +333,23 @@ const ChatContainer = ({ currentUserId }) => {
       console.error('🔴 Error calling addNewChat:', error);
     }
     
-    // Clear search filters to hide the dropdown
-    setSearchTerm('');
-    setSelectedRole('');
-    
     // Trigger refresh of RecentChats component
     setRefreshChats(prev => prev + 1);
-    
-    // Switch back to Recent Chats tab
-    setActiveTab(0);
   };
 
   const handleSearchChange = (term) => {
     setSearchTerm(term);
-    if (term || selectedRole) {
-      setActiveTab(1); // Switch to Find Users tab when searching
+    // Switch to Find Users tab when searching
+    if ((term || selectedRole) && activeTab !== 1) {
+      setActiveTab(1);
     }
   };
 
   const handleRoleFilter = (role) => {
     setSelectedRole(role);
-    if (role || searchTerm) {
-      setActiveTab(1); // Switch to Find Users tab when filtering
+    // Switch to Find Users tab when filtering  
+    if ((role || searchTerm) && activeTab !== 1) {
+      setActiveTab(1);
     }
   };
 
@@ -414,11 +413,10 @@ const ChatContainer = ({ currentUserId }) => {
         sx={{ 
           width: 360, 
           mr: 2,
-          background: 'rgba(255,255,255,0.95)',
-          border: "1px solid #E5E7EB",
+          border: `1px solid ${roleColors.primary}30`,
           borderRadius: 3,
           backdropFilter: 'blur(10px)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          boxShadow: `0 8px 32px ${roleColors.primary}20`,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
@@ -431,10 +429,11 @@ const ChatContainer = ({ currentUserId }) => {
           searchTerm={searchTerm}
           selectedRole={selectedRole}
           onClearFilters={handleClearFilters}
+          roleColors={roleColors}
         />
 
         {/* Tab Navigation */}
-        <Box sx={{ borderBottom: '1px solid #E5E7EB' }}>
+        <Box sx={{ borderBottom: `1px solid ${roleColors.primary}30` }}>
           <Tabs 
             value={activeTab} 
             onChange={handleTabChange}
@@ -448,7 +447,7 @@ const ChatContainer = ({ currentUserId }) => {
                 fontSize: '14px',
               },
               '& .MuiTabs-indicator': {
-                backgroundColor: '#D97706',
+                backgroundColor: roleColors.primary,
               },
             }}
           >
@@ -457,8 +456,8 @@ const ChatContainer = ({ currentUserId }) => {
               label="Recent Chats" 
               iconPosition="start"
               sx={{ 
-                color: activeTab === 0 ? '#D97706' : '#6B7280',
-                '&.Mui-selected': { color: '#D97706' }
+                color: activeTab === 0 ? roleColors.primary : '#6B7280',
+                '&.Mui-selected': { color: roleColors.primary }
               }}
             />
             <Tab 
@@ -466,8 +465,8 @@ const ChatContainer = ({ currentUserId }) => {
               label="Find Users" 
               iconPosition="start"
               sx={{ 
-                color: activeTab === 1 ? '#D97706' : '#6B7280',
-                '&.Mui-selected': { color: '#D97706' }
+                color: activeTab === 1 ? roleColors.primary : '#6B7280',
+                '&.Mui-selected': { color: roleColors.primary }
               }}
             />
           </Tabs>
@@ -545,9 +544,9 @@ const ChatContainer = ({ currentUserId }) => {
               startIcon={<PeopleIcon />}
               onClick={() => setActiveTab(1)}
               sx={{
-                backgroundColor: '#D97706',
+                backgroundColor: roleColors.primary,
                 '&:hover': {
-                  backgroundColor: '#B45309',
+                  backgroundColor: roleColors.dark,
                 },
                 borderRadius: '12px',
                 px: 3,
@@ -561,28 +560,7 @@ const ChatContainer = ({ currentUserId }) => {
           </Box>
         )}
 
-        {/* Quick Access Floating Button */}
-        {selectedUser && activeTab === 0 && (
-          <Fab
-            color="primary"
-            aria-label="find users"
-            onClick={() => setActiveTab(1)}
-            sx={{
-              position: 'absolute',
-              bottom: 24,
-              right: 24,
-              backgroundColor: '#D97706',
-              '&:hover': {
-                backgroundColor: '#B45309',
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.2s ease',
-              zIndex: 1,
-            }}
-          >
-            <PeopleIcon />
-          </Fab>
-        )}
+        {/* Quick Access Floating Button removed as per request */}
       </Paper>
 
       {/* Notification Snackbar */}

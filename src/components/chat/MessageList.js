@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -13,44 +13,79 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { groupMessagesByDate, formatDate, formatTime } from '../../utils/chatUtils';
+import { getRoleColor } from '../../utils/roleColors';
 
-const MessagesContainer = styled(Box)(({ theme }) => ({
+const MessagesContainer = styled(Box)(({ theme, rolecolors }) => ({
   flex: 1,
   overflowY: 'auto',
-  padding: '8px',
+  padding: '12px',
   display: 'flex',
   flexDirection: 'column',
-  gap: '4px',
-  backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23f3f4f6" fill-opacity="0.4"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+  gap: '6px',
+  background: '#ffffff',
+  backgroundImage: `url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="${encodeURIComponent(rolecolors?.primary || '#d1d5db')}" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
   '&::-webkit-scrollbar': {
-    width: '6px',
+    width: '8px',
   },
   '&::-webkit-scrollbar-track': {
     background: 'transparent',
   },
   '&::-webkit-scrollbar-thumb': {
-    background: '#d1d5db',
+    background: rolecolors?.primary || '#d1d5db',
     borderRadius: '10px',
-  },
-  '&::-webkit-scrollbar-thumb:hover': {
-    background: '#9ca3af',
+    '&:hover': {
+      background: rolecolors?.dark || '#6b7280',
+    },
   },
 }));
 
-const MessageBubble = styled(Box)(({ theme, isown }) => ({
+const MessageBubble = styled(Box)(({ theme, isown, rolecolors }) => ({
   maxWidth: '70%',
-  padding: '8px 12px',
-  borderRadius: isown ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-  backgroundColor: isown ? '#dcf8c6' : '#ffffff',
-  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+  padding: '10px 14px',
+  borderRadius: isown ? '20px 20px 6px 20px' : '20px 20px 20px 6px',
+  background: isown 
+    ? rolecolors?.primary || '#1976d2' 
+    : '#ffffff',
+  color: isown ? 'white' : '#1f2937',
+  boxShadow: isown 
+    ? `0 3px 12px ${rolecolors?.primary || '#10b981'}40` 
+    : '0 2px 8px rgba(0,0,0,0.1)',
   position: 'relative',
   wordWrap: 'break-word',
-  marginBottom: '2px',
-  transition: 'all 0.2s ease',
-  border: `1px solid ${isown ? '#c3e88d' : '#e5e7eb'}`,
+  marginBottom: '3px',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  border: `1px solid ${isown ? rolecolors?.dark || '#059669' : '#e5e7eb'}`,
+  backdropFilter: 'blur(10px)',
   '&:hover': {
-    transform: 'scale(1.02)',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    transform: 'scale(1.02) translateY(-1px)',
+    boxShadow: isown 
+      ? `0 6px 20px ${rolecolors?.primary || '#10b981'}50` 
+      : '0 4px 16px rgba(0,0,0,0.15)',
+  },
+  '&::before': isown ? {
+    content: '""',
+    position: 'absolute',
+    bottom: '-1px',
+    right: '-1px',
+    width: '12px',
+    height: '12px',
+    background: 'inherit',
+    borderRadius: '0 0 12px 0',
+    transform: 'rotate(45deg)',
+    borderRight: `1px solid ${rolecolors?.dark || '#059669'}`,
+    borderBottom: `1px solid ${rolecolors?.dark || '#059669'}`,
+  } : {
+    content: '""',
+    position: 'absolute',
+    bottom: '-1px',
+    left: '-1px',
+    width: '12px',
+    height: '12px',
+    background: '#ffffff',
+    borderRadius: '0 0 0 12px',
+    transform: 'rotate(45deg)',
+    borderLeft: '1px solid #e5e7eb',
+    borderBottom: '1px solid #e5e7eb',
   },
 }));
 
@@ -71,16 +106,17 @@ const MessageWrapper = styled(Box)(({ isown }) => ({
   },
 }));
 
-const MessageTime = styled(Typography)(({ theme }) => ({
+const MessageTime = styled(Typography)(({ theme, isown, rolecolors }) => ({
   fontSize: '11px',
-  color: '#667781',
-  marginTop: '2px',
+  color: isown ? 'rgba(255,255,255,0.8)' : '#667781',
+  marginTop: '4px',
   display: 'flex',
   alignItems: 'center',
   gap: '4px',
+  textShadow: isown ? '0 1px 1px rgba(0,0,0,0.2)' : 'none',
 }));
 
-const DateSeparator = styled(Box)(({ theme }) => ({
+const DateSeparator = styled(Box)(({ theme, rolecolors }) => ({
   display: 'flex',
   alignItems: 'center',
   margin: '16px 0 8px 0',
@@ -88,43 +124,38 @@ const DateSeparator = styled(Box)(({ theme }) => ({
     content: '""',
     flex: 1,
     height: '1px',
-    backgroundColor: '#d1d5db',
+    background: rolecolors?.primary || '#d1d5db',
+    opacity: 0.3,
   },
 }));
 
-const DateChip = styled(Chip)(({ theme }) => ({
-  backgroundColor: 'rgba(255,255,255,0.9)',
-  color: '#6b7280',
+const DateChip = styled(Chip)(({ theme, rolecolors }) => ({
+  backgroundColor: 'rgba(255,255,255,0.95)',
+  color: rolecolors?.dark || '#6b7280',
   fontSize: '12px',
   fontWeight: 600,
   height: '28px',
   margin: '0 12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  boxShadow: `0 2px 8px ${rolecolors?.primary || '#1976d2'}20`,
+  border: `1px solid ${rolecolors?.light || '#e5e7eb'}`,
 }));
 
 const TypingIndicator = styled(Box)(({ theme }) => ({
   display: 'flex',
-  alignItems: 'center',
-  padding: '8px 16px',
-  backgroundColor: 'rgba(255,255,255,0.9)',
-  borderRadius: '12px',
-  margin: '4px 0',
-  maxWidth: '120px',
-  '& .typing-dots': {
-    display: 'flex',
-    gap: '2px',
-    '& span': {
-      width: '4px',
-      height: '4px',
-      borderRadius: '50%',
-      backgroundColor: '#9ca3af',
-      animation: 'typingAnimation 1.4s infinite',
-      '&:nth-of-type(2)': {
-        animationDelay: '0.2s',
-      },
-      '&:nth-of-type(3)': {
-        animationDelay: '0.4s',
-      },
+  gap: '3px',
+  '& span': {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    animation: 'typingAnimation 1.4s infinite',
+    '&:nth-of-type(1)': {
+      animationDelay: '0s',
+    },
+    '&:nth-of-type(2)': {
+      animationDelay: '0.2s',
+    },
+    '&:nth-of-type(3)': {
+      animationDelay: '0.4s',
     },
   },
   '@keyframes typingAnimation': {
@@ -133,27 +164,30 @@ const TypingIndicator = styled(Box)(({ theme }) => ({
       opacity: 0.4,
     },
     '30%': {
-      transform: 'translateY(-8px)',
+      transform: 'translateY(-6px)',
       opacity: 1,
     },
   },
 }));
 
 // Message status component
-const MessageStatus = ({ status, isOwn }) => {
+const MessageStatus = ({ status, isOwn, roleColors }) => {
   if (!isOwn) return null;
+  
+  const iconColor = 'rgba(255,255,255,0.8)';
+  const readColor = '#4ade80';
   
   switch (status) {
     case 'sending':
-      return <ScheduleIcon sx={{ fontSize: 12, color: '#9ca3af' }} />;
+      return <ScheduleIcon sx={{ fontSize: 12, color: iconColor }} />;
     case 'sent':
-      return <CheckIcon sx={{ fontSize: 12, color: '#9ca3af' }} />;
+      return <CheckIcon sx={{ fontSize: 12, color: iconColor }} />;
     case 'delivered':
-      return <DoneAllIcon sx={{ fontSize: 12, color: '#9ca3af' }} />;
+      return <DoneAllIcon sx={{ fontSize: 12, color: iconColor }} />;
     case 'read':
-      return <DoneAllIcon sx={{ fontSize: 12, color: '#10b981' }} />;
+      return <DoneAllIcon sx={{ fontSize: 12, color: readColor }} />;
     default:
-      return <CheckIcon sx={{ fontSize: 12, color: '#9ca3af' }} />;
+      return <CheckIcon sx={{ fontSize: 12, color: iconColor }} />;
   }
 };
 
@@ -165,6 +199,13 @@ const MessageList = ({
   loading = false
 }) => {
   const messagesEndRef = useRef(null);
+
+  // Get current user role for theming
+  const currentUserRole = localStorage.getItem('userRole') || 'default';
+  const roleColors = useMemo(() => ({
+    ...getRoleColor(currentUserRole),
+    role: currentUserRole
+  }), [currentUserRole]);
   
   console.log('🔵 MessageList render:', { 
     messagesCount: messages.length,
@@ -229,14 +270,14 @@ const MessageList = ({
 
   if (loading) {
     return (
-      <MessagesContainer>
+      <MessagesContainer rolecolors={roleColors}>
         <Box 
           display="flex" 
           justifyContent="center" 
           alignItems="center" 
           height="100%"
         >
-          <Typography>Loading messages...</Typography>
+          <Typography sx={{ color: roleColors.dark }}>Loading messages...</Typography>
         </Box>
       </MessagesContainer>
     );
@@ -244,18 +285,31 @@ const MessageList = ({
 
   if (messages.length === 0) {
     return (
-      <MessagesContainer>
+      <MessagesContainer rolecolors={roleColors}>
         <Box 
           display="flex" 
           justifyContent="center" 
           alignItems="center" 
           height="100%" 
           flexDirection="column"
+          sx={{ gap: 2 }}
         >
-          <Typography variant="h6" color="textSecondary">
+          <Box sx={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            background: roleColors.primary,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: `0 8px 32px ${roleColors.primary}30`,
+          }}>
+            <Typography variant="h3" sx={{ color: 'white' }}>💬</Typography>
+          </Box>
+          <Typography variant="h6" sx={{ color: roleColors.dark, fontWeight: 600 }}>
             No messages yet
           </Typography>
-          <Typography variant="body2" color="textSecondary">
+          <Typography variant="body2" sx={{ color: roleColors.secondary, textAlign: 'center' }}>
             Start a conversation with {targetUser?.name}
           </Typography>
         </Box>
@@ -266,11 +320,11 @@ const MessageList = ({
   const groupedMessages = groupMessagesByDate(messages);
 
   return (
-    <MessagesContainer>
+    <MessagesContainer rolecolors={roleColors}>
       {Object.entries(groupedMessages).map(([date, msgs]) => (
         <Box key={date}>
-          <DateSeparator>
-            <DateChip label={formatDate(date)} size="small" />
+          <DateSeparator rolecolors={roleColors}>
+            <DateChip rolecolors={roleColors} label={formatDate(date)} size="small" />
           </DateSeparator>
           
           {msgs.map((message, index) => {
@@ -278,11 +332,11 @@ const MessageList = ({
             return (
               <Fade in={true} timeout={300} key={message.id || index}>
                 <MessageWrapper isown={isOwn}>
-                  <MessageBubble isown={isOwn}>
+                  <MessageBubble isown={isOwn} rolecolors={roleColors}>
                     <Typography 
                       variant="body2" 
                       sx={{ 
-                        color: '#1f2937',
+                        color: isOwn ? 'white' : '#1f2937',
                         lineHeight: 1.4,
                         wordBreak: 'break-word'
                       }}
@@ -292,9 +346,9 @@ const MessageList = ({
                         message.message
                       }
                     </Typography>
-                    <MessageTime>
+                    <MessageTime isown={isOwn} rolecolors={roleColors}>
                       {formatTime(message.timestamp)}
-                      <MessageStatus status={message.status} isOwn={isOwn} />
+                      <MessageStatus status={message.status} isOwn={isOwn} roleColors={roleColors} />
                     </MessageTime>
                   </MessageBubble>
                 </MessageWrapper>
@@ -306,16 +360,26 @@ const MessageList = ({
         {typing && (
           <Zoom in={typing}>
             <MessageWrapper isown={false}>
-              <TypingIndicator>
-                <Typography variant="caption" sx={{ mr: 1, color: '#6b7280' }}>
+              <Box sx={{
+                backgroundColor: roleColors.light,
+                border: `1px solid ${roleColors.secondary}`,
+                borderRadius: '18px 18px 18px 4px',
+                padding: '8px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                maxWidth: '70%',
+                boxShadow: `0 2px 8px ${roleColors.primary}20`,
+              }}>
+                <Typography variant="caption" sx={{ color: roleColors.dark }}>
                   {targetUser?.name} is typing
                 </Typography>
-                <div className="typing-dots">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              </TypingIndicator>
+                <TypingIndicator>
+                  <span style={{ backgroundColor: roleColors.primary }} />
+                  <span style={{ backgroundColor: roleColors.primary }} />
+                  <span style={{ backgroundColor: roleColors.primary }} />
+                </TypingIndicator>
+              </Box>
             </MessageWrapper>
           </Zoom>
         )}

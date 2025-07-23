@@ -6,7 +6,7 @@ import {
     DialogContent, DialogActions, DialogContentText, IconButton, Alert,
     Card, CardContent, Grid, Divider
 } from "@mui/material";
-import { ArrowBack, LocalShipping as TruckIcon, OpenInNew as OpenIcon } from "@mui/icons-material";
+import { ArrowBack, LocalShipping as TruckIcon } from "@mui/icons-material";
 import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 import LocationDisplay from "../../components/LocationDisplay";
@@ -30,28 +30,6 @@ const Collection = () => {
     const [orderPreferences, setOrderPreferences] = useState([]);
     const [vehicleBookings, setVehicleBookings] = useState([]);
     const [showBookingStatuses, setShowBookingStatuses] = useState(false);
-
-    // Function to open pickup location in Google Maps with red marker
-    const openLocationInMaps = (location) => {
-        if (!location || location === 'Location not available') {
-            alert('Location not available');
-            return;
-        }
-        // Create URL that shows the location with a red marker using the place search
-        const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(location)}`;
-        window.open(mapsUrl, '_blank');
-    };
-
-    // Function to open destination location in Google Maps with red marker
-    const openDestinationInMaps = (location) => {
-        if (!location || location === 'Location not available' || location === 'Not specified') {
-            alert('Destination location not available');
-            return;
-        }
-        // Create URL that shows the location with a red marker using the place search
-        const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(location)}`;
-        window.open(mapsUrl, '_blank');
-    };
 
     const fetchConfirmedBids = useCallback(async () => {
         try {
@@ -629,46 +607,12 @@ const Collection = () => {
                                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                                     <strong>Weight:</strong> {booking.weight} kg
                                                 </Typography>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                                                    <Typography variant="body2">
-                                                        <strong>From:</strong> {booking.startLocation}
-                                                    </Typography>
-                                                    <Button
-                                                        size="small"
-                                                        variant="outlined"
-                                                        startIcon={<OpenIcon />}
-                                                        onClick={() => openLocationInMaps(booking.startLocation)}
-                                                        disabled={!booking.startLocation}
-                                                        sx={{ 
-                                                            minWidth: 'auto',
-                                                            px: 1,
-                                                            fontSize: '0.75rem',
-                                                            ml: 1
-                                                        }}
-                                                    >
-                                                        Maps
-                                                    </Button>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                                                    <Typography variant="body2">
-                                                        <strong>To:</strong> {booking.endLocation}
-                                                    </Typography>
-                                                    <Button
-                                                        size="small"
-                                                        variant="outlined"
-                                                        startIcon={<OpenIcon />}
-                                                        onClick={() => openDestinationInMaps(booking.endLocation)}
-                                                        disabled={!booking.endLocation}
-                                                        sx={{ 
-                                                            minWidth: 'auto',
-                                                            px: 1,
-                                                            fontSize: '0.75rem',
-                                                            ml: 1
-                                                        }}
-                                                    >
-                                                        Maps
-                                                    </Button>
-                                                </Box>
+                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                    <strong>From:</strong> {booking.startLocation}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                    <strong>To:</strong> {booking.endLocation}
+                                                </Typography>
                                                 
                                                 {booking.transporterDetails && (
                                                     <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>

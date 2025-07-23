@@ -73,23 +73,63 @@ const BrowseListing = () => {
   const [totalResults, setTotalResults] = useState(0);
   const [searchPerformance, setSearchPerformance] = useState(null);
 
+  // Complete list of all 25 districts in Sri Lanka
+  const sriLankanDistricts = [
+    "All Districts",
+    "Ampara",
+    "Anuradhapura", 
+    "Badulla",
+    "Batticaloa",
+    "Colombo",
+    "Galle",
+    "Gampaha",
+    "Hambantota",
+    "Jaffna",
+    "Kalutara",
+    "Kandy",
+    "Kegalle",
+    "Kilinochchi",
+    "Kurunegala",
+    "Mannar",
+    "Matale",
+    "Matara",
+    "Monaragala",
+    "Mullaitivu",
+    "Nuwara Eliya",
+    "Polonnaruwa",
+    "Puttalam",
+    "Ratnapura",
+    "Trincomalee",
+    "Vavuniya"
+  ];
+
   // Fetch available districts and product types on component mount
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/products/districts");
         const availableDistricts = (response.data || []).filter(district => district != null && district !== "");
-        setDistricts(["All Districts", ...availableDistricts]);
+        
+        // Merge API districts with the complete Sri Lankan districts list
+        // Prioritize the complete list but include any additional districts from API
+        const apiDistrictsSet = new Set(availableDistricts.map(d => d.trim()));
+        const completeDistrictsList = [...sriLankanDistricts];
+        
+        // Add any additional districts from API that aren't in our complete list
+        availableDistricts.forEach(district => {
+          const trimmedDistrict = district.trim();
+          if (!sriLankanDistricts.includes(trimmedDistrict) && trimmedDistrict !== "All Districts") {
+            completeDistrictsList.push(trimmedDistrict);
+          }
+        });
+        
+        setDistricts(completeDistrictsList);
+        console.log('Districts loaded:', completeDistrictsList);
       } catch (error) {
         console.error("Error fetching districts:", error);
-        // Fallback to hardcoded districts if API fails
-        setDistricts([
-          "All Districts", "Colombo", "Gampaha", "Kalutara", "Kandy", "Matale", 
-          "Nuwara Eliya", "Galle", "Matara", "Hambantota", "Jaffna", "Kilinochchi", 
-          "Mannar", "Vavuniya", "Mullaitivu", "Batticaloa", "Ampara", "Trincomalee", 
-          "Kurunegala", "Puttalam", "Anuradhapura", "Polonnaruwa", "Badulla", 
-          "Monaragala", "Ratnapura", "Kegalle"
-        ]);
+        // Use the complete Sri Lankan districts list as fallback
+        setDistricts(sriLankanDistricts);
+        console.log('Using fallback districts list');
       }
     };
 

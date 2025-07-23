@@ -49,7 +49,7 @@ const ChatHeader = ({ targetUser, isOnline, lastSeen, onClose, onClearChat, curr
   const [anchorEl, setAnchorEl] = useState(null);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
-  // Get current user role for theming
+  // Get current user role for header theming
   const currentUserRole = localStorage.getItem('userRole') || 'default';
   const roleColors = useMemo(() => ({
     ...getRoleColor(currentUserRole),

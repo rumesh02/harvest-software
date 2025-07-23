@@ -28,6 +28,8 @@ import {
 import { ArrowBack } from "@mui/icons-material";
 import LocateMe from "../components/LocateMe"; // Import LocateMe component
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 const allDistricts = [
   "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo", "Galle",
   "Gampaha", "Hambantota", "Jaffna", "Kalutara", "Kandy", "Kegalle",
@@ -79,7 +81,7 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
         if (productId) {
           setLoadingProduct(true);
           try {
-            const response = await axios.get(`http://localhost:5000/api/products/${productId}`);
+            const response = await axios.get(`${BACKEND_URL}/api/products/${productId}`);
             setProductDetails(response.data);
             console.log("Product details fetched:", response.data);
           } catch (error) {
@@ -89,7 +91,7 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
             // Try to get location information from the original bid
             if (selectedConfirmedBid.bidId) {
               try {
-                const bidResponse = await axios.get(`http://localhost:5000/api/bids/${selectedConfirmedBid.bidId}`);
+                const bidResponse = await axios.get(`${BACKEND_URL}/api/bids/${selectedConfirmedBid.bidId}`);
                 console.log("Bid details:", bidResponse.data);
                 // If bid has location info, use it
                 if (bidResponse.data.location) {
@@ -146,6 +148,16 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
   const [selectedLocationData, setSelectedLocationData] = useState(null); // Track selected location
   const [bookingSuccess, setBookingSuccess] = useState(false); // Track booking success
   const [bookedVehicleDetails, setBookedVehicleDetails] = useState(null); // Store booked vehicle details
+
+  // Debug modal state changes
+  useEffect(() => {
+    console.log("🔄 Modal state changed - openModal:", openModal);
+    console.log("🔄 Selected vehicle:", selectedVehicle);
+  }, [openModal, selectedVehicle]);
+
+  useEffect(() => {
+    console.log("🗺️ Location modal state changed - openLocationModal:", openLocationModal);
+  }, [openLocationModal]);
 
   // Booking form state
   const [bookingForm, setBookingForm] = useState({
@@ -249,7 +261,8 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
 
   // Handle opening the booking modal
   const handleBook = async (vehicle) => {
-    console.log("Selected Vehicle:", vehicle); // Debugging log
+    console.log("🚚 BOOKING BUTTON CLICKED - Selected Vehicle:", vehicle); // Enhanced debugging log
+    console.log("🚚 OPENING BOOKING MODAL..."); // Debugging log
     
     // Calculate total weight of orders
     const totalWeight = selectedOrders?.length > 0 ? 
@@ -258,11 +271,12 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
     
     const vehicleCapacity = parseInt(vehicle.loadCapacity, 10) || 0;
     
-    console.log("Total weight:", totalWeight, "kg");
-    console.log("Vehicle capacity:", vehicleCapacity, "kg");
+    console.log("📊 Total weight:", totalWeight, "kg");
+    console.log("🚛 Vehicle capacity:", vehicleCapacity, "kg");
     
     // Check if total weight exceeds vehicle capacity
     if (totalWeight > vehicleCapacity) {
+      console.log("❌ CAPACITY EXCEEDED!");
       setCapacityError(`Cannot book this vehicle! Total order weight (${totalWeight}kg) exceeds vehicle capacity (${vehicleCapacity}kg). Please choose another vehicle that matches your total quantity.`);
       // Clear error after 5 seconds
       setTimeout(() => setCapacityError(""), 5000);
@@ -271,11 +285,13 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
     
     // Clear any previous capacity errors
     setCapacityError("");
+    console.log("✅ Capacity check passed, proceeding with booking...");
     
     // Fetch transporter details to get contact number
     try {
-      const transporterResponse = await axios.get(`http://localhost:5000/api/users/${encodeURIComponent(vehicle.transporterId)}`);
+      const transporterResponse = await axios.get(`${BACKEND_URL}/api/users/${encodeURIComponent(vehicle.transporterId)}`);
       const transporterData = transporterResponse.data;
+      console.log("👤 Transporter data fetched:", transporterData);
       
       // Set vehicle with transporter contact info
       setSelectedVehicle({
@@ -283,18 +299,21 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
         transporterPhone: transporterData.phone,
         transporterName: transporterData.name
       });
+      console.log("✅ Selected vehicle set with transporter info");
     } catch (error) {
-      console.error("Error fetching transporter details:", error);
+      console.error("❌ Error fetching transporter details:", error);
       // Still set vehicle even if transporter details fail
       setSelectedVehicle({
         ...vehicle,
         transporterPhone: "Contact number not available",
         transporterName: "Name not available"
       });
+      console.log("⚠️ Selected vehicle set without transporter info");
     }
     
     // Don't override booking form if we have multiple orders (already properly initialized)
     if (!selectedOrders || selectedOrders.length <= 1) {
+      console.log("📝 Setting booking form for single order");
       setBookingForm((prev) => ({
         ...prev,
         items: productDetails?.name || selectedConfirmedBid?.items?.[0]?.name || prev.items,
@@ -302,8 +321,13 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
         startLocation: productDetails?.location?.address || "Harvest location not available", // Use product location
         endLocation: "", // Don't auto-fill end location
       }));
+    } else {
+      console.log("📝 Multiple orders detected, keeping existing booking form");
     }
+    
+    console.log("🎯 OPENING BOOKING MODAL - setOpenModal(true)");
     setOpenModal(true);
+    console.log("✅ Booking modal should now be open. openModal state:", true);
   };
 
   // Handle closing the modal
@@ -370,7 +394,7 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
       
       // Fetch transporter details to get phone number
       try {
-        const transporterResponse = await axios.get(`http://localhost:5000/api/users/${encodeURIComponent(selectedVehicle.transporterId)}`);
+        const transporterResponse = await axios.get(`${BACKEND_URL}/api/users/${encodeURIComponent(selectedVehicle.transporterId)}`);
         const transporterData = transporterResponse.data;
         console.log("Transporter details fetched:", transporterData);
         
@@ -671,6 +695,17 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
                     </Typography>
                     <Typography
                       variant="body2"
+                      sx={{ 
+                        mb: 1.5, 
+                        fontSize: "0.85rem",
+                        color: "#1976d2",
+                        fontWeight: 600
+                      }}
+                    >
+                      Price: LKR {vehicle.pricePerKm || "N/A"}/km
+                    </Typography>
+                    <Typography
+                      variant="body2"
                       color="text.secondary"
                       sx={{ mb: 1.5, fontSize: "0.85rem" }}
                     >
@@ -715,19 +750,20 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
         onClose={() => setOpenModal(false)} 
         maxWidth="lg" 
         fullWidth
+        sx={{
+          zIndex: 10000, // Higher than Collection dialog z-index (9999)
+          '& .MuiBackdrop-root': {
+            zIndex: 9999 // Higher than Collection dialog backdrop
+          }
+        }}
         PaperProps={{
           sx: {
             borderRadius: 3,
             maxHeight: '95vh',
             overflow: 'hidden',
-            zIndex: 1300, // Standard MUI Dialog z-index
+            zIndex: 10000, // Ensure paper is on top
             minWidth: '800px',
             width: '90vw'
-          }
-        }}
-        BackdropProps={{
-          sx: {
-            zIndex: 1299
           }
         }}
       >
@@ -815,6 +851,12 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
                 <Box>
                   <Typography variant="body2" color="text.secondary">Load Capacity:</Typography>
                   <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1.1rem' }}>{selectedVehicle?.loadCapacity} kg</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">Price per KM:</Typography>
+                  <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1.1rem', color: '#1976d2' }}>
+                    LKR {selectedVehicle?.pricePerKm || "N/A"}/km
+                  </Typography>
                 </Box>
                 <Box>
                   <Typography variant="body2" color="text.secondary">Transporter Contact:</Typography>
@@ -1411,17 +1453,18 @@ const FindVehicles = ({ selectedOrders, onBack, user: userProp }) => {
         onClose={() => setOpenLocationModal(false)}
         maxWidth="lg"
         fullWidth
+        sx={{
+          zIndex: 10001, // Higher than booking modal (10000)
+          '& .MuiBackdrop-root': {
+            zIndex: 10000 // Same as booking modal backdrop
+          }
+        }}
         PaperProps={{
           sx: {
             borderRadius: 3,
             maxHeight: '90vh',
             overflow: 'hidden',
-            zIndex: 2100, // Higher than booking modal
-          }
-        }}
-        BackdropProps={{
-          sx: {
-            zIndex: 2099
+            zIndex: 10001, // Ensure paper is on top
           }
         }}
       >

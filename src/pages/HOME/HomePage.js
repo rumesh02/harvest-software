@@ -263,7 +263,7 @@ useEffect(() => {
 
   const handleSignUpClick = (role) => {
     localStorage.setItem('selectedRole', role);
-    navigate('/register');
+    navigate('/login');
   };
   
   const scrollToSection = (ref) => {

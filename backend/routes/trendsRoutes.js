@@ -346,7 +346,256 @@ const getFarmerTrends = async (req, res) => {
   }
 };
 
+// Get product price trends with date range filtering
+const getProductTrends = async (req, res) => {
+  try {
+    const { 
+      startDate, 
+      endDate, 
+      groupBy = 'day', // Options: 'day', 'week', 'month'
+      productName 
+    } = req.query;
+
+    console.log('Fetching product trends with parameters:', { startDate, endDate, groupBy, productName });
+
+    // Validate date parameters
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        error: 'Both startDate and endDate are required',
+        example: 'startDate=2024-01-01&endDate=2024-12-31'
+      });
+    }
+
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      return res.status(400).json({ 
+        error: 'Invalid date format. Use YYYY-MM-DD format',
+        example: 'startDate=2024-01-01&endDate=2024-12-31'
+      });
+    }
+
+    if (startDateObj >= endDateObj) {
+      return res.status(400).json({ 
+        error: 'startDate must be before endDate'
+      });
+    }
+
+    const client = await MongoClient.connect(uri);
+    const db = client.db("harvest-sw");
+
+    // Build match criteria
+    let matchCriteria = {
+      listedDate: { 
+        $gte: startDateObj, 
+        $lte: endDateObj 
+      }
+    };
+
+    // Add product name filter if specified
+    if (productName && productName.trim()) {
+      matchCriteria.name = { 
+        $regex: productName.trim(), 
+        $options: 'i' 
+      };
+    }
+
+    // Define grouping stage based on groupBy parameter
+    let groupStage;
+    switch (groupBy.toLowerCase()) {
+      case 'week':
+        groupStage = {
+          _id: {
+            year: { $year: "$listedDate" },
+            week: { $week: "$listedDate" },
+            productName: "$name"
+          },
+          period: {
+            $first: {
+              $concat: [
+                { $toString: { $year: "$listedDate" } },
+                "-W",
+                { $toString: { $week: "$listedDate" } }
+              ]
+            }
+          }
+        };
+        break;
+      case 'month':
+        groupStage = {
+          _id: {
+            year: { $year: "$listedDate" },
+            month: { $month: "$listedDate" },
+            productName: "$name"
+          },
+          period: {
+            $first: {
+              $concat: [
+                { $toString: { $year: "$listedDate" } },
+                "-",
+                { 
+                  $toString: { 
+                    $cond: [
+                      { $lt: [{ $month: "$listedDate" }, 10] },
+                      { $concat: ["0", { $toString: { $month: "$listedDate" } }] },
+                      { $toString: { $month: "$listedDate" } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        };
+        break;
+      default: // 'day'
+        groupStage = {
+          _id: {
+            year: { $year: "$listedDate" },
+            month: { $month: "$listedDate" },
+            day: { $dayOfMonth: "$listedDate" },
+            productName: "$name"
+          },
+          period: {
+            $first: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$listedDate"
+              }
+            }
+          }
+        };
+    }
+
+    // Complete the group stage
+    groupStage.averagePrice = { $avg: "$price" };
+    groupStage.minPrice = { $min: "$price" };
+    groupStage.maxPrice = { $max: "$price" };
+    groupStage.totalQuantity = { $sum: "$quantity" };
+    groupStage.listingCount = { $sum: 1 };
+    groupStage.uniqueFarmers = { $addToSet: "$farmerID" };
+    groupStage.category = { $first: "$type" };
+
+    // Execute aggregation
+    const trendData = await db.collection('products').aggregate([
+      { $match: matchCriteria },
+      { $group: groupStage },
+      {
+        $project: {
+          productName: "$_id.productName",
+          period: 1,
+          averagePrice: { $round: ["$averagePrice", 2] },
+          minPrice: { $round: ["$minPrice", 2] },
+          maxPrice: { $round: ["$maxPrice", 2] },
+          totalQuantity: 1,
+          listingCount: 1,
+          farmerCount: { $size: "$uniqueFarmers" },
+          category: 1,
+          priceVariation: { 
+            $round: [
+              { $subtract: ["$maxPrice", "$minPrice"] }, 
+              2
+            ] 
+          },
+          _id: 0
+        }
+      },
+      { $sort: { period: 1, productName: 1 } }
+    ]).toArray();
+
+    // Get overall summary statistics
+    const summaryStats = await db.collection('products').aggregate([
+      { $match: matchCriteria },
+      {
+        $group: {
+          _id: null,
+          totalProducts: { $sum: 1 },
+          uniqueProductNames: { $addToSet: "$name" },
+          uniqueFarmers: { $addToSet: "$farmerID" },
+          totalQuantity: { $sum: "$quantity" },
+          avgPrice: { $avg: "$price" },
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" },
+          categories: { $addToSet: "$type" }
+        }
+      },
+      {
+        $project: {
+          totalProducts: 1,
+          uniqueProductCount: { $size: "$uniqueProductNames" },
+          uniqueFarmerCount: { $size: "$uniqueFarmers" },
+          totalQuantity: 1,
+          avgPrice: { $round: ["$avgPrice", 2] },
+          minPrice: 1,
+          maxPrice: 1,
+          categories: 1,
+          _id: 0
+        }
+      }
+    ]).toArray();
+
+    // Group data by product for easier frontend consumption
+    const productGroups = {};
+    trendData.forEach(item => {
+      if (!productGroups[item.productName]) {
+        productGroups[item.productName] = {
+          productName: item.productName,
+          category: item.category,
+          trends: []
+        };
+      }
+      productGroups[item.productName].trends.push({
+        period: item.period,
+        averagePrice: item.averagePrice,
+        minPrice: item.minPrice,
+        maxPrice: item.maxPrice,
+        totalQuantity: item.totalQuantity,
+        listingCount: item.listingCount,
+        farmerCount: item.farmerCount,
+        priceVariation: item.priceVariation
+      });
+    });
+
+    client.close();
+
+    res.json({
+      success: true,
+      data: {
+        trends: Object.values(productGroups),
+        rawData: trendData,
+        summary: summaryStats[0] || {
+          totalProducts: 0,
+          uniqueProductCount: 0,
+          uniqueFarmerCount: 0,
+          totalQuantity: 0,
+          avgPrice: 0,
+          minPrice: 0,
+          maxPrice: 0,
+          categories: []
+        },
+        filters: {
+          startDate,
+          endDate,
+          groupBy,
+          productName: productName || null
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching product trends:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch product trend analysis data',
+      details: error.message 
+    });
+  }
+};
+
 // GET route for farmer trends
 router.get('/farmer/:farmerId/trends', getFarmerTrends);
+
+// GET route for product trends with date range filtering
+router.get('/products/trends', getProductTrends);
 
 module.exports = router;

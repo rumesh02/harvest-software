@@ -1,12 +1,6 @@
 // src/App.js
 import React, { useEffect } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-  useLocation,
-} from "react-router-dom";
+import * as ReactRouterDOM from "react-router-dom";
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 
 import AuthWrapper from "./components/AuthWrapper";
@@ -72,6 +66,14 @@ import PrivacyPolicy from "./pages/Legal/PrivacyPolicy";
 import FarmerSidebar from "./components/Sidebar";
 import TransporterSidebar from "./components/TransporterSidebar";
 import MerchantSidebar from "./components/MerchantSidebar";
+
+const {
+  BrowserRouter: Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation
+} = ReactRouterDOM;
 
 // Auth0 Configuration
 const domain = "dev-loobtzocpv0sh4ny.us.auth0.com";

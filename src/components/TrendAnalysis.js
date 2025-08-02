@@ -34,13 +34,17 @@ const TrendAnalysis = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Quick Price Checker time period filtering
+  const [quickPriceFilter, setQuickPriceFilter] = useState('all');
+  const [rawProductsData, setRawProductsData] = useState([]);
 
   useEffect(() => {
     // Fetch all market products (no farmer filter needed)
     fetchProductPrices();
   }, []);
 
-  // Filter products based on search term only
+  // Filter products based on search term and time period
   useEffect(() => {
     let filtered = [...products];
 
@@ -51,8 +55,85 @@ const TrendAnalysis = () => {
       );
     }
 
+    // Apply quick price filter for date range
+    if (quickPriceFilter !== 'all' && rawProductsData.length > 0) {
+      const now = new Date();
+      let cutoffDate;
+      
+      switch (quickPriceFilter) {
+        case 'today':
+          cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case '7days':
+          cutoffDate = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+          break;
+        case '30days':
+          cutoffDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+          break;
+        default:
+          cutoffDate = null;
+      }
+      
+      if (cutoffDate) {
+        // Filter raw data by date and recalculate averages
+        const filteredRawData = rawProductsData.filter(product => {
+          const productDate = new Date(product.listedDate || product.createdAt || product.dateCreated || new Date());
+          return productDate >= cutoffDate;
+        });
+        
+        // Recalculate product averages with filtered data
+        const productMap = {};
+        
+        filteredRawData.forEach(product => {
+          const productName = product.name || product.type || 'Unknown Product';
+          const price = product.price || 0;
+          
+          if (!productMap[productName]) {
+            productMap[productName] = {
+              name: productName,
+              prices: [],
+              totalQuantity: 0,
+              category: product.type || 'Other',
+              farmers: new Set(),
+              listings: []
+            };
+          }
+          
+          productMap[productName].prices.push(price);
+          productMap[productName].totalQuantity += product.quantity || 0;
+          productMap[productName].farmers.add(product.farmerID || 'Unknown');
+          productMap[productName].listings.push({
+            price: price,
+            quantity: product.quantity || 0,
+            createdAt: product.listedDate || product.createdAt || product.dateCreated || new Date(),
+            farmerId: product.farmerID || 'Unknown'
+          });
+        });
+        
+        const filteredProductList = Object.values(productMap)
+          .filter(product => product.prices.length > 0)
+          .map(product => ({
+            name: product.name,
+            averagePrice: product.prices.reduce((sum, price) => sum + price, 0) / product.prices.length,
+            totalQuantity: product.totalQuantity,
+            category: product.category,
+            listings: product.prices.length,
+            farmerCount: product.farmers.size,
+            rawListings: product.listings,
+            lastUpdated: Math.max(...product.listings.map(l => new Date(l.createdAt).getTime()))
+          }));
+        
+        // Filter by search term if applied
+        filtered = searchTerm.trim() 
+          ? filteredProductList.filter(product =>
+              product.name.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+          : filteredProductList;
+      }
+    }
+
     setFilteredProducts(filtered);
-  }, [products, searchTerm]);
+  }, [products, searchTerm, quickPriceFilter, rawProductsData]);
 
   // Get unique categories for display purposes
   const getUniqueCategories = () => {
@@ -60,9 +141,33 @@ const TrendAnalysis = () => {
     return categories.filter(category => category && category !== '');
   };
 
-  // Clear search
+  // Clear search and reset filters
   const clearSearch = () => {
     setSearchTerm('');
+    setQuickPriceFilter('all');
+  };
+
+  // Function to calculate time since listing
+  const getTimeSince = (date) => {
+    const now = new Date();
+    const listingDate = new Date(date);
+    const diffInMs = now - listingDate;
+    
+    const minutes = Math.floor(diffInMs / (1000 * 60));
+    const hours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const days = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (weeks < 4) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+    if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`;
+    
+    const years = Math.floor(months / 12);
+    return `${years} year${years > 1 ? 's' : ''} ago`;
   };
 
   const fetchProductPrices = async () => {
@@ -70,15 +175,15 @@ const TrendAnalysis = () => {
       setLoading(true);
       setError(null);
       
-      // Get current market prices for all products (not filtered by farmer)
-      // Add a large limit to get all products for price analysis
+      // Original simple product listing
       const response = await axios.get(`http://localhost:5000/api/products?limit=1000`);
-      
-      // Handle the response structure (backend returns { products: [], total, page, totalPages })
       const productsData = response.data.products || response.data || [];
       
+      // Store raw data for time-based filtering
+      setRawProductsData(productsData);
+      
       if (productsData && productsData.length > 0) {
-        // Group products by name and calculate average price
+        // Group products by name and calculate average price (original logic)
         const productMap = {};
         
         productsData.forEach(product => {
@@ -90,32 +195,39 @@ const TrendAnalysis = () => {
               name: productName,
               prices: [],
               totalQuantity: 0,
-              category: product.type || 'Other', // Product model uses 'type' field
-              farmers: new Set()
+              category: product.type || 'Other',
+              farmers: new Set(),
+              listings: []
             };
           }
           
           productMap[productName].prices.push(price);
           productMap[productName].totalQuantity += product.quantity || 0;
-          productMap[productName].farmers.add(product.farmerID || 'Unknown'); // Product model uses 'farmerID'
+          productMap[productName].farmers.add(product.farmerID || 'Unknown');
+          productMap[productName].listings.push({
+            price: price,
+            quantity: product.quantity || 0,
+            createdAt: product.listedDate || product.createdAt || product.dateCreated || new Date(),
+            farmerId: product.farmerID || 'Unknown'
+          });
         });
         
-        // Calculate average prices
         const productList = Object.values(productMap).map(product => ({
           name: product.name,
           averagePrice: product.prices.reduce((sum, price) => sum + price, 0) / product.prices.length,
           totalQuantity: product.totalQuantity,
           category: product.category,
           listings: product.prices.length,
-          farmerCount: product.farmers.size
+          farmerCount: product.farmers.size,
+          rawListings: product.listings,
+          lastUpdated: Math.max(...product.listings.map(l => new Date(l.createdAt).getTime()))
         }));
         
-        // Sort by average price descending
         productList.sort((a, b) => b.averagePrice - a.averagePrice);
-        
         setProducts(productList);
       } else {
         setProducts([]);
+        setRawProductsData([]);
       }
     } catch (error) {
       console.error('Error fetching product prices:', error);
@@ -153,27 +265,27 @@ const TrendAnalysis = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* Header */}
-      <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            color: '#155724',
-            mb: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 1
-          }}
-        >
-          <MoneyIcon />
-          Market Price Analyzer
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Get instant price insights to make better pricing decisions
-        </Typography>
-      </Box>
+        {/* Header */}
+        <Box sx={{ mb: 4, textAlign: 'center' }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              color: '#155724',
+              mb: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1
+            }}
+          >
+            <MoneyIcon />
+            Market Price Analyzer
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Get instant price insights and historical trends to make better pricing decisions
+          </Typography>
+        </Box>
 
       {/* Quick Price Checker - Dedicated Section */}
       <Paper sx={{ 
@@ -193,6 +305,43 @@ const TrendAnalysis = () => {
         <Typography variant="body1" color="#388e3c" sx={{ mb: 3 }}>
           Search for any product to instantly see its current market price from all farmers and help you make informed pricing decisions.
         </Typography>
+        
+        {/* Time Period Filter for Quick Price Checker */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 2, color: '#2e7d32', fontWeight: 600 }}>
+            📅 Price Analysis Period:
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {[
+              { value: 'all', label: 'All Time', icon: '∞' },
+              { value: 'today', label: 'Today', icon: '📅' },
+              { value: '7days', label: 'Last 7 Days', icon: '📊' },
+              { value: '30days', label: 'Last 30 Days', icon: '📈' }
+            ].map((filter) => (
+              <Chip
+                key={filter.value}
+                label={`${filter.icon} ${filter.label}`}
+                variant={quickPriceFilter === filter.value ? 'filled' : 'outlined'}
+                onClick={() => setQuickPriceFilter(filter.value)}
+                sx={{
+                  cursor: 'pointer',
+                  backgroundColor: quickPriceFilter === filter.value ? '#4caf50' : 'transparent',
+                  color: quickPriceFilter === filter.value ? 'white' : '#2e7d32',
+                  borderColor: '#4caf50',
+                  fontWeight: quickPriceFilter === filter.value ? 700 : 500,
+                  '&:hover': {
+                    backgroundColor: quickPriceFilter === filter.value ? '#388e3c' : '#e8f5e8',
+                    transform: 'translateY(-1px)'
+                  },
+                  transition: 'all 0.2s ease'
+                }}
+              />
+            ))}
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            💡 Select a time period to see average prices only from listings within that range
+          </Typography>
+        </Box>
         
         <TextField
           fullWidth
@@ -224,6 +373,25 @@ const TrendAnalysis = () => {
             }
           }}
         />
+        
+        {/* Display active filter info */}
+        {quickPriceFilter !== 'all' && (
+          <Box sx={{ 
+            mt: 2, 
+            p: 2, 
+            backgroundColor: '#e3f2fd', 
+            borderRadius: 2, 
+            border: '1px solid #2196f3' 
+          }}>
+            <Typography variant="body2" sx={{ color: '#1976d2', fontWeight: 600 }}>
+              🔍 Currently showing prices from: {
+                quickPriceFilter === 'today' ? 'Today only' :
+                quickPriceFilter === '7days' ? 'Last 7 days' :
+                quickPriceFilter === '30days' ? 'Last 30 days' : 'All time'
+              }
+            </Typography>
+          </Box>
+        )}
         
         {/* Instant Price Display */}
         {searchTerm && filteredProducts.length > 0 && (
@@ -261,9 +429,18 @@ const TrendAnalysis = () => {
                     label={filteredProducts[0].category}
                     sx={{ backgroundColor: '#a5d6a7', color: '#155724', fontWeight: 600 }}
                   />
+                  {filteredProducts[0].lastUpdated && (
+                    <Chip 
+                      label={`Updated ${getTimeSince(filteredProducts[0].lastUpdated)}`}
+                      sx={{ backgroundColor: '#ffecb3', color: '#e65100', fontWeight: 600 }}
+                    />
+                  )}
                 </Box>
                 <Typography variant="body2" color="#666" sx={{ mt: 2 }}>
-                  💡 Price based on all market listings - Use this to set competitive prices
+                  💡 Price based on {quickPriceFilter === 'all' ? 'all market listings' : 
+                    quickPriceFilter === 'today' ? 'today\'s listings only' :
+                    quickPriceFilter === '7days' ? 'last 7 days listings' :
+                    'last 30 days listings'} - Use this to set competitive prices
                 </Typography>
               </Box>
             ) : (
@@ -290,6 +467,11 @@ const TrendAnalysis = () => {
                         <Typography variant="caption" color="#666">
                           {product.listings} listings
                         </Typography>
+                        {product.lastUpdated && (
+                          <Typography variant="caption" sx={{ color: '#ff9800', fontWeight: 600, display: 'block' }}>
+                            {getTimeSince(product.lastUpdated)}
+                          </Typography>
+                        )}
                       </Paper>
                     </Grid>
                   ))}
@@ -483,6 +665,7 @@ const TrendAnalysis = () => {
                   <TableCell sx={{ fontWeight: 600, color: '#155724' }}>Total Quantity</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: '#155724' }}>Listings</TableCell>
                   <TableCell sx={{ fontWeight: 600, color: '#155724' }}>Farmers</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#155724' }}>Last Updated</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -579,6 +762,25 @@ const TrendAnalysis = () => {
                             fontWeight: isHighlighted ? 600 : 500
                           }}
                         />
+                      </TableCell>
+                      <TableCell>
+                        {product.lastUpdated ? (
+                          <Box>
+                            <Typography variant="body2" sx={{ 
+                              fontWeight: isHighlighted ? 600 : 500,
+                              color: isHighlighted ? '#e65100' : '#ff9800'
+                            }}>
+                              {getTimeSince(product.lastUpdated)}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {new Date(product.lastUpdated).toLocaleDateString()}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            Unknown
+                          </Typography>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

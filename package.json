@@ -11,6 +11,7 @@
     "@mui/material": "^7.2.0",
     "@mui/styled-engine-sc": "^6.4.6",
     "@mui/system": "^6.5.0",
+    "@mui/x-date-pickers": "^8.9.2",
     "@radix-ui/react-select": "^2.1.6",
     "@react-google-maps/api": "^2.20.7",
     "@svgr/plugin-svgo": "^6.5.1",

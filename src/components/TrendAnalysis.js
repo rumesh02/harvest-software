@@ -85,12 +85,13 @@ const TrendAnalysis = () => {
         const productMap = {};
         
         filteredRawData.forEach(product => {
-          const productName = product.name || product.type || 'Unknown Product';
+          const originalProductName = product.name || product.type || 'Unknown Product';
+          const normalizedProductName = originalProductName.toLowerCase().trim();
           const price = product.price || 0;
           
-          if (!productMap[productName]) {
-            productMap[productName] = {
-              name: productName,
+          if (!productMap[normalizedProductName]) {
+            productMap[normalizedProductName] = {
+              name: originalProductName, // Keep the original name for display
               prices: [],
               totalQuantity: 0,
               category: product.type || 'Other',
@@ -99,10 +100,10 @@ const TrendAnalysis = () => {
             };
           }
           
-          productMap[productName].prices.push(price);
-          productMap[productName].totalQuantity += product.quantity || 0;
-          productMap[productName].farmers.add(product.farmerID || 'Unknown');
-          productMap[productName].listings.push({
+          productMap[normalizedProductName].prices.push(price);
+          productMap[normalizedProductName].totalQuantity += product.quantity || 0;
+          productMap[normalizedProductName].farmers.add(product.farmerID || 'Unknown');
+          productMap[normalizedProductName].listings.push({
             price: price,
             quantity: product.quantity || 0,
             createdAt: product.listedDate || product.createdAt || product.dateCreated || new Date(),
@@ -187,12 +188,13 @@ const TrendAnalysis = () => {
         const productMap = {};
         
         productsData.forEach(product => {
-          const productName = product.name || product.type || 'Unknown Product';
+          const originalProductName = product.name || product.type || 'Unknown Product';
+          const normalizedProductName = originalProductName.toLowerCase().trim();
           const price = product.price || 0;
           
-          if (!productMap[productName]) {
-            productMap[productName] = {
-              name: productName,
+          if (!productMap[normalizedProductName]) {
+            productMap[normalizedProductName] = {
+              name: originalProductName, // Keep the original name for display
               prices: [],
               totalQuantity: 0,
               category: product.type || 'Other',
@@ -201,10 +203,10 @@ const TrendAnalysis = () => {
             };
           }
           
-          productMap[productName].prices.push(price);
-          productMap[productName].totalQuantity += product.quantity || 0;
-          productMap[productName].farmers.add(product.farmerID || 'Unknown');
-          productMap[productName].listings.push({
+          productMap[normalizedProductName].prices.push(price);
+          productMap[normalizedProductName].totalQuantity += product.quantity || 0;
+          productMap[normalizedProductName].farmers.add(product.farmerID || 'Unknown');
+          productMap[normalizedProductName].listings.push({
             price: price,
             quantity: product.quantity || 0,
             createdAt: product.listedDate || product.createdAt || product.dateCreated || new Date(),
